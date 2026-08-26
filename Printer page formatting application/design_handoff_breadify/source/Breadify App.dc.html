@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/hampter-design-system-03c25988-bba8-4fc5-801f-653a333b24c3/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/hampter-design-system-03c25988-bba8-4fc5-801f-653a333b24c3/tokens/colors.css">
+<link rel="stylesheet" href="_ds/hampter-design-system-03c25988-bba8-4fc5-801f-653a333b24c3/tokens/typography.css">
+<link rel="stylesheet" href="_ds/hampter-design-system-03c25988-bba8-4fc5-801f-653a333b24c3/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/hampter-design-system-03c25988-bba8-4fc5-801f-653a333b24c3/tokens/shape.css">
+<link rel="stylesheet" href="_ds/hampter-design-system-03c25988-bba8-4fc5-801f-653a333b24c3/tokens/motion.css">
+<link rel="stylesheet" href="_ds/hampter-design-system-03c25988-bba8-4fc5-801f-653a333b24c3/tokens/base.css">
+<link rel="stylesheet" href="_ds/hampter-design-system-03c25988-bba8-4fc5-801f-653a333b24c3/components/components.css">
+<link rel="stylesheet" href="_ds/hampter-design-system-03c25988-bba8-4fc5-801f-653a333b24c3/styles.css">
+<script src="_ds/hampter-design-system-03c25988-bba8-4fc5-801f-653a333b24c3/_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: #07060B; }
+  a { color: var(--text-link); text-decoration: none; }
+  a:hover { color: var(--text-link-hover); }
+</style>
+</helmet>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0B0910"></rect>
+    <rect x="30" y="32" width="40" height="36" rx="3" fill="#17141F" stroke="#B48EF7" stroke-width="1.5"></rect>
+    <rect x="30" y="32" width="40" height="7" rx="3" fill="#B48EF7"></rect>
+    <rect x="35" y="45" width="14" height="3" fill="#F2EEF8"></rect>
+    <rect x="35" y="52" width="26" height="2" fill="#8D87A0"></rect>
+    <rect x="35" y="58" width="20" height="2" fill="#8D87A0"></rect>
+  </svg>
+</template>
+
+<div style="min-height:100vh;padding:32px;box-sizing:border-box;background:#07060B;font-family:'Space Grotesk',sans-serif">
+<div style="width:1280px;height:864px;margin:0 auto;display:flex;flex-direction:column;background:var(--surface-page);border:1px solid var(--border-default);border-radius:10px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.6)">
+
+  <div style="flex:none;height:40px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 8px 0 16px;background:rgba(14,12,20,.82);border-bottom:1px solid var(--border-subtle)">
+    <div style="display:flex;align-items:center;gap:16px;min-width:0">
+      <img src="assets/matvare-expressen.svg" alt="Matvare Expressen" style="flex:none;display:block;height:20px;width:83px">
+      <div style="font:400 11px/1 'IBM Plex Mono',monospace;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">PSR-BREAD-2026-03-04-to-2026-03-04 (1).xlsx</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;flex:none">
+      <x-import component-from-global-scope="HampterDesignSystem_03c259.Button" from="./_ds/hampter-design-system-03c25988-bba8-4fc5-801f-653a333b24c3/_ds_bundle.js" variant="ghost" size="sm" shortcut="K" hint-size="auto,28px">Search</x-import>
+      <div style="width:12px"></div>
+      <x-import component-from-global-scope="HampterDesignSystem_03c259.IconButton" variant="ghost" size="sm" icon="minus" aria-label="Minimise" hint-size="28px,28px"></x-import>
+      <x-import component-from-global-scope="HampterDesignSystem_03c259.IconButton" variant="ghost" size="sm" icon="square" aria-label="Maximise" hint-size="28px,28px"></x-import>
+      <x-import component-from-global-scope="HampterDesignSystem_03c259.IconButton" variant="ghost" size="sm" icon="x" aria-label="Close" hint-size="28px,28px"></x-import>
+    </div>
+  </div>
+
+  <div style="flex:none;display:flex;align-items:stretch;border-bottom:1px solid var(--border-default);background:var(--surface-raised)">
+    <sc-for list="{{ steps }}" as="s" hint-placeholder-count="4">
+      <button type="button" onClick="{{ s.go }}" style="flex:1;display:flex;align-items:center;gap:12px;padding:14px 20px;background:{{ s.bg }};border:0;border-bottom:2px solid {{ s.rule }};cursor:pointer;text-align:left" style-hover="background:var(--surface-hover)">
+        <span style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;color:{{ s.numColor }}">{{ s.num }}</span>
+        <span style="font:700 15px/1.1 Archivo,sans-serif;letter-spacing:-.02em;color:{{ s.color }}">{{ s.label }}</span>
+        <span style="font:400 11px/1 'IBM Plex Mono',monospace;color:var(--text-faint);margin-left:auto;white-space:nowrap">{{ s.note }}</span>
+      </button>
+    </sc-for>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+
+    <sc-if value="{{ isOpen }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;display:grid;grid-template-columns:1fr 320px;min-height:0">
+        <div style="display:flex;align-items:center;justify-content:center;padding:40px">
+          <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;border:1px dashed var(--border-strong);border-radius:12px;background:var(--surface-raised);background-image:linear-gradient(rgba(242,238,248,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(242,238,248,.045) 1px,transparent 1px);background-size:32px 32px">
+            <x-import component-from-global-scope="HampterDesignSystem_03c259.Icon" name="file-spreadsheet" size="32" hint-size="32px,32px"></x-import>
+            <div style="font:800 26px/1.2 Archivo,sans-serif;letter-spacing:-.025em;color:var(--text-strong);text-align:center;white-space:nowrap">Drop today's export here</div>
+            <div style="font:400 13px/1.45 'IBM Plex Mono',monospace;color:var(--text-muted);text-align:center;max-width:52ch">PSR-BREAD-&lt;from&gt;-to-&lt;to&gt;.xlsx — one sheet named <span style="color:var(--code-string)">Data</span>, 14 headers plus one unlabelled column. The delivery date is read from the filename.</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
+              <x-import component-from-global-scope="HampterDesignSystem_03c259.Button" variant="primary" size="md" icon="folder-open" onClick="{{ next }}" hint-size="auto,34px">Choose file</x-import>
+              <x-import component-from-global-scope="HampterDesignSystem_03c259.KbdGroup" keys="{{ openKeys }}" hint="or press" hint-size="auto,24px"></x-import>
+            </div>
+          </div>
+        </div>
+        <div style="border-left:1px solid var(--border-default);padding:24px 20px;display:flex;flex-direction:column;gap:14px;background:var(--surface-page)">
+          <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Recent</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ recents }}" as="r" hint-placeholder-count="4">
+              <button type="button" onClick="{{ next }}" style="display:flex;flex-direction:column;gap:6px;padding:12px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:8px;cursor:pointer;text-align:left" style-hover="background:var(--surface-hover);border-color:var(--border-strong)">
+                <span style="font:500 13px/1.3 'IBM Plex Mono',monospace;color:var(--text-body)">{{ r.date }}</span>
+                <span style="font:400 11px/1.3 'IBM Plex Mono',monospace;color:var(--text-faint)">{{ r.meta }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isCheck }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-height:0;overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column;gap:24px">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">What was read</div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+            <sc-for list="{{ stats }}" as="st" hint-placeholder-count="5">
+              <div style="padding:16px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:8px;display:flex;flex-direction:column;gap:6px">
+                <div style="font:500 26px/1 'IBM Plex Mono',monospace;color:var(--text-strong)">{{ st.value }}</div>
+                <div style="font:400 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint)">{{ st.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px">
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Checks</div>
+            <div style="font:400 12px/1 'IBM Plex Mono',monospace;color:var(--text-muted)">6 passed · 2 warnings · 2 notes</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ checks }}" as="c" hint-placeholder-count="4">
+              <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;background:var(--surface-card);border:1px solid var(--border-subtle);border-left:2px solid {{ c.edge }};border-radius:8px">
+                <div style="flex:none;width:104px;padding-top:1px">
+                  <x-import component-from-global-scope="HampterDesignSystem_03c259.Badge" tone="{{ c.tone }}" dot="{{ true }}" hint-size="auto,20px">{{ c.kind }}</x-import>
+                </div>
+                <div style="min-width:0;display:flex;flex-direction:column;gap:4px">
+                  <div style="font:500 14px/1.35 'Space Grotesk',sans-serif;color:var(--text-strong)">{{ c.title }}</div>
+                  <div style="font:400 12.5px/1.45 'IBM Plex Mono',monospace;color:var(--text-muted)">{{ c.detail }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface-raised);border:1px solid var(--border-subtle);border-radius:8px">
+            <x-import component-from-global-scope="HampterDesignSystem_03c259.Icon" name="check" size="14" hint-size="14px,14px"></x-import>
+            <div style="font:400 12.5px/1.4 'IBM Plex Mono',monospace;color:var(--text-muted)">Sheet shape, required cells, column types, order consistency, product consistency, one route per address — all passed.</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isConfigure }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-height:0;display:grid;grid-template-columns:304px 1fr 356px">
+
+        <div style="border-right:1px solid var(--border-default);padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-y:auto">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Always printed</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <sc-for list="{{ lockedFields }}" as="f" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:5px">
+                  <x-import component-from-global-scope="HampterDesignSystem_03c259.Icon" name="lock" size="12" hint-size="12px,12px"></x-import>
+                  <span style="font:400 12.5px/1 'IBM Plex Mono',monospace;color:var(--text-body);white-space:nowrap">{{ f }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Optional columns</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <sc-for list="{{ optionalFields }}" as="f" hint-placeholder-count="8">
+                <div style="flex:0 0 auto">
+                  <x-import component-from-global-scope="HampterDesignSystem_03c259.Tag" interactive="{{ true }}" selected="{{ f.on }}" data-key="{{ f.key }}" onClick="{{ toggleField }}" hint-size="auto,24px">{{ f.label }}</x-import>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px">
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Never printed</div>
+            <div style="display:flex;flex-direction:column;gap:3px;font:400 12.5px/1.4 'IBM Plex Mono',monospace;color:var(--text-faint)">
+              <span style="text-decoration:line-through">Route ordering</span>
+              <span>the list order says it</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:24px 28px;display:flex;flex-direction:column;gap:22px;overflow-y:auto">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Page</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <x-import component-from-global-scope="HampterDesignSystem_03c259.Select" label="Paper" options="{{ paperOptions }}" hint-size="100%,60px"></x-import>
+              <x-import component-from-global-scope="HampterDesignSystem_03c259.Select" label="Language of labels" options="{{ langOptions }}" hint-size="100%,60px"></x-import>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Density</div>
+            <div style="display:flex;gap:8px">
+              <sc-for list="{{ densities }}" as="d" hint-placeholder-count="3">
+                <button type="button" data-key="{{ d.key }}" onClick="{{ setDensity }}" style="flex:1;display:flex;flex-direction:column;gap:6px;padding:12px 14px;background:{{ d.bg }};border:1px solid {{ d.border }};border-radius:5px;cursor:pointer;text-align:left" style-hover="background:var(--surface-hover)">
+                  <span style="font:700 14px/1.1 Archivo,sans-serif;letter-spacing:-.02em;color:{{ d.color }}">{{ d.label }}</span>
+                  <span style="font:400 11.5px/1.3 'IBM Plex Mono',monospace;color:var(--text-faint)">{{ d.note }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">No-substitutes marker</div>
+            <div style="display:flex;gap:8px">
+              <sc-for list="{{ markers }}" as="m" hint-placeholder-count="3">
+                <button type="button" data-key="{{ m.key }}" onClick="{{ setMarker }}" style="flex:1;display:flex;flex-direction:column;gap:10px;padding:12px;background:{{ m.bg }};border:1px solid {{ m.border }};border-radius:5px;cursor:pointer;text-align:left" style-hover="background:var(--surface-hover)">
+                  <span style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:{{ m.color }}">{{ m.label }}</span>
+                  <span style="display:flex;align-items:center;justify-content:center;height:34px;background:#fff;border-radius:2px;font:800 11px/1 Archivo,sans-serif;color:#000">{{ m.sample }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="font:400 11.5px/1.45 'IBM Plex Mono',monospace;color:var(--text-faint)">Survives a mono laser and a photocopy. Colour only reinforces it.</div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+              <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Crates</div>
+              <div style="font:400 11.5px/1 'IBM Plex Mono',monospace;color:var(--text-muted)">{{ smallCount }} of 35 marked small</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+              <x-import component-from-global-scope="HampterDesignSystem_03c259.Select" options="{{ largeCrate }}" aria-label="Large crate capacity" hint-size="100%,34px"></x-import>
+              <x-import component-from-global-scope="HampterDesignSystem_03c259.Select" options="{{ smallCrate }}" aria-label="Small crate capacity" hint-size="100%,34px"></x-import>
+              <x-import component-from-global-scope="HampterDesignSystem_03c259.Select" options="{{ smallCounts }}" aria-label="Small bread per slot" hint-size="100%,34px"></x-import>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;max-height:132px;overflow-y:auto;padding:12px;background:var(--surface-raised);border:1px solid var(--border-subtle);border-radius:8px">
+              <sc-for list="{{ breads }}" as="b" hint-placeholder-count="12">
+                <div style="flex:0 0 auto;max-width:100%">
+                  <x-import component-from-global-scope="HampterDesignSystem_03c259.Tag" interactive="{{ true }}" selected="{{ b.small }}" data-key="{{ b.name }}" onClick="{{ toggleSmall }}" hint-size="auto,24px">{{ b.name }}</x-import>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font:400 11.5px/1.45 'IBM Plex Mono',monospace;color:var(--text-faint)">Selected types are small. The crate count printed beside each customer is the fewest crates that hold their bread — rectangles for large, squares for small.</div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;padding:16px;background:var(--surface-raised);border:1px solid var(--border-subtle);border-radius:8px">
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Fixed rules</div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
+                <div style="display:flex;align-items:flex-start;gap:9px;font:400 12px/1.4 'IBM Plex Mono',monospace;color:var(--text-muted)">
+                  <x-import component-from-global-scope="HampterDesignSystem_03c259.Icon" name="lock" size="12" hint-size="12px,12px"></x-import>
+                  <span>{{ r }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-left:1px solid var(--border-default);padding:24px 20px;display:flex;flex-direction:column;gap:14px;background:var(--surface-page);overflow-y:auto">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Sample block</div>
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;color:var(--text-faint)">route 14</div>
+          </div>
+          <div style="background:#fff;border-radius:3px;padding:16px 18px;color:#000;font-family:'Space Grotesk',sans-serif">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;border-top:1.5px solid #000;padding-top:9px">
+              <div>
+                <div style="font:500 10px/1.2 'Space Grotesk',sans-serif;letter-spacing:.05em;color:#5a5a5a">Customer 012</div>
+                <div style="font:800 19px/1.05 Archivo,sans-serif;letter-spacing:-.02em;margin-top:2px;white-space:nowrap">Department 11</div>
+                <sc-if value="{{ showAddress }}" hint-placeholder-val="{{ false }}">
+                  <div style="font:400 9px/1.2 'IBM Plex Mono',monospace;color:#7a7a7a;margin-top:4px">Street 12</div>
+                </sc-if>
+              </div>
+              <div style="flex:none;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                <div style="font:500 10px/1 'IBM Plex Mono',monospace;color:#3d3d3d;white-space:nowrap">want substitute: true</div>
+                <sc-if value="{{ showOrderId }}" hint-placeholder-val="{{ true }}">
+                  <div style="font:400 8px/1 'IBM Plex Mono',monospace;color:#a2a2a2;white-space:nowrap">order 1000621870</div>
+                </sc-if>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;margin-top:7px">
+              <sc-for list="{{ sampleLines }}" as="l" hint-placeholder-count="4">
+                <div style="display:flex;align-items:baseline;gap:10px;padding:3px 0;border-bottom:.5px solid #E2E2E2">
+                  <div style="width:22px;text-align:right;font:600 14px/1 'IBM Plex Mono',monospace;flex:none">{{ l.qty }}</div>
+                  <div style="flex:1;font:400 11px/1.25 'Space Grotesk',sans-serif">{{ l.name }}</div>
+                  <sc-if value="{{ showSupplier }}" hint-placeholder-val="{{ true }}">
+                    <div style="font:400 8px/1 'IBM Plex Mono',monospace;color:#8a8a8a;white-space:nowrap;flex:none">{{ l.sup }}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="font:400 11.5px/1.5 'IBM Plex Mono',monospace;color:var(--text-faint)">Shown at print size. The department is the crate label, so it takes the heading and the customer sits above it.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPrint }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-height:0;display:grid;grid-template-columns:420px 1fr">
+
+        <div style="border-right:1px solid var(--border-default);display:flex;flex-direction:column;min-height:0">
+          <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border-default)">
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Routes</div>
+            <div style="font:400 11.5px/1 'IBM Plex Mono',monospace;color:var(--text-muted);white-space:nowrap">{{ routeSummary }}</div>
+          </div>
+          <div style="flex:1;min-height:0;overflow-y:auto">
+            <div style="display:grid;grid-template-columns:24px 1fr 56px 56px;gap:0 12px;align-items:center;padding:8px 20px;font:400 10px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--border-subtle)">
+              <div></div><div>Route</div><div style="text-align:right">Lines</div><div style="text-align:right">Sheets</div>
+            </div>
+            <sc-for list="{{ routes }}" as="r" hint-placeholder-count="10">
+              <button type="button" data-key="{{ r.key }}" onClick="{{ toggleRoute }}" style="width:100%;display:grid;grid-template-columns:24px 1fr 56px 56px;gap:0 12px;align-items:center;padding:9px 20px;background:{{ r.bg }};border:0;border-bottom:1px solid var(--border-subtle);cursor:pointer;text-align:left" style-hover="background:var(--surface-hover)">
+                <span style="display:flex;align-items:center;justify-content:center;width:15px;height:15px;border:1px solid {{ r.boxBorder }};border-radius:3px;background:{{ r.boxBg }};font:600 10px/1 'IBM Plex Mono',monospace;color:#191624">{{ r.tick }}</span>
+                <span style="font:500 14px/1 'IBM Plex Mono',monospace;color:{{ r.color }}">{{ r.name }}</span>
+                <span style="text-align:right;font:400 12.5px/1 'IBM Plex Mono',monospace;color:var(--text-faint)">{{ r.lines }}</span>
+                <span style="text-align:right;font:400 12.5px/1 'IBM Plex Mono',monospace;color:var(--text-muted)">{{ r.sheets }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;min-height:0;background:var(--surface-void)">
+          <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px;border-bottom:1px solid var(--border-default);background:var(--surface-page)">
+            <div style="font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.10em;text-transform:uppercase;color:var(--text-faint)">Preview</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <x-import component-from-global-scope="HampterDesignSystem_03c259.Button" variant="ghost" size="sm" icon="chevron-left" aria-label="Previous sheet" hint-size="auto,28px">Prev</x-import>
+              <div style="font:400 12px/1 'IBM Plex Mono',monospace;color:var(--text-muted);min-width:96px;text-align:center">sheet 1 of 24</div>
+              <x-import component-from-global-scope="HampterDesignSystem_03c259.Button" variant="ghost" size="sm" iconRight="chevron-right" aria-label="Next sheet" hint-size="auto,28px">Next</x-import>
+            </div>
+          </div>
+          <div style="flex:1;min-height:0;overflow-y:auto;padding:24px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-content:start">
+            <sc-for list="{{ sheets }}" as="s" hint-placeholder-count="8">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="aspect-ratio:210/297;background:#fff;border-radius:2px;padding:9px 8px;display:flex;flex-direction:column;gap:5px;box-shadow:0 2px 10px rgba(0,0,0,.5);outline:{{ s.outline }};outline-offset:2px">
+                  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:6px;border-bottom:1.5px solid #B48EF7;padding-bottom:3px">
+                    <div style="font:900 13px/.85 Archivo,sans-serif;color:#000">{{ s.route }}</div>
+                    <div style="height:2px;width:34px;background:#c9c9c9"></div>
+                  </div>
+                  <sc-for list="{{ s.blocks }}" as="b" hint-placeholder-count="4">
+                    <div style="display:flex;flex-direction:column;gap:2.5px;border-top:1px solid #000;padding-top:3px">
+                      <div style="height:4px;width:{{ b.w }};background:#111"></div>
+                      <sc-for list="{{ b.rows }}" as="w" hint-placeholder-count="3">
+                        <div style="display:flex;align-items:center;gap:3px">
+                          <div style="height:2.5px;width:5px;background:#333"></div>
+                          <div style="height:2.5px;width:{{ w }};background:#bdbdbd"></div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px;font:400 11px/1 'IBM Plex Mono',monospace;color:var(--text-faint)">
+                  <span style="color:var(--text-muted)">{{ s.label }}</span>
+                  <span>{{ s.of }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;border-top:1px solid var(--border-default);background:var(--surface-raised)">
+    <div style="display:flex;align-items:center;gap:12px;min-width:0">
+      <x-import component-from-global-scope="HampterDesignSystem_03c259.Button" variant="ghost" size="md" icon="arrow-left" onClick="{{ back }}" disabled="{{ atStart }}" hint-size="auto,34px">Back</x-import>
+      <div style="font:400 12px/1.4 'IBM Plex Mono',monospace;color:var(--text-faint)">{{ hint }}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex:none">
+      <sc-if value="{{ isPrint }}" hint-placeholder-val="{{ false }}">
+        <x-import component-from-global-scope="HampterDesignSystem_03c259.Select" options="{{ printers }}" aria-label="Printer" hint-size="240px,34px"></x-import>
+        <x-import component-from-global-scope="HampterDesignSystem_03c259.Button" variant="secondary" size="md" icon="file-down" hint-size="auto,34px">Export PDF</x-import>
+      </sc-if>
+      <x-import component-from-global-scope="HampterDesignSystem_03c259.Button" variant="primary" size="md" icon="{{ nextIcon }}" onClick="{{ next }}" hint-size="auto,34px">{{ nextLabel }}</x-import>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1344,&quot;height&quot;:928}}">
+const STEPS = [
+  { num: '01', label: 'Open', note: 'xlsx' },
+  { num: '02', label: 'Check', note: '2 warnings' },
+  { num: '03', label: 'Configure', note: 'fields & layout' },
+  { num: '04', label: 'Print', note: '24 sheets' },
+];
+
+const ROUTES = [
+  ['1', 24, 2], ['2', 13, 1], ['3', 30, 2], ['4', 22, 2], ['5', 34, 2], ['6', 29, 2],
+  ['7', 17, 1], ['8', 13, 1], ['9', 25, 2], ['10', 20, 1], ['11', 29, 2], ['12', 14, 1],
+  ['13', 26, 1], ['14', 32, 2], ['hau 1', 12, 1], ['hau 2', 12, 1],
+];
+
+const OPTIONAL = [
+  ['totals', 'Route\u00a0totals', true],
+  ['supplier', 'Supplier', true],
+  ['orderId', 'Order ID', true],
+  ['street', 'Street', false],
+  ['comment', 'Comment', false],
+  ['date', 'Date', false],
+  ['productId', 'Product ID', false],
+  ['sku', 'SKU', false],
+  ['position', 'Position', false],
+  ['region', 'Region', false],
+];
+
+// All 35 bread types in the export. `true` = counts as a small item, so more of
+// them fit a crate slot — the printed crate glyphs are derived from this list.
+const BREADS = [
+  ['Bakehuset Grovbrød M/sirup 750g', false],
+  ['Bakehuset Grovbrød M/sirup Skåret 750g', false],
+  ['Barnehagebrødet - Oppskåret 750g', false],
+  ['Dansk Rugbrød Hel Sandnes Bakeri', false],
+  ['Emballerte Skoleboller 2 Pk Sandnes Bakeri', true],
+  ['Energi Stykke Sandnes Bakeri', true],
+  ['Fransk Landbrød Halvstekt Bakehuset 4 Stk', false],
+  ['Franskbrød U/valmuefrø Oppd Sandnes Bakeri', false],
+  ['Frokostbrød Fine 4pk Emball Sandnes Bakeri', true],
+  ['Frokostbrød Grove 4pk Emball Sandnes Bakeri', true],
+  ['Frokostbrød Grove Sandnes Bakeri', false],
+  ['Frokostbrød Sandnes Bakeri', false],
+  ['Frøhorn 1stk Bakehuset', true],
+  ['Funkygine Fiberbrød 700g Bakehuset Uskåret', false],
+  ['Gleding Barnehagebrød Sandnes Bakeri', false],
+  ['Grovbrød M/sirup Oppdelt Sandnes Bakeri', false],
+  ['Grovbrød Skåret 750g Bakehuset', false],
+  ['Hamburgerbrød 6pk Sandnes Bakeri Ikke Kuttet', true],
+  ['Havrebrød Oppdelt Sandnes Bakeri', false],
+  ['Holdbart Havrebrød Skåret 750g Bakehuset (har Vært Fryst)', false],
+  ['Horn Fint Sandnes Bakeri', true],
+  ['Horn Grovt Sandnes Bakeri', true],
+  ['Hveteboller 8stk Sandnes Bakeri', true],
+  ['Kneipp Holdbar Skåret 750g Bakehuset (har Vært Fryst)', false],
+  ['Kneippbrød Oppdelt, Sandnes Bakeri', false],
+  ['Loff Skåret 600g Bakehuset', false],
+  ['Norsk Fjellbrød Skåret 750g Bakehuset', false],
+  ['Ostebrød Sandnes Bakeri', true],
+  ['Pølsebrød 10pk Sandnes Bakeri -ikke Kuttet', true],
+  ['Ryfylkebrød Sandnes Oppdelt Bakeri', false],
+  ['Sandnesbrød Oppdelt Sandnes Bakeri', false],
+  ['Sekskornsbrød Oppdelt Sandnes Bakeri', false],
+  ['Skolebrød 140g Bakehuset', true],
+  ['Wienerbrød 95g Bakehuset', true],
+  ['Wienerbrød Sandnes Bakeri', true],
+];
+
+class Component extends DCLogic {
+  state = {
+    small: BREADS.reduce((a, [n, s]) => ((a[n] = s), a), {}),
+    step: 0,
+    density: 'mid',
+    marker: 'badge',
+    fields: OPTIONAL.reduce((a, [k, , on]) => ((a[k] = on), a), {}),
+    dropped: ROUTES.reduce((a, [k]) => ((a[k] = true), a), {}),
+  };
+
+  go = (i) => this.setState({ step: Math.max(0, Math.min(3, i)) });
+
+  renderVals() {
+    const { step, density, marker, fields, dropped } = this.state;
+    const selected = ROUTES.filter(([k]) => dropped[k]);
+    const sheetTotal = selected.reduce((n, [, , s]) => n + s, 0);
+
+    return {
+      steps: STEPS.map((s, i) => ({
+        ...s,
+        go: () => this.go(i),
+        bg: i === step ? 'var(--surface-card)' : 'transparent',
+        rule: i === step ? 'var(--violet-400)' : 'transparent',
+        color: i === step ? 'var(--text-strong)' : 'var(--text-muted)',
+        numColor: i === step ? 'var(--violet-300)' : 'var(--text-faint)',
+      })),
+      isOpen: step === 0,
+      isCheck: step === 1,
+      isConfigure: step === 2,
+      isPrint: step === 3,
+      atStart: step === 0,
+      next: () => this.go(step + 1),
+      back: () => this.go(step - 1),
+      nextLabel: ['Read the file', 'Continue anyway', 'Preview sheets', 'Print ' + sheetTotal + ' sheets'][step],
+      nextIcon: ['file-search', 'arrow-right', 'arrow-right', 'printer'][step],
+      hint: [
+        'One sheet named Data. 35 MB or less.',
+        'Two warnings — nothing that stops a print.',
+        'Six fields always print; the rest are yours.',
+        'One route per sheet set. Orders at one address share a heading.',
+      ][step],
+      openKeys: ['Ctrl', 'O'],
+
+      recents: [
+        { date: '2026-03-04', meta: '352 rows · 148 orders · 16 routes' },
+        { date: '2026-03-03', meta: '341 rows · 143 orders · 16 routes' },
+        { date: '2026-03-02', meta: '298 rows · 131 orders · 15 routes' },
+        { date: '2026-02-28', meta: '377 rows · 155 orders · 16 routes' },
+      ],
+
+      stats: [
+        { value: '352', label: 'rows' },
+        { value: '148', label: 'orders' },
+        { value: '16', label: 'routes' },
+        { value: '35', label: 'products' },
+        { value: '03-04', label: 'date from filename' },
+      ],
+
+      checks: [
+        {
+          kind: 'warning', tone: 'warning', edge: 'var(--status-warning)',
+          title: 'Route ordering 1400 repeats on route 9',
+          detail: 'Street 64 and 19 — one stop, two entrances. Both print at that position, tiebroken by address.',
+        },
+        {
+          kind: 'warning', tone: 'warning', edge: 'var(--status-warning)',
+          title: 'Route 11 @ 1400 — three spellings of one building',
+          detail: 'Street 17 · Street 62 · Street 112. Printed as five separate stops under two customer names.',
+        },
+        {
+          kind: 'note', tone: 'info', edge: 'var(--status-info)',
+          title: '37 rows have Route ordering 0',
+          detail: '20 customers across 9 routes. Printed after the sequenced stops, flagged as unplaced — driver\u2019s choice.',
+        },
+        {
+          kind: 'note', tone: 'info', edge: 'var(--status-info)',
+          title: 'Column O carries no header',
+          detail: 'Read positionally. Value is Stavanger on all 352 rows; nothing is keyed off it.',
+        },
+      ],
+
+      lockedFields: ['Quantity', 'Product Name', 'Customer', 'Department', 'Accept alternatives', 'Route nickname'],
+      optionalFields: OPTIONAL.map(([key, label]) => ({ key, label, on: !!fields[key] })),
+      toggleField: (e) => {
+        const key = e.currentTarget.dataset.key;
+        if (!key) return;
+        this.setState((s) => ({ fields: { ...s.fields, [key]: !s.fields[key] } }));
+      },
+      showSupplier: !!fields.supplier,
+      showOrderId: !!fields.orderId,
+      showAddress: !!fields.street,
+
+      paperOptions: [{ value: 'a4', label: 'A4 — 210 × 297 mm' }, { value: 'letter', label: 'Letter — 8.5 × 11 in' }],
+      langOptions: [{ value: 'en', label: 'English labels, data verbatim' }, { value: 'no', label: 'Norwegian labels' }],
+
+      densities: [
+        { key: 'arm', label: 'Roomy', note: '11.5 pt · 29 sheets' },
+        { key: 'mid', label: 'Grouped', note: '11 pt, stops grouped · 24 sheets' },
+        { key: 'save', label: 'Paper-saving', note: '10 pt · 20 sheets' },
+      ].map((d) => ({
+        ...d,
+        bg: d.key === density ? 'var(--surface-selected)' : 'var(--surface-card)',
+        border: d.key === density ? 'var(--border-accent)' : 'var(--border-subtle)',
+        color: d.key === density ? 'var(--text-strong)' : 'var(--text-body)',
+      })),
+      setDensity: (e) => this.setState({ density: e.currentTarget.dataset.key }),
+
+      markers: [
+        { key: 'badge', label: 'Inverted badge', sample: 'WANT SUBSTITUTE: FALSE' },
+        { key: 'rule', label: 'Heavy left rule', sample: '\u2503 SUBSTITUTE: FALSE' },
+        { key: 'word', label: 'Word only', sample: 'want substitute: false' },
+      ].map((m) => ({
+        ...m,
+        bg: m.key === marker ? 'var(--surface-selected)' : 'var(--surface-card)',
+        border: m.key === marker ? 'var(--border-accent)' : 'var(--border-subtle)',
+        color: m.key === marker ? 'var(--violet-300)' : 'var(--text-faint)',
+      })),
+      setMarker: (e) => this.setState({ marker: e.currentTarget.dataset.key }),
+
+      breads: BREADS.map(([name]) => ({ name, small: !!this.state.small[name] })),
+      smallCount: Object.values(this.state.small).filter(Boolean).length,
+      toggleSmall: (e) => {
+        const key = e.currentTarget.dataset.key;
+        if (!key) return;
+        this.setState((s) => ({ small: { ...s.small, [key]: !s.small[key] } }));
+      },
+      largeCrate: [{ value: '10', label: 'Large crate — 10' }, { value: '12', label: 'Large crate — 12' }],
+      smallCrate: [{ value: '5', label: 'Small crate — 5' }, { value: '6', label: 'Small crate — 6' }],
+      smallCounts: [{ value: '2', label: 'Small — 2 per slot' }, { value: '3', label: 'Small — 3 per slot' }],
+
+      rules: [
+        'One route per sheet set',
+        'Route totals close the last sheet',
+        'A stop never splits across a break',
+        'Unsequenced stops last, flagged',
+        'The sequence number never prints',
+      ],
+
+      sampleLines: [
+        { qty: '3', name: 'Franskbrød U/valmuefrø Oppd Sandnes Bakeri', sup: 'Sandnes Bakeri' },
+        { qty: '4', name: 'Sekskornsbrød Oppdelt Sandnes Bakeri', sup: 'Sandnes Bakeri' },
+        { qty: '2', name: 'Havrebrød Oppdelt Sandnes Bakeri', sup: 'Sandnes Bakeri' },
+        { qty: '3', name: 'Bakehuset Grovbrød M/sirup Skåret 750g', sup: 'Bakehuset' },
+      ],
+
+      routes: ROUTES.map(([key, lines, sheets]) => ({
+        key, name: 'route ' + key, lines, sheets,
+        tick: dropped[key] ? '\u2713' : '',
+        bg: dropped[key] ? 'transparent' : 'var(--surface-void)',
+        color: dropped[key] ? 'var(--text-strong)' : 'var(--text-faint)',
+        boxBg: dropped[key] ? 'var(--violet-400)' : 'transparent',
+        boxBorder: dropped[key] ? 'var(--violet-400)' : 'var(--border-strong)',
+      })),
+      toggleRoute: (e) => {
+        const key = e.currentTarget.dataset.key;
+        if (!key) return;
+        this.setState((s) => ({ dropped: { ...s.dropped, [key]: !s.dropped[key] } }));
+      },
+      routeSummary: selected.length + ' of 16 · ' + sheetTotal + ' sheets',
+
+      // Thumbnails come from the same ROUTES data as the table, so a caption's
+      // n/m can never drift from its row.
+      sheets: ROUTES.flatMap(([key, lines, n]) =>
+        Array.from({ length: n }, (_, i) => {
+          const seed = key.length * 13 + i * 7 + lines;
+          const groups = 2 + (seed % 3);
+          return {
+            route: key,
+            label: 'route ' + key,
+            of: (i + 1) + '/' + n,
+            outline: 'none',
+            blocks: Array.from({ length: groups }, (_, g) => ({
+              w: (44 + ((seed + g * 11) % 30)) + '%',
+              rows: Array.from({ length: 1 + ((seed + g * 5) % 4) }, (_, r) =>
+                (62 + ((seed + g * 7 + r * 9) % 26)) + '%'),
+            })),
+          };
+        })
+      ).slice(0, 12),
+
+      printers: [
+        { value: 'hp', label: 'HP LaserJet M404 — bakery' },
+        { value: 'brother', label: 'Brother HL-L2350DW — office' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
