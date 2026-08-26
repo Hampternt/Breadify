@@ -132,6 +132,13 @@ Requirements for the flag:
 
 Exact rendering is the design's call, within that register.
 
+**One caveat for whoever builds this:** the handoff's verified page budgets
+(§9, "24 sheets") were measured *without* the flag, since the design had
+deleted it. Reinstating it adds a line to each of the nine routes that have
+unsequenced stops — `2, 4, 5, 8, 9, 11, 12, hau 1, hau 2`. Route 11 page 1 is
+the tight one at 28 mm of clearance, and it has an unsequenced stop, so
+re-measure that page before trusting the sheet count.
+
 ## 7. Route totals
 
 Each route's last page closes with a **route total**: how much of each bread
