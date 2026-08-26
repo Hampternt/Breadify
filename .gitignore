@@ -1,0 +1,14 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# LibreOffice / Excel lock and backup files
+.~lock.*#
+~$*
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Duplicate of the extracted design_handoff_breadify/ tree
+Printer page formatting application.zip
