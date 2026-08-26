@@ -58,6 +58,8 @@ address, all at the same delivery position.
 Every block has to make clear whether that customer wants replacement wares or
 not. Colour, a true/false column, a word — the channel doesn't matter as long
 as it is understood at a glance and survives a black-and-white printer.
+*Settled by the design pass: quiet `want substitute: true`, and for false an
+inverted badge plus a heavy left rule — see `print-spec.md` §5.*
 
 **D9 — A stop is never split across a page break.** (2026-08-26)
 If a block doesn't fit in the remaining space, the whole block moves to the
@@ -68,25 +70,57 @@ next page. Paper is cheaper than a half-picked crate.
 No address, comment or date on the default printout. Since the app is a
 formatting tool, the user picks which fields make it onto the page — the D5
 set is the default, not a fixed list.
+*Second half superseded by **D11**: only the order ID ended up toggglable.*
+
+**D11 — Only the order ID is toggglable.** (2026-08-26)
+Everything else on the page is fixed: the user can show or hide `Order ID` and
+nothing more. This overrides the design handoff's "any of the 15 columns on top
+of six mandatory ones" — the page is a fixed form, not a column picker.
+
+**D12 — Route labels print the nickname verbatim.** (2026-08-26)
+`hau 1` and `hau 2` are ordinary routes that simply don't run in Stavanger.
+Nothing about them is special *except* that the page must say `hau 1`, not
+`1` — the masthead renders the nickname as it appears in the file rather than
+the integer parsed out of it. (The integer is still what sorts them, D2.)
+The unlabelled `Stavanger` column carries no meaning for the printout.
+
+**D13 — Design mono, allow colour to reinforce.** (2026-08-26)
+The printer at the bakery is sometimes a colour one and sometimes not, and the
+app can't know which. So every distinction must be fully carried in black and
+white; colour may only add redundancy on top.
+
+**D14 — Product names print exactly as the file has them.** (2026-08-26)
+No stripping of the trailing bakery name, even though it repeats what the
+supplier column says. The picker knows the bread by its full name.
+
+**D15 — Route totals stay.** (2026-08-26)
+Each route's last page closes with a per-bread, per-supplier total, ordered
+most to least, with a dot per full ten inside a single order. This reverses the
+old "no summaries" non-goal — the bakery gets a cross-check, at a cost of about
+5 of the 24 sheets in a full day.
+
+**D3 reaffirmed — the unsequenced flag stays.** (2026-08-26)
+The design pass deleted it; that deletion is rejected. Without the flag a
+driver cannot tell "no position assigned" from "last delivery of the day", and
+route 5 has five such stops in a row. `print-spec.md` §6 overrides the design
+handoff on this one point.
 
 ## Open
 
-1. **Which fields the picker can toggle** — D10 says the field set is
-   configurable. Is that any of the 15 input columns, or a fixed shortlist
-   (address, comment, date, order ID) on top of the mandatory D5 set?
-2. **`hau` routes and the unlabelled `Stavanger` column** — do they mean
-   anything for the printout (a depot heading, a separate batch)?
-3. **Printer reality** — always mono laser, or is colour available? The spec
-   assumes mono, which is safe either way, but colour would open up a cheaper
-   way to carry D8.
-4. **Bakery name inside the product name** — `Grovbrød M/sirup Oppdelt Sandnes
-   Bakeri` next to a `Sandnes Bakeri` supplier column says it twice, and the
-   names run to 57 chars. Strip the trailing bakery name for the printout, or
-   print the product name exactly as the file has it?
+Nothing. The design handoff's eight overrides are all settled: six adopted as
+written, route totals adopted as **D15**, and the deletion of the unsequenced
+flag rejected — **D3** stands.
 
 ## Next
 
-The decisions above are written up as a design brief in
-[`print-spec.md`](print-spec.md) — that is the file to hand to a UI/design
-pass. This file stays the decision log; when a decision changes, change it
-here and reflect it there.
+The design pass is done; its output is in
+`Printer page formatting application/design_handoff_breadify/`, which is the
+source of truth for how the page looks. [`print-spec.md`](print-spec.md) is
+the reconciled specification of what it must say and do, and records the one
+place where it overrides the handoff (the unsequenced flag). This file stays
+the decision log — when a decision changes, change it here and reflect it
+there.
+
+What is left is building it: a Rust desktop app that reads the export,
+validates it (§6 of `excel-format.md`), and prints the page `print-spec.md`
+describes.
