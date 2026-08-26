@@ -245,9 +245,10 @@ one stop with several delivery points:
 
 - Route 9 @ `1400`: `Customer 064` `Department 18`
   (Street 64 **17**) and `Department 19` (gate **19**).
-- Route 11 @ `1400`: 8 rows, 5 orders, 3 spellings of one building
-  (`Street 17`, `Street 62`, `Street 112`)
-  under 2 customer spellings.
+- Route 11 @ `1400`: 12 rows, **8 orders**, 3 spellings of one building
+  (`Street 17` ×4, `Street 62` ×3, `Street 17,1. etg,
+  høyre` ×1) under 2 customer spellings. Exact-string grouping therefore makes
+  this three stops, not one — see `print-spec.md` §8 for why that matters.
 
 Ties at `0` are just the unsequenced bucket and need the same tiebreak.
 
@@ -282,43 +283,43 @@ All 13 rows carrying `Route nickname = 8`, in the order they appear in the file
 | row | Order ID | Qty | Product | Position | Customer | Address | Route ord | Alt |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 6 | 1000620185 | 10 | Barnehagebrødet - Oppskåret 750g | X-Bakehuset | Customer 005 | Street 05 | 2100 | 1 |
-| 28 | 1000621240 | 1 | Dansk Rugbrød Hel | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
-| 50 | 1000622666 | 5 | Grovbrød M/sirup Oppdelt | X-Sandnes Bakeri | Customer 041 | Street 42 | 1100 | 1 |
-| 63 | 1000621240 | 1 | Grovbrød M/sirup Oppdelt | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
-| 73 | 1000622461 | 4 | Grovbrød M/sirup Oppdelt | X-Sandnes Bakeri | Customer 054 | Street 55 | **0** | **0** |
-| 81 | 1000621240 | 3 | Sekskornsbrød Oppdelt | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
-| 105 | 1000622554 | 2 | Sekskornsbrød Oppdelt | X-Sandnes Bakeri | Customer 070 | Street 71 | **0** | 1 |
-| 140 | 1000622666 | 2 | Havrebrød Oppdelt | X-Sandnes Bakeri | Customer 041 | Street 42 | 1100 | 1 |
-| 146 | 1000621240 | 2 | Havrebrød Oppdelt | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
-| 231 | 1000621240 | 4 | Ryfylkebrød Oppdelt | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
-| 261 | 1000622461 | 4 | Ryfylkebrød Oppdelt | X-Sandnes Bakeri | Customer 054 | Street 55 | **0** | **0** |
-| 270 | 1000621240 | 3 | Sandnesbrød Oppdelt | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
-| 287 | 1000622666 | 2 | Sandnesbrød Oppdelt | X-Sandnes Bakeri | Customer 041 | Street 42 | 1100 | 1 |
+| 28 | 1000621240 | 1 | Dansk Rugbrød Hel Sandnes Bakeri | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
+| 50 | 1000622666 | 5 | Grovbrød M/sirup Oppdelt Sandnes Bakeri | X-Sandnes Bakeri | Customer 041 | Street 42 | 1100 | 1 |
+| 63 | 1000621240 | 1 | Grovbrød M/sirup Oppdelt Sandnes Bakeri | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
+| 73 | 1000622461 | 4 | Grovbrød M/sirup Oppdelt Sandnes Bakeri | X-Sandnes Bakeri | Customer 054 | Street 55 | **0** | **0** |
+| 81 | 1000621240 | 3 | Sekskornsbrød Oppdelt Sandnes Bakeri | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
+| 105 | 1000622554 | 2 | Sekskornsbrød Oppdelt Sandnes Bakeri | X-Sandnes Bakeri | Customer 070 | Street 71 | **0** | 1 |
+| 140 | 1000622666 | 2 | Havrebrød Oppdelt Sandnes Bakeri | X-Sandnes Bakeri | Customer 041 | Street 42 | 1100 | 1 |
+| 146 | 1000621240 | 2 | Havrebrød Oppdelt Sandnes Bakeri | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
+| 231 | 1000621240 | 4 | Ryfylkebrød Sandnes Oppdelt Bakeri | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
+| 261 | 1000622461 | 4 | Ryfylkebrød Sandnes Oppdelt Bakeri | X-Sandnes Bakeri | Customer 054 | Street 55 | **0** | **0** |
+| 270 | 1000621240 | 3 | Sandnesbrød Oppdelt Sandnes Bakeri | X-Sandnes Bakeri | Customer 024 | Street 24 | 100 | 1 |
+| 287 | 1000622666 | 2 | Sandnesbrød Oppdelt Sandnes Bakeri | X-Sandnes Bakeri | Customer 041 | Street 42 | 1100 | 1 |
 
 Grouped by order and sorted by the §4 rule, route 8 becomes 5 stops:
 
 ```
 ROUTE 8
   1. ord  100  Customer 024 — Street 24          [order 1000621240, subst. OK]
-        1 × Dansk Rugbrød Hel
-        1 × Grovbrød M/sirup Oppdelt
-        3 × Sekskornsbrød Oppdelt
-        2 × Havrebrød Oppdelt
-        4 × Ryfylkebrød Oppdelt
-        3 × Sandnesbrød Oppdelt
+        1 × Dansk Rugbrød Hel Sandnes Bakeri
+        1 × Grovbrød M/sirup Oppdelt Sandnes Bakeri
+        3 × Sekskornsbrød Oppdelt Sandnes Bakeri
+        2 × Havrebrød Oppdelt Sandnes Bakeri
+        4 × Ryfylkebrød Sandnes Oppdelt Bakeri
+        3 × Sandnesbrød Oppdelt Sandnes Bakeri
   2. ord 1100  Customer 041 — Street 42         [order 1000622666, subst. OK]
-        5 × Grovbrød M/sirup Oppdelt
-        2 × Havrebrød Oppdelt
-        2 × Sandnesbrød Oppdelt
+        5 × Grovbrød M/sirup Oppdelt Sandnes Bakeri
+        2 × Havrebrød Oppdelt Sandnes Bakeri
+        2 × Sandnesbrød Oppdelt Sandnes Bakeri
   3. ord 2100  Customer 005 — Street 05
                                                             [order 1000620185, subst. OK]
        10 × Barnehagebrødet - Oppskåret 750g   (X-Bakehuset)
   -- unsequenced (Route ordering = 0) --
   ?. Customer 054 — Street 55            [order 1000622461, NO SUBSTITUTES]
-        4 × Grovbrød M/sirup Oppdelt
-        4 × Ryfylkebrød Oppdelt
+        4 × Grovbrød M/sirup Oppdelt Sandnes Bakeri
+        4 × Ryfylkebrød Sandnes Oppdelt Bakeri
   ?. Customer 070 — Street 71 [order 1000622554, subst. OK]
-        2 × Sekskornsbrød Oppdelt
+        2 × Sekskornsbrød Oppdelt Sandnes Bakeri
 ```
 
 Note the two unsequenced stops tiebreak by address (`Street 55` before

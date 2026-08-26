@@ -255,9 +255,21 @@ final deliveries; A3 refuses substitutes and gets both the badge and the left
 rule; the only ten-dot on the route is Trollhaugen's single line of 10.
 
 **Grouped stops** work the same way with an address heading above the
-sub-blocks — `Customer 012 · Street 12 ·
-one stop · nine crates`, then nine `DPT` sub-blocks flush beneath it. That
-grouping is what keeps a 9-order site on one page.
+sub-blocks — `Customer 012 · Street 12 · one stop ·
+13 crates`, then nine `DPT` sub-blocks flush beneath it.
+
+Two corrections to the handoff here, both recomputed from the sample:
+
+- **Customer 012 is 13 crates, not nine.** Nine is the department count; the nine
+  orders are 4, 11, 12, 21, 7, 7, 5, 4 and 6 units, which the §3 crate rule
+  turns into 1, 2, 2, 3, 1, 1, 1, 1, 1 = **13**. The prototype draws 13
+  rectangles while its own heading says nine. Neighbouring Boganes reads
+  `8 crates` correctly only because its eight orders happen to need one each.
+- **Grouping does not keep a big site to one page.** Route 14 is 10 orders and
+  splits 7/3 across two sheets, Customer 012 along with it. What grouping buys is one
+  *stop* and eight fewer repeated address headings — real, but not that.
+  Route 13's Street 38 (8 orders, all at ordering 600) is the site that
+  genuinely fits on one page.
 
 ## 11. Still open to design
 
