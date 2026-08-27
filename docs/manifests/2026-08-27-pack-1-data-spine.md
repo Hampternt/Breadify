@@ -1,6 +1,6 @@
 # Pack 1 — Data spine
 
-**Status:** in progress — items 1–3 of 9 done.
+**Status:** in progress — items 1–4 of 9 done.
 **Container:** Breadify v1 (7 packs — see [`../print-layout.md`](../print-layout.md) §Next).
 **Branch:** `pack-1-data-spine`.
 
@@ -59,7 +59,7 @@ assert numbers this repo has already re-derived.
 - [x] 1 — Repo skeleton and the two gates · `d9a5d00`
 - [x] 2 — xlsx loader keyed off cell references · 7 tests green
 - [x] 3 — Validation findings · sample yields exactly 2 warnings
-- [ ] 4 — Order model
+- [x] 4 — Order model · 148 orders, 37 mixed-bakery, comments deduped
 - [ ] 5 — Delivery date from the filename
 - [ ] 6 — The two sorts
 - [ ] 7 — Crate arithmetic on slots
