@@ -82,7 +82,7 @@ fn choices(app: &mut Breadify, ui: &mut egui::Ui) {
                         .changed()
                     {
                         app.settings.crates.large_capacity = large;
-                        app.resettle();
+                        app.remember_crates();
                     }
                     ui.label(RichText::new("small holds").color(theme::MUTED).size(12.0));
                     if ui
@@ -90,9 +90,19 @@ fn choices(app: &mut Breadify, ui: &mut egui::Ui) {
                         .changed()
                     {
                         app.settings.crates.small_capacity = small;
-                        app.resettle();
+                        app.remember_crates();
                     }
                 });
+
+                if let Some(path) = &app.crates_kept {
+                    ui.add_space(4.0);
+                    ui.label(
+                        RichText::new(format!("kept in {}", path.display()))
+                            .family(theme::mono())
+                            .size(10.0)
+                            .color(theme::FAINT),
+                    );
+                }
 
                 ui.add_space(14.0);
                 heading(ui, "HOW MUCH ROOM EACH BREAD TAKES");
@@ -176,7 +186,7 @@ fn sizes(app: &mut Breadify, ui: &mut egui::Ui) {
     }
     if let Some((id, percent)) = set {
         app.settings.crates.set_size(id, percent);
-        app.resettle();
+        app.remember_crates();
     }
 }
 

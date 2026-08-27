@@ -176,6 +176,19 @@ top to bottom, and the bakery asked for the plainer sheet. The words print in
 Archivo ExtraBold caps under every treatment, so nothing is lost by not
 choosing.
 
+**D22 — The crate rules persist; nothing else does.** (2026-08-27)
+How many slots a crate holds and how much room each bread takes are facts
+about the bakery, worked out once at the crates — so they are written to
+`$XDG_CONFIG_HOME/breadify/crates.conf` (`%APPDATA%\breadify\crates.conf` on
+Windows) whenever they change and read back at startup. The rest of the
+settings — the order-ID toggle, the marker treatment, which routes are
+selected — are decisions about today's print and start fresh every time.
+
+The file is a few lines of text, not JSON, so the person who set the numbers
+can open it and fix a typo without the app; each size carries its bread's name
+as a label the app ignores. Anything unparseable is skipped rather than
+refused — a settings file is never worth failing a print over.
+
 ## Open
 
 Nothing blocking. The design handoff's eight overrides are settled (six adopted

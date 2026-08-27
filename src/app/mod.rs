@@ -10,7 +10,7 @@ pub mod preview;
 pub mod print;
 pub mod theme;
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::mpsc::{Receiver, TryRecvError, channel};
 
@@ -119,6 +119,10 @@ pub struct Breadify {
     pub sizing: Option<u32>,
     /// The mascot, once a frame has asked for him.
     pub mascot: Option<egui::TextureHandle>,
+    /// Where the crate rules were last written, so the step can say so.
+    pub crates_kept: Option<PathBuf>,
+    /// Set when the crate rules change; written out once the user lets go.
+    crates_dirty: bool,
     /// The sheets the current selection comes to, worked out when it changes.
     day: Vec<crate::layout::Sheet>,
     /// Set while a file is being read on another thread.
@@ -138,16 +142,24 @@ impl Breadify {
         open: Option<PathBuf>,
     ) -> Self {
         theme::install(context);
+        // The crate rules are the bakery's, not today's: they come back from
+        // the last time somebody set them (crate::store).
+        let settings = Settings {
+            crates: crate::store::load().unwrap_or_default(),
+            ..Settings::default()
+        };
         let mut app = Self {
             step: Step::Open,
             loaded: None,
             error: None,
             recent: Vec::new(),
-            settings: Settings::default(),
+            settings,
             selected: BTreeSet::new(),
             wrote: None,
             sizing: None,
             mascot: None,
+            crates_kept: None,
+            crates_dirty: false,
             day: Vec::new(),
             loading: None,
             screenshot,
@@ -260,13 +272,47 @@ impl Breadify {
         self.stale = true;
     }
 
+    /// The same, for a change to the crate rules — which also outlive the
+    /// window and so are written to disk once the user stops dragging.
+    pub fn remember_crates(&mut self) {
+        self.stale = true;
+        self.crates_dirty = true;
+    }
+
     /// Redoes the invalidated work, once the user has stopped dragging.
     fn settle(&mut self, context: &egui::Context) {
-        if !self.stale || context.input(|input| input.pointer.any_down()) {
+        if context.input(|input| input.pointer.any_down()) {
+            return;
+        }
+
+        if self.crates_dirty {
+            self.crates_dirty = false;
+            self.keep_crates();
+        }
+        if !self.stale {
             return;
         }
         self.stale = false;
         self.day = print::selected_day(self);
+    }
+
+    /// Writes the crate rules out. A settings file that will not save is worth
+    /// saying so on the step that owns it, and worth nothing more than that —
+    /// it never stops a print.
+    fn keep_crates(&mut self) {
+        let names = self.loaded.as_ref().map_or_else(BTreeMap::new, |loaded| {
+            loaded
+                .orders
+                .iter()
+                .flat_map(|order| order.lines.iter())
+                .map(|line| (line.product.id, line.product.name.clone()))
+                .collect()
+        });
+
+        match crate::store::save(&self.settings.crates, &names) {
+            Ok(path) => self.crates_kept = Some(path),
+            Err(message) => self.error = Some(message),
+        }
     }
 
     /// The sheets the current selection comes to. Worked out when something

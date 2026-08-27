@@ -20,6 +20,7 @@ pub mod page;
 pub mod pdf;
 pub mod route;
 pub mod sheet;
+pub mod store;
 pub mod supplier;
 pub mod text;
 pub mod total;
