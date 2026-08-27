@@ -59,11 +59,17 @@ fn main() -> ExitCode {
 
 /// Opens the app window.
 fn window(screenshot: Option<PathBuf>, open: Option<PathBuf>, step: Option<usize>) -> ExitCode {
+    let (rgba, edge) = breadify::icon::window_icon();
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_inner_size([1280.0, 864.0])
             .with_min_inner_size([980.0, 640.0])
-            .with_title("Breadify"),
+            .with_title("Breadify")
+            .with_icon(eframe::egui::IconData {
+                rgba,
+                width: edge,
+                height: edge,
+            }),
         ..Default::default()
     };
 

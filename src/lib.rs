@@ -13,6 +13,7 @@ pub mod date;
 pub mod dump;
 pub mod font;
 pub mod geometry;
+pub mod icon;
 pub mod layout;
 pub mod order;
 pub mod page;

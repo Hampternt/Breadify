@@ -88,3 +88,40 @@ fn curves_carry_their_control_points() {
 
     assert!(controls > 100, "a mark this round needs its beziers");
 }
+
+/// The window icon is the mark's symbol and nothing else, rasterised. The
+/// wordmark's lettering would be a stripe in a square tile.
+#[test]
+fn the_window_icon_is_the_symbol_on_a_transparent_tile() {
+    let (rgba, edge) = breadify::icon::window_icon();
+    assert_eq!(rgba.len(), (edge * edge * 4) as usize);
+
+    let pixel = |x: u32, y: u32| {
+        let at = ((y * edge + x) * 4) as usize;
+        (rgba[at], rgba[at + 1], rgba[at + 2], rgba[at + 3])
+    };
+
+    for (x, y) in [(0, 0), (edge - 1, 0), (0, edge - 1), (edge - 1, edge - 1)] {
+        assert_eq!(pixel(x, y).3, 0, "the tile's corners are paper, not bag");
+    }
+
+    let brand = breadify::page::BRAND_RED;
+    let red = rgba
+        .chunks_exact(4)
+        .filter(|p| p[3] == 0xFF && (p[0], p[1], p[2]) == (brand.red, brand.green, brand.blue))
+        .count();
+    let white = rgba
+        .chunks_exact(4)
+        .filter(|p| p[3] == 0xFF && (p[0], p[1], p[2]) == (0xFF, 0xFF, 0xFF))
+        .count();
+
+    assert!(red > white, "the bag is the ground, the smile is on it");
+    assert!(
+        white > 400,
+        "the smile survives at {edge} px: {white} pixels"
+    );
+    assert!(
+        red + white > ((edge * edge) / 3) as usize,
+        "the symbol fills the tile it was fitted to"
+    );
+}
