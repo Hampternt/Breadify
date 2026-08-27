@@ -105,11 +105,64 @@ driver cannot tell "no position assigned" from "last delivery of the day", and
 route 5 has five such stops in a row. `print-spec.md` §6 overrides the design
 handoff on this one point.
 
+**D16 — A stop is one customer, or one department of a customer.**
+(2026-08-27)
+That is: **one stop = one order = one block = one crate label**. There is no
+address-level stop. Route 11 is therefore 14 stops and route 14 is 10, and the
+masthead's stop counter counts orders. Nothing needs address normalisation,
+and the three `Street 17` spellings simply stay three stops.
+
+Orders at the same address still sort adjacently (D2) and may share an address
+heading as pure layout economy — but the count, the label and the crate are
+per order. This narrows the design handoff's "grouped stops", which treated an
+address as the stop; it costs roughly 3 sheets a day in repeated headings.
+
+**D17 — Crate size is a per-bread modifier, not a small/large flag.**
+(2026-08-27)
+Each bread type carries a **size modifier**, default `1.0`, editable in the
+app: rolls and small items below 1, bulky items above it. The arithmetic then
+runs on *slots* rather than raw units:
+
+```
+slots  = ceil( Σ over the order's lines of  quantity × modifier )
+tens   = slots / 10      rem = slots % 10
+rem == 0     ->  tens × crate-of-10
+rem in 1..5  ->  tens × crate-of-10  +  1 × crate-of-5
+rem in 6..9  -> (tens + 1) × crate-of-10
+```
+
+With every modifier at `1.0` this reduces exactly to the flat-unit rule, so
+the verified baseline still holds — Customer 012's nine departments are 13 crates
+until modifiers are set. Crate capacities (10 and 5) stay configurable. This
+replaces the design handoff's binary "14 of 35 marked small" list, which had
+no formula behind it.
+
+**D18 — v1 prints by handing the PDF to the system.** (2026-08-27)
+The app writes the PDF and opens it in whatever the OS uses, so the user gets
+their own printer picker, page-scaling control and print preview for free, on
+both platforms, for about ten lines of code. A direct `lp -d … -o media=A4`
+path on Linux comes after that if it earns its place. The Windows
+`PrintDlgW` + rasterise route is explicitly **not** in v1: it is the largest
+piece of platform-specific code in the project and it trades away vector text.
+Revisit only if the bakery's own printer turns out to have no PDF handler.
+
+The print step must tell the user to print at **actual size / 100 %, no
+scaling** — a viewer's default "fit to printable area" shrinks A4 by ~4 % and
+takes the 11 pt body below its floor.
+
 ## Open
 
-Nothing. The design handoff's eight overrides are all settled: six adopted as
-written, route totals adopted as **D15**, and the deletion of the unsequenced
-flag rejected — **D3** stands.
+Nothing blocking. The design handoff's eight overrides are settled (six adopted
+as written, route totals kept as **D15**, the unsequenced flag reinstated by
+**D3**), and D16–D18 close the three questions the build plan raised.
+
+Two calls are deferred to the pack that needs them rather than open:
+
+- The **actual size modifiers** per bread (D17 gives the mechanism and a
+  default of 1.0; the numbers are the bakery's to set once someone looks at
+  the crates).
+- The **unsequenced flag's rendering**, the default no-substitutes treatment,
+  and English vs Norwegian page copy — all land in pack 2 or 3.
 
 ## Next
 
