@@ -8,10 +8,7 @@ use std::collections::HashMap;
 
 use crate::order::Product;
 use crate::route::Route;
-
-/// The order supplier columns print in. Anything not named here follows,
-/// alphabetically.
-pub const SUPPLIER_ORDER: [&str; 2] = ["sandnes bakeri", "bakehuset"];
+use crate::supplier;
 
 /// How many of one bread the route needs.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -108,19 +105,10 @@ pub fn of(route: &Route) -> RouteTotal {
         .collect();
 
     columns.sort_by(|left, right| {
-        supplier_position(&left.supplier).cmp(&supplier_position(&right.supplier))
+        supplier::column_position(&left.supplier).cmp(&supplier::column_position(&right.supplier))
     });
 
     RouteTotal { columns }
-}
-
-/// Where a supplier's column sits: the house order first, then anything new,
-/// alphabetically.
-fn supplier_position(supplier: &str) -> (usize, &str) {
-    let known = SUPPLIER_ORDER
-        .iter()
-        .position(|name| name.eq_ignore_ascii_case(supplier));
-    (known.unwrap_or(SUPPLIER_ORDER.len()), supplier)
 }
 
 /// `6 types · 33 units`, pluralised — a route with one bread reads
