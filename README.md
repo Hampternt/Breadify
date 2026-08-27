@@ -63,7 +63,8 @@ file.
 Same work from a terminal:
 
 ```
-breadify print --pdf today.pdf          every route in the export in this folder
+breadify print --pdf today.pdf          every route, if this folder holds one export
+breadify print bread.xlsx --pdf today.pdf   name it when it holds both
 breadify dump 8                         one route, to read
 breadify dump 8 --pdf route-8.pdf       one route, as sheets
 breadify --version                      which build this is

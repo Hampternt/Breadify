@@ -88,9 +88,10 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 
 ## In flight
 
-Nothing. Breadify **v1.1.1** is built and tagged: seven packs, then two passes of
-changes from using it — the heading reshaped, crate sizes said in fractions
-and kept between runs, the window icon, and a review pass over the lot.
+Nothing. Breadify **v1.2.0** is built and tagged: seven packs, two passes of
+changes from using it — the heading reshaped, crate sizes said in fractions and
+kept between runs, the window icon — and then the freezer list, which brought
+with it a printed-page fault that had been shipping since v1.0.0.
 
 What is deliberately not built, and why, is in
 [`manifests/2026-08-27-pack-7-ship.md`](manifests/2026-08-27-pack-7-ship.md).
