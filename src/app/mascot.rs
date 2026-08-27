@@ -16,9 +16,9 @@ const JPEG: &[u8] = include_bytes!("../../assets/breadguy.jpg");
 /// How much of the step he is allowed to cover.
 const FILL: f32 = 0.78;
 
-/// How far from invisible. Any higher and the findings have to compete with
-/// him; any lower and nobody ever notices he is there.
-const ALPHA: u8 = 16;
+/// How far from invisible. High enough to be seen on purpose rather than
+/// noticed by accident, low enough that the findings still win the page.
+const ALPHA: u8 = 34;
 
 /// The decoded pixels and their size, worked out once.
 static PIXELS: LazyLock<Option<(Vec<u8>, [usize; 2])>> = LazyLock::new(decode);
