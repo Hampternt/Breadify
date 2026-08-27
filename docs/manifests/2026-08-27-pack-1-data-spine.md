@@ -1,8 +1,8 @@
 # Pack 1 — Data spine
 
-**Status:** planned, not started. Awaiting go.
+**Status:** all 9 items done, reviewed, pack gate green. Ready to merge.
 **Container:** Breadify v1 (7 packs — see [`../print-layout.md`](../print-layout.md) §Next).
-**Branch:** `pack-1-data-spine` (not yet created).
+**Branch:** `pack-1-data-spine`.
 
 ## Goal
 
@@ -56,15 +56,40 @@ assert numbers this repo has already re-derived.
 
 ## Ledger
 
-- [ ] 1 — Repo skeleton and the two gates
-- [ ] 2 — xlsx loader keyed off cell references
-- [ ] 3 — Validation findings
-- [ ] 4 — Order model
-- [ ] 5 — Delivery date from the filename
-- [ ] 6 — The two sorts
-- [ ] 7 — Crate arithmetic on slots
-- [ ] 8 — Route totals and ten-dots
-- [ ] 9 — `dump` subcommand and golden tests
+- [x] 1 — Repo skeleton and the two gates · `d9a5d00`
+- [x] 2 — xlsx loader keyed off cell references · 7 tests green
+- [x] 3 — Validation findings · sample yields exactly 2 warnings
+- [x] 4 — Order model · 148 orders, 37 mixed-bakery, comments deduped
+- [x] 5 — Delivery date from the filename · ` (1)` suffix handled
+- [x] 6 — The two sorts · route 8 reproduces the worked example exactly
+- [x] 7 — Crate arithmetic on slots · route 8 ■◪/■/■/■/◪, Customer 012 13
+- [x] 8 — Route totals and ten-dots · routes 5, 8, 11, 14 exact
+- [x] 9 — `dump` subcommand and golden tests · 352 rows cross-checked
 
-**Deviations:** none yet.
-**Pack gate:** not run.
+**Deviations:**
+
+- Item 7 was scoped as "the small-items configuration hook present but inert".
+  D17 settled the formula while the pack was being planned, so it is
+  implemented rather than stubbed: sizes are a percentage of a slot, default
+  100 %, and the arithmetic runs on slots. At all-100 % it reproduces the
+  verified figures exactly, which a test asserts.
+**Code review:** one pass at high effort over the whole branch. Two confirmed
+findings, both fixed on the branch:
+
+1. `comment` was treated as an order-level value every line must repeat, so an
+   export writing a note once instead of onto every line produced a *blocking*
+   finding telling the user not to print a file that folds perfectly well.
+   Reproduced before fixing. Only two genuinely *different* notes on one order
+   block now.
+2. The shared-sequence finding counted addresses and called them "stops",
+   contradicting D16. Route 11 at 1400 now reads "3 addresses at 1400 … across
+   8 stops".
+
+**Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, then
+51 tests across 8 files, all green:
+
+```
+crates 6 · date 4 · dump 2 · golden 4 · order 7 · route 7 · sheet 7
+· total 5 · validate 9
+verify.sh: OK
+```
