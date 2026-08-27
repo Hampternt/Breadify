@@ -342,9 +342,10 @@ mis-sorted list is worse than a refused file:
 4. **Order consistency** — all lines sharing an `Order ID` agree on customer,
    department, address, route, route ordering, accept-alternatives and comment.
    Disagreement means the export changed shape; report the order ID.
-5. **Route consistency** — one route per address; warn (don't fail) when a
-   non-zero `Route ordering` repeats within a route, since that legitimately
-   happens at multi-entrance sites.
+5. **Route consistency** — one route per address. A repeated non-zero `Route
+   ordering` within a route is *not* checked: it is how a multi-entrance site
+   is written down, the stops sort adjacently anyway, and reporting it taught
+   the reader that warnings are noise.
 6. **Product consistency** — `Product ID` maps to one name, one SKU, one
    supplier across the file.
 7. **Unknowns** — surface, don't reject: an unlabelled-column value other than

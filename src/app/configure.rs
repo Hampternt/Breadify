@@ -138,6 +138,9 @@ fn sizes(app: &mut Breadify, ui: &mut egui::Ui) {
     // read the settings while it draws.
     let mut set: Option<(u32, u32)> = None;
     let mut open: Option<Option<u32>> = None;
+    // A bread that has been given a size appears twice — lifted, and again in
+    // its place in the list — so only the first of the two opens its buttons.
+    let mut expanded = false;
     ui.spacing_mut().item_spacing.y = 1.0;
 
     if !custom.is_empty() {
@@ -148,7 +151,8 @@ fn sizes(app: &mut Breadify, ui: &mut egui::Ui) {
             if size_row(ui, name, percent, app.sizing == Some(*id), true) {
                 open = Some((app.sizing != Some(*id)).then_some(*id));
             }
-            if app.sizing == Some(*id) {
+            if app.sizing == Some(*id) && !expanded {
+                expanded = true;
                 set = size_buttons(ui, percent).map(|value| (*id, value)).or(set);
             }
         }
@@ -161,7 +165,8 @@ fn sizes(app: &mut Breadify, ui: &mut egui::Ui) {
         if size_row(ui, name, percent, app.sizing == Some(*id), false) {
             open = Some((app.sizing != Some(*id)).then_some(*id));
         }
-        if app.sizing == Some(*id) {
+        if app.sizing == Some(*id) && !expanded {
+            expanded = true;
             set = size_buttons(ui, percent).map(|value| (*id, value)).or(set);
         }
     }
@@ -317,14 +322,21 @@ fn sample_block(app: &Breadify, ui: &mut egui::Ui) {
     });
 }
 
-/// A stop worth looking at: one that refuses substitutes, so the marker choice
-/// is visible, and failing that the first one in the file.
+/// A stop worth looking at: one that exercises both of the choices above it —
+/// a department, so the second line of the heading is there, and a refusal, so
+/// the marker treatment is visible. Falling back through each half on its own
+/// to the first stop in the file.
 fn sample_stop(app: &Breadify) -> Option<Order> {
     let loaded = app.loaded.as_ref()?;
-    loaded
-        .orders
-        .iter()
-        .find(|order| !order.accept_alternatives && order.lines.len() > 1)
+    let worth_seeing = |order: &&Order| order.lines.len() > 1;
+    let has_department = |order: &&Order| order.department.is_some();
+    let refuses = |order: &&Order| !order.accept_alternatives;
+
+    let orders = || loaded.orders.iter();
+    orders()
+        .find(|order| worth_seeing(order) && has_department(order) && refuses(order))
+        .or_else(|| orders().find(|order| worth_seeing(order) && has_department(order)))
+        .or_else(|| orders().find(|order| worth_seeing(order) && refuses(order)))
         .or_else(|| loaded.orders.first())
         .cloned()
 }
