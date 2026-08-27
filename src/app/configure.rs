@@ -333,18 +333,25 @@ fn sample_block(app: &Breadify, ui: &mut egui::Ui) {
         );
 
         ui.add_space(10.0);
-        let count = crates::count(&stop, &app.settings.crates);
-        ui.label(
-            RichText::new(format!(
+        // The block above respects the list; this line has to as well, or it
+        // reports crates the sheet beside it does not draw.
+        let summary = if app.settings.has_crates() {
+            let count = crates::count(&stop, &app.settings.crates);
+            format!(
                 "{} units · {} slots · {} large + {} small",
                 stop.units(),
                 crates::slots(&stop, &app.settings.crates),
                 count.large,
                 count.small
-            ))
-            .family(theme::mono())
-            .size(11.5)
-            .color(theme::MUTED),
+            )
+        } else {
+            format!("{} units · no crates on this list", stop.units())
+        };
+        ui.label(
+            RichText::new(summary)
+                .family(theme::mono())
+                .size(11.5)
+                .color(theme::MUTED),
         );
     });
 }

@@ -75,7 +75,11 @@ fn stats(ui: &mut egui::Ui, loaded: &Loaded) {
         .dates
         .map_or_else(|| "none".to_owned(), |dates| dates.to_string());
 
+    // The list is read from the filename and nothing else says it, so a file
+    // somebody renamed decides it wrongly and silently. Saying it here is what
+    // makes that a thing the user can see.
     let cards = [
+        (loaded.list.to_string(), "LIST"),
         (loaded.rows.len().to_string(), "ROWS"),
         (loaded.orders.len().to_string(), "ORDERS"),
         (loaded.routes.len().to_string(), "ROUTES"),
@@ -83,8 +87,8 @@ fn stats(ui: &mut egui::Ui, loaded: &Loaded) {
         (date, "DATE FROM FILENAME"),
     ];
 
-    let gaps = ui.spacing().item_spacing.x * 4.0;
-    let width = (ui.available_width() - gaps) / 5.0;
+    let gaps = ui.spacing().item_spacing.x * (cards.len() - 1) as f32;
+    let width = (ui.available_width() - gaps) / cards.len() as f32;
     ui.horizontal(|ui| {
         for (value, label) in cards {
             egui::Frame::NONE
