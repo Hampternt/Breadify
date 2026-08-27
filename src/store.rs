@@ -11,7 +11,7 @@
 //! never worth failing a print over.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::crates::CrateRules;
 
@@ -33,8 +33,13 @@ pub fn path() -> Option<PathBuf> {
 /// The rules as last saved, or nothing if they have never been saved or the
 /// file cannot be read.
 pub fn load() -> Option<CrateRules> {
-    let text = std::fs::read_to_string(path()?).ok()?;
-    Some(read(&text))
+    load_from(&path()?)
+}
+
+/// The same, from a named file — which is what makes this testable without
+/// reaching into whoever is running the tests' own settings.
+pub fn load_from(file: &Path) -> Option<CrateRules> {
+    Some(read(&std::fs::read_to_string(file).ok()?))
 }
 
 /// Writes the rules, keeping the bread names as comments so the file reads.
@@ -44,11 +49,20 @@ pub fn load() -> Option<CrateRules> {
 /// Tuesday's is saved over it.
 pub fn save(rules: &CrateRules, names: &BTreeMap<u32, String>) -> Result<PathBuf, String> {
     let target = path().ok_or("this machine does not say where settings go")?;
+    save_to(&target, rules, names)
+}
+
+/// The same, to a named file.
+pub fn save_to(
+    target: &Path,
+    rules: &CrateRules,
+    names: &BTreeMap<u32, String>,
+) -> Result<PathBuf, String> {
     let directory = target
         .parent()
         .ok_or("the settings path has no directory")?;
 
-    let mut labels = std::fs::read_to_string(&target)
+    let mut labels = std::fs::read_to_string(target)
         .map(|text| read_labels(&text))
         .unwrap_or_default();
     labels.extend(names.iter().map(|(id, name)| (*id, name.clone())));
@@ -61,10 +75,10 @@ pub fn save(rules: &CrateRules, names: &BTreeMap<u32, String>) -> Result<PathBuf
     let scratch = target.with_extension("writing");
     std::fs::write(&scratch, render(rules, &labels))
         .map_err(|error| format!("could not write {}: {error}", scratch.display()))?;
-    std::fs::rename(&scratch, &target)
+    std::fs::rename(&scratch, target)
         .map_err(|error| format!("could not replace {}: {error}", target.display()))?;
 
-    Ok(target)
+    Ok(target.to_path_buf())
 }
 
 /// The rules a settings file describes. Lines it does not understand are
