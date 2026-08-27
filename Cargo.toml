@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 calamine = "0.36.1"
+printpdf = { version = "=0.12.6", default-features = false }
 thiserror = "2.0.20"
 ttf-parser = "0.25.1"
 

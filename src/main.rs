@@ -7,27 +7,43 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use breadify::crates::CrateRules;
+use breadify::layout::{self, SheetContext};
 use breadify::route::Route;
-use breadify::{date, dump, order, route, sheet, validate};
+use breadify::{date, dump, order, pdf, route, sheet, validate};
 
 fn main() -> ExitCode {
     let arguments: Vec<String> = std::env::args().skip(1).collect();
     let words: Vec<&str> = arguments.iter().map(String::as_str).collect();
 
-    match words.as_slice() {
-        ["dump", nickname] => run(nickname, None),
-        ["dump", nickname, path] => run(nickname, Some(Path::new(path))),
-        _ => {
-            eprintln!("usage: breadify dump <route> [export.xlsx]");
-            eprintln!();
-            eprintln!("Prints one route's stops, crates and total. With no file given,");
-            eprintln!("looks for a single PSR-BREAD-*.xlsx in the current directory.");
-            ExitCode::FAILURE
+    let mut positional: Vec<&str> = Vec::new();
+    let mut pdf: Option<&str> = None;
+    let mut rest = words.iter().copied();
+    while let Some(word) = rest.next() {
+        match word {
+            "--pdf" => pdf = rest.next(),
+            unknown if unknown.starts_with("--") => return usage(),
+            value => positional.push(value),
         }
+    }
+
+    match positional.as_slice() {
+        ["dump", nickname] => run(nickname, None, pdf),
+        ["dump", nickname, path] => run(nickname, Some(Path::new(path)), pdf),
+        _ => usage(),
     }
 }
 
-fn run(nickname: &str, path: Option<&Path>) -> ExitCode {
+/// What the binary can do, for anyone who asks it wrongly.
+fn usage() -> ExitCode {
+    eprintln!("usage: breadify dump <route> [export.xlsx] [--pdf <file.pdf>]");
+    eprintln!();
+    eprintln!("Prints one route's stops, crates and total. With no file given,");
+    eprintln!("looks for a single PSR-BREAD-*.xlsx in the current directory.");
+    eprintln!("With --pdf, also draws the route as an A4 sheet.");
+    ExitCode::FAILURE
+}
+
+fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     let path = match path
         .map(Path::to_path_buf)
         .ok_or(())
@@ -55,8 +71,27 @@ fn run(nickname: &str, path: Option<&Path>) -> ExitCode {
     };
 
     let dates = date::from_filename(&path).ok();
-    print!("{}", dump::route(wanted, dates, &CrateRules::default()));
-    ExitCode::SUCCESS
+    let rules = CrateRules::default();
+    print!("{}", dump::route(wanted, dates, &rules));
+
+    let Some(target) = pdf else {
+        return ExitCode::SUCCESS;
+    };
+
+    let source = path
+        .file_stem()
+        .map(|stem| stem.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let context = SheetContext::single(wanted, dates, source);
+    let sheet = layout::sheet(wanted, &context, &rules);
+
+    match pdf::write(Path::new(target), &[sheet], &format!("Route {nickname}")) {
+        Ok(()) => {
+            eprintln!("wrote {target}");
+            ExitCode::SUCCESS
+        }
+        Err(error) => fail(&error.to_string()),
+    }
 }
 
 /// The single `PSR-BREAD-*.xlsx` in the working directory, if there is exactly

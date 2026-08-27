@@ -1,6 +1,6 @@
 # Pack 2 — First sheet
 
-**Status:** in progress — items 1–4 of 9 done.
+**Status:** all 9 items done — pack gate green, awaiting review.
 **Container:** Breadify v1 (7 packs).
 **Branch:** `pack-2-first-sheet`.
 
@@ -60,11 +60,11 @@ a matter of discipline.
 - [x] 2 — Headless text measurement · longest name 112.65 mm at 11 pt
 - [x] 3 — The display list · text, rules, boxes; no font handles
 - [x] 4 — Page geometry · A4, 9/8/8/5 mm, one mm↔pt conversion
-- [ ] 5 — Bread line and stop block
-- [ ] 6 — Masthead, page note, legend
-- [ ] 7 — Route total
-- [ ] 8 — The PDF backend
-- [ ] 9 — `--pdf` on the CLI
+- [x] 5 — Bread line and stop block · zebra, tick boxes, badge, crate glyphs
+- [x] 6 — Masthead, page note, legend · brand rule, legend band, unsequenced flag
+- [x] 7 — Route total · columns, ten-dots, 3 pt rule
+- [x] 8 — The PDF backend · exact A4, fonts embedded, æøå round-trips
+- [x] 9 — `--pdf` on the CLI · `dump 8 --pdf route-8.pdf`
 
 **Deviations:**
 
@@ -73,6 +73,15 @@ a matter of discipline.
   Grotesk only as variable files, which item 1 exists to keep out. Same
   typefaces, same OFL 1.1, official sources (Omnibus-Type/Archivo,
   floriankarsten/space-grotesk); IBM Plex Mono is Google's own static build.
+- The heading needed a rule the design has no case for: where a customer name,
+  its department box and its crates will not fit beside the marker and order
+  id, the box and crates drop to a second line. Without it, OCAB AS on route 10
+  — a 32-character name with a 38-character department — drew 8 mm off the
+  right edge of the sheet. A test now asserts nothing on any of the 16 routes
+  is drawn outside the page.
+- The logo is a white wordmark on its dark panel rather than the supplied SVG;
+  the PDF backend does not import vector artwork yet. The panel, its colour and
+  its position are right, so this is a swap of one primitive when it lands.
 - Item 2 turned up a wrong figure in the design handoff: the longest product
   name is 112.65 mm at 11 pt, not the ~148 mm the handoff calls the binding
   constraint. `print-spec.md` §9 now records the measurement and what follows
