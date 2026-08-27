@@ -170,14 +170,7 @@ fn total_row(page: &mut Page, at: Point, width: Mm, line: &crate::total::TotalLi
         page::INK_SOFT,
     );
 
-    let mut dot_x = at.x + width - TOTAL_DOT;
-    for _ in 0..line.full_tens {
-        page.fill(
-            Rect::new(dot_x, middle - TOTAL_DOT / 2.0, TOTAL_DOT, TOTAL_DOT),
-            page::BLACK,
-        );
-        dot_x -= TOTAL_DOT + 1.0;
-    }
+    dots(page, at.x + width, middle, line.full_tens);
 
     page.horizontal_rule(
         Point::new(at.x, at.y + height),
@@ -186,6 +179,56 @@ fn total_row(page: &mut Page, at: Point, width: Mm, line: &crate::total::TotalLi
         page::RULE_LINE,
     );
     at.y + height
+}
+
+/// The full trays, drawn right to left in their own column.
+///
+/// More trays than the column holds — no route in the sample has that many,
+/// but a bigger day would — are written as a count beside a single dot rather
+/// than run into the product name.
+fn dots(page: &mut Page, right: Mm, middle: Mm, full_tens: u32) {
+    if full_tens == 0 {
+        return;
+    }
+
+    let pitch = TOTAL_DOT + 1.0;
+    let room = ((TOTAL_DOT_COLUMN + 1.0) / pitch).floor() as u32;
+
+    if full_tens <= room {
+        for index in 0..full_tens {
+            page.fill(
+                Rect::new(
+                    right - TOTAL_DOT - f64::from(index) * pitch,
+                    middle - TOTAL_DOT / 2.0,
+                    TOTAL_DOT,
+                    TOTAL_DOT,
+                ),
+                page::BLACK,
+            );
+        }
+        return;
+    }
+
+    page.fill(
+        Rect::new(
+            right - TOTAL_DOT,
+            middle - TOTAL_DOT / 2.0,
+            TOTAL_DOT,
+            TOTAL_DOT,
+        ),
+        page::BLACK,
+    );
+    let style = Style::new(Face::MonoSemiBold, SIZE_DOT_NOTE);
+    let count = format!("×{full_tens}");
+    page.text(
+        Point::new(
+            right - TOTAL_DOT - 1.0 - text::width(&count, style),
+            middle + text::ascent(style) / 2.0 - 0.35,
+        ),
+        &count,
+        style,
+        page::BLACK,
+    );
 }
 
 fn plural(count: u32, word: &str) -> String {

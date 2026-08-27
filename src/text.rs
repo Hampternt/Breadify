@@ -43,6 +43,12 @@ impl Style {
 /// Sums the glyphs' own advances and the tracking between them. It does not
 /// apply kerning pairs, which for these faces and this Latin text only ever
 /// tighten a line — so a run that fits by this measure fits when printed.
+///
+/// Tracking counts the gaps *between* glyphs, which is the inked extent. PDF's
+/// own character spacing also advances the cursor past the last glyph, so a
+/// tracked run leaves the cursor a fraction further right than this reports —
+/// under 0.25 mm at these sizes, and nothing positions anything from where a
+/// run ends.
 pub fn width(text: &str, style: Style) -> Mm {
     if text.is_empty() {
         return 0.0;

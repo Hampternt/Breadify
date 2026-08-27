@@ -93,12 +93,12 @@ fn logo_panel(page: &mut Page, at: Point) {
 
     // Stands in for assets/matvare-expressen.svg until the PDF backend imports
     // vector artwork; the panel and the white wordmark are what the page needs.
-    let wordmark = Style::new(Face::ArchivoBlack, 7.4).tracked(-0.02);
+    let wordmark = Style::new(Face::ArchivoBlack, 4.6).tracked(0.02);
     let baseline = at.y + LOGO_PADDING.0 + height / 2.0 + text::ascent(wordmark) / 2.0 - 0.3;
     page.text(
         Point::new(at.x + LOGO_PADDING.1, baseline),
         "MATVARE EXPRESSEN",
-        Style::new(Face::ArchivoBlack, 4.6).tracked(0.02),
+        wordmark,
         page::WHITE,
     );
 }
