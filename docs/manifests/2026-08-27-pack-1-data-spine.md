@@ -1,6 +1,6 @@
 # Pack 1 — Data spine
 
-**Status:** in progress — items 1–6 of 9 done.
+**Status:** in progress — items 1–7 of 9 done.
 **Container:** Breadify v1 (7 packs — see [`../print-layout.md`](../print-layout.md) §Next).
 **Branch:** `pack-1-data-spine`.
 
@@ -62,9 +62,15 @@ assert numbers this repo has already re-derived.
 - [x] 4 — Order model · 148 orders, 37 mixed-bakery, comments deduped
 - [x] 5 — Delivery date from the filename · ` (1)` suffix handled
 - [x] 6 — The two sorts · route 8 reproduces the worked example exactly
-- [ ] 7 — Crate arithmetic on slots
+- [x] 7 — Crate arithmetic on slots · route 8 ■◪/■/■/■/◪, Customer 012 13
 - [ ] 8 — Route totals and ten-dots
 - [ ] 9 — `dump` subcommand and golden tests
 
-**Deviations:** none yet.
+**Deviations:**
+
+- Item 7 was scoped as "the small-items configuration hook present but inert".
+  D17 settled the formula while the pack was being planned, so it is
+  implemented rather than stubbed: sizes are a percentage of a slot, default
+  100 %, and the arithmetic runs on slots. At all-100 % it reproduces the
+  verified figures exactly, which a test asserts.
 **Pack gate:** not run.
