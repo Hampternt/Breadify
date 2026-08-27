@@ -9,9 +9,15 @@
 pub mod crates;
 pub mod date;
 pub mod dump;
+pub mod font;
+pub mod geometry;
+pub mod layout;
 pub mod order;
+pub mod page;
+pub mod pdf;
 pub mod route;
 pub mod sheet;
 pub mod supplier;
+pub mod text;
 pub mod total;
 pub mod validate;

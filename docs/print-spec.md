@@ -184,10 +184,19 @@ the maxima.
 | Department | ~12 chars | **38 chars** |
 | Quantity | 1–4 | **48** |
 
-**Width binds before height.** At 11 pt the longest product name needs ~148 mm
-of a 150 mm column — which is why the line carries a supplier code rather than
-a name, and why the margins are tight. Anything added to a bread line comes
-out of the 11 pt body size, which is the floor.
+**Height binds, not width.** The design handoff says the longest product name
+needs ~148 mm of its 150 mm column at 11 pt, and reasons from that. It does
+not: measured off the embedded Space Grotesk 400 tables, the 57-character
+`Holdbart Havrebrød Skåret 750g Bakehuset (har Vært Fryst)` is **112.65 mm**
+at 11 pt — 29.03 em over a 1000-unit em. Two independent parses agree, and
+kerning only tightens it further.
+
+So the product column has roughly 37 mm of slack, and neither the supplier
+code nor the tight margins are forced by width. Keep both — the code reads
+faster than a repeated bakery name and the design is built around them — but
+do not treat width as the constraint that settles layout arguments. Sheet
+count is decided by height, and adding a column is a real option if one is
+ever wanted.
 
 Verified budgets from the design pass: **24 sheets** for the whole sample day
 at the default density; 19 without route totals; route 5 needs two pages at any

@@ -1,6 +1,6 @@
 # Pack 2 — First sheet
 
-**Status:** planned, starting.
+**Status:** all 9 items done, reviewed, pack gate green. Merged.
 **Container:** Breadify v1 (7 packs).
 **Branch:** `pack-2-first-sheet`.
 
@@ -56,15 +56,48 @@ a matter of discipline.
 
 ## Ledger
 
-- [ ] 1 — Vendor the fonts
-- [ ] 2 — Headless text measurement
-- [ ] 3 — The display list
-- [ ] 4 — Page geometry
-- [ ] 5 — Bread line and stop block
-- [ ] 6 — Masthead, page note, legend
-- [ ] 7 — Route total
-- [ ] 8 — The PDF backend
-- [ ] 9 — `--pdf` on the CLI
+- [x] 1 — Vendor the fonts · 8 static faces, ~1.2 MB, OFL
+- [x] 2 — Headless text measurement · longest name 112.65 mm at 11 pt
+- [x] 3 — The display list · text, rules, boxes; no font handles
+- [x] 4 — Page geometry · A4, 9/8/8/5 mm, one mm↔pt conversion
+- [x] 5 — Bread line and stop block · zebra, tick boxes, badge, crate glyphs
+- [x] 6 — Masthead, page note, legend · brand rule, legend band, unsequenced flag
+- [x] 7 — Route total · columns, ten-dots, 3 pt rule
+- [x] 8 — The PDF backend · exact A4, fonts embedded, æøå round-trips
+- [x] 9 — `--pdf` on the CLI · `dump 8 --pdf route-8.pdf`
 
-**Deviations:** none yet.
-**Pack gate:** not run.
+**Deviations:**
+
+- The fonts came from the projects' own upstream repositories rather than
+  Google Fonts for two of the three families: Google ships Archivo and Space
+  Grotesk only as variable files, which item 1 exists to keep out. Same
+  typefaces, same OFL 1.1, official sources (Omnibus-Type/Archivo,
+  floriankarsten/space-grotesk); IBM Plex Mono is Google's own static build.
+- The heading needed a rule the design has no case for: where a customer name,
+  its department box and its crates will not fit beside the marker and order
+  id, the box and crates drop to a second line. Without it, OCAB AS on route 10
+  — a 32-character name with a 38-character department — drew 8 mm off the
+  right edge of the sheet. A test now asserts nothing on any of the 16 routes
+  is drawn outside the page.
+- The logo is a white wordmark on its dark panel rather than the supplied SVG;
+  the PDF backend does not import vector artwork yet. The panel, its colour and
+  its position are right, so this is a swap of one primitive when it lands.
+- Item 2 turned up a wrong figure in the design handoff: the longest product
+  name is 112.65 mm at 11 pt, not the ~148 mm the handoff calls the binding
+  constraint. `print-spec.md` §9 now records the measurement and what follows
+  from it.
+**Code review:** one pass at high effort. Three confirmed findings, all fixed:
+
+1. `--pdf` with no filename after it was silently ignored — the command wrote
+   nothing and exited 0. It now fails with a message.
+2. `department_box_width` took a line height it discarded and duplicated the
+   box's width formula; the drawing now uses the same function, so the
+   heading's fit test cannot drift from what is drawn.
+3. The PDF renderer discarded every box's corner radius, printing tick boxes
+   and crate glyphs square. Rounded boxes are drawn as bezier-cornered
+   polygons now.
+
+**Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, then
+69 tests across 10 files, all green. Route 8's sheet was also rendered and
+looked at: masthead, legend, five blocks, the flag, the badge and left bar,
+the total with its ten-dot, footer at the foot.
