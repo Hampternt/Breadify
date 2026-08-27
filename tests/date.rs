@@ -53,3 +53,54 @@ fn an_unrecognisable_name_asks_rather_than_guesses() {
         assert_eq!(outcome.unwrap_err().filename, name);
     }
 }
+
+/// The exporter names the freezer list the same way it names the bread one,
+/// with a different word in the middle. Matching `PSR-BREAD-` literally left
+/// every freezer sheet dateless.
+#[test]
+fn both_lists_carry_their_dates_and_their_kind() {
+    let bread = Path::new("PSR-BREAD-2026-03-04-to-2026-03-04 (1).xlsx");
+    let freezer = Path::new("PSR-FREEZER-2026-01-23-to-2026-01-23 (1).xlsx");
+
+    assert_eq!(
+        date::from_filename(bread).unwrap().to_string(),
+        "2026-03-04"
+    );
+    assert_eq!(
+        date::from_filename(freezer).unwrap().to_string(),
+        "2026-01-23"
+    );
+    assert_eq!(date::list_word(bread).as_deref(), Some("BREAD"));
+    assert_eq!(date::list_word(freezer).as_deref(), Some("FREEZER"));
+}
+
+/// The list word is read off the file rather than matched against a list of
+/// known ones, and it is taken as everything before the first date — so a
+/// hyphenated kind nobody has invented yet would still open.
+#[test]
+fn an_unknown_list_word_still_carries_dates() {
+    let path = Path::new("PSR-DRY-GOODS-2026-05-01-to-2026-05-02.xlsx");
+
+    assert_eq!(date::list_word(path).as_deref(), Some("DRY-GOODS"));
+    assert_eq!(
+        date::from_filename(path).unwrap().to_string(),
+        "2026-05-01 to 2026-05-02"
+    );
+}
+
+/// A name with a prefix but no list word is not an export.
+#[test]
+fn a_missing_list_word_is_not_an_export() {
+    for name in [
+        "PSR-2026-03-04-to-2026-03-04.xlsx",
+        "PSR--2026-03-04-to-2026-03-04.xlsx",
+        "BREAD-2026-03-04-to-2026-03-04.xlsx",
+    ] {
+        let path = Path::new(name);
+        assert!(
+            date::from_filename(path).is_err(),
+            "{name} should not parse"
+        );
+        assert_eq!(date::list_word(path), None, "{name} carries no list word");
+    }
+}

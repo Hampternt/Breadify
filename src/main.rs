@@ -198,8 +198,9 @@ Flags:
   --step <0-3>           open the window on a given step
   --screenshot <f.ppm>   render one frame, write it, and close
 
-With no file given, looks for a single PSR-BREAD-*.xlsx in this folder.
-The delivery date is read from the filename.
+With no file given, looks for a single PSR-*.xlsx in this folder — the
+bread list or the freezer one. Which list it is, and the delivery date,
+are both read from the filename.
 ",
     );
     ExitCode::FAILURE
@@ -298,8 +299,10 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     }
 }
 
-/// The single `PSR-BREAD-*.xlsx` in the working directory, if there is exactly
-/// one — the common case while working on a day's orders.
+/// The single `PSR-*.xlsx` in the working directory, if there is exactly one —
+/// the common case while working on a day's orders. With both a bread and a
+/// freezer export to hand it asks which, which is the right answer: they are
+/// separate lists and printing the wrong one wastes a ream.
 fn export_here() -> Result<PathBuf, String> {
     let entries =
         std::fs::read_dir(".").map_err(|error| format!("cannot read this folder: {error}"))?;
@@ -312,7 +315,7 @@ fn export_here() -> Result<PathBuf, String> {
     exports.sort();
 
     match exports.len() {
-        0 => Err("no PSR-BREAD-*.xlsx here — give the file as the second argument".to_owned()),
+        0 => Err("no PSR-*.xlsx here — give the file as the second argument".to_owned()),
         1 => Ok(exports.remove(0)),
         _ => Err(format!(
             "several exports here — say which: {}",
@@ -329,7 +332,7 @@ fn is_export(path: &Path) -> bool {
     let Some(name) = path.file_name().map(|name| name.to_string_lossy()) else {
         return false;
     };
-    name.starts_with("PSR-BREAD-") && name.ends_with(".xlsx")
+    name.starts_with("PSR-") && name.ends_with(".xlsx")
 }
 
 fn nicknames(routes: &[Route]) -> String {
