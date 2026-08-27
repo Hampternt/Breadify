@@ -65,7 +65,11 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 - Step 4 lists every route with what it costs in paper, draws every sheet as a
   thumbnail, and either exports a PDF or hands it to the system to print.
 - `breadify --screenshot <file.ppm>` renders a frame and writes it;
-  `--step <n>` opens on a given step.
+  `--step <n>` opens on a given step; `--version` says which build it is.
+- The Matvare Expressen symbol is rasterised from the same SVG the masthead
+  draws — as the window's icon at startup, and as `assets/breadify.ico`, which
+  the Windows build compiles into the executable so Explorer and the taskbar
+  have a file icon. A test re-derives the `.ico` so the two cannot drift.
 
 **Tools**
 

@@ -129,3 +129,59 @@ fn the_window_icon_is_the_symbol_on_a_transparent_tile() {
         "the symbol fills the tile it was fitted to"
     );
 }
+
+/// The Windows executable's icon is a file in the repo, because a build script
+/// cannot easily borrow the crate's own rasteriser. That makes it the one
+/// place the mark could quietly become two marks, so it is checked.
+#[test]
+fn the_committed_windows_icon_is_the_one_this_draws() {
+    let derived = breadify::icon::ico();
+    let committed: &[u8] = include_bytes!("../assets/breadify.ico");
+
+    assert_eq!(
+        derived.len(),
+        committed.len(),
+        "assets/breadify.ico is {} bytes and the rasteriser now draws {} — \
+         regenerate it",
+        committed.len(),
+        derived.len()
+    );
+    assert!(
+        derived == committed,
+        "assets/breadify.ico no longer matches what the rasteriser draws — \
+         regenerate it"
+    );
+}
+
+/// And that it is an icon file Windows will read: six sizes, true colour.
+#[test]
+fn the_icon_file_says_what_it_holds() {
+    let ico = breadify::icon::ico();
+    let word = |at: usize| u16::from_le_bytes([ico[at], ico[at + 1]]);
+
+    assert_eq!(word(0), 0, "reserved");
+    assert_eq!(word(2), 1, "an icon, not a cursor");
+    let count = word(4) as usize;
+    assert_eq!(count, 6, "one image per size Explorer asks for");
+
+    let mut seen = Vec::new();
+    for index in 0..count {
+        let entry = 6 + 16 * index;
+        // Zero in the one-byte size field means 256.
+        let edge = u32::from(ico[entry]);
+        seen.push(if edge == 0 { 256 } else { edge });
+
+        assert_eq!(ico[entry], ico[entry + 1], "square");
+        assert_eq!(word(entry + 6), 32, "true colour with an alpha channel");
+
+        let size = u32::from_le_bytes(ico[entry + 8..entry + 12].try_into().expect("four bytes"));
+        let offset =
+            u32::from_le_bytes(ico[entry + 12..entry + 16].try_into().expect("four bytes"));
+        assert!(
+            (offset + size) as usize <= ico.len(),
+            "image {index} runs past the end of the file"
+        );
+    }
+
+    assert_eq!(seen, [16, 32, 48, 64, 128, 256]);
+}
