@@ -54,7 +54,12 @@ crates and labels each crate; the driver delivers them in route order.
 - Step 1 takes a dropped file, a chosen one or a recent one, and reads it off
   the paint thread. Step 2 shows what was read and every finding computed from
   that file — structural errors block, observations warn.
-- `breadify --screenshot <file.ppm>` renders a frame and writes it.
+- Step 3 offers what is actually the user's to decide: whether the order ID
+  prints, how a refusal to substitute is marked, and the crate arithmetic —
+  including how much room each bread takes. A sample block redraws from the
+  same display list the PDF is drawn from.
+- `breadify --screenshot <file.ppm>` renders a frame and writes it;
+  `--step <n>` opens on a given step.
 
 **Tools**
 
@@ -63,9 +68,9 @@ crates and labels each crate; the driver delivers them in route order.
 
 ## In flight
 
-🚧 **Pack 5 — Configure** →
+🚧 **Pack 6 — Print** →
 `manifests/` — not yet written.
-Step 3's controls, wired to the paginator.
+Step 4's route table and both output paths.
 
 ## Not built yet
 

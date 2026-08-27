@@ -60,19 +60,37 @@ pub fn mono() -> FontFamily {
     FontFamily::Monospace
 }
 
+/// The family name a printed face is drawn with on screen, so the preview can
+/// use the same eight faces the sheet does.
+pub fn family_for(face: Face) -> FontFamily {
+    FontFamily::Name(name_for(face).into())
+}
+
+fn name_for(face: Face) -> &'static str {
+    match face {
+        Face::ArchivoExtraBold => "archivo",
+        Face::ArchivoBlack => "archivo-black",
+        Face::SpaceGrotesk => "grotesk",
+        Face::SpaceGroteskMedium => "grotesk-medium",
+        Face::MonoRegular => "plex",
+        Face::MonoMedium => "plex-medium",
+        Face::MonoSemiBold => "plex-semibold",
+        Face::MonoBold => "plex-bold",
+    }
+}
+
 /// Installs the embedded faces and the dark palette.
 pub fn install(context: &egui::Context) {
     let mut fonts = FontDefinitions::default();
-    let faces = [
-        ("archivo", Face::ArchivoExtraBold),
-        ("grotesk", Face::SpaceGrotesk),
-        ("plex", Face::MonoRegular),
-    ];
 
-    for (name, face) in faces {
+    for face in crate::font::ALL {
+        let name = name_for(face);
         fonts
             .font_data
             .insert(name.to_owned(), FontData::from_static(face.bytes()).into());
+        fonts
+            .families
+            .insert(FontFamily::Name(name.into()), vec![name.to_owned()]);
     }
 
     fonts.families.insert(

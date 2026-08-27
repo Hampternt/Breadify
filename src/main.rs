@@ -6,8 +6,8 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use breadify::crates::CrateRules;
 use breadify::layout;
+use breadify::layout::Settings;
 use breadify::route::Route;
 use breadify::{date, dump, order, pdf, route, sheet, validate};
 
@@ -19,6 +19,7 @@ fn main() -> ExitCode {
     let mut pdf: Option<&str> = None;
     let mut screenshot: Option<&str> = None;
     let mut open: Option<&str> = None;
+    let mut step: Option<usize> = None;
     let mut rest = words.iter().copied();
     while let Some(word) = rest.next() {
         match word {
@@ -30,6 +31,10 @@ fn main() -> ExitCode {
                 Some(target) => screenshot = Some(target),
                 None => return fail("--screenshot needs a file to write to"),
             },
+            "--step" => match rest.next() {
+                Some(index) => step = index.parse().ok(),
+                None => return fail("--step needs a step number"),
+            },
             "--open" => match rest.next() {
                 Some(target) => open = Some(target),
                 None => return fail("--open needs a file to read"),
@@ -40,7 +45,7 @@ fn main() -> ExitCode {
     }
 
     match positional.as_slice() {
-        [] => window(screenshot.map(PathBuf::from), open.map(PathBuf::from)),
+        [] => window(screenshot.map(PathBuf::from), open.map(PathBuf::from), step),
         ["dump", nickname] => run(nickname, None, pdf),
         ["dump", nickname, path] => run(nickname, Some(Path::new(path)), pdf),
         ["print"] => print_day(None, pdf),
@@ -50,7 +55,7 @@ fn main() -> ExitCode {
 }
 
 /// Opens the app window.
-fn window(screenshot: Option<PathBuf>, open: Option<PathBuf>) -> ExitCode {
+fn window(screenshot: Option<PathBuf>, open: Option<PathBuf>, step: Option<usize>) -> ExitCode {
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_inner_size([1280.0, 864.0])
@@ -63,11 +68,11 @@ fn window(screenshot: Option<PathBuf>, open: Option<PathBuf>) -> ExitCode {
         "Breadify",
         options,
         Box::new(move |cc| {
-            Ok(Box::new(breadify::app::Breadify::new(
-                &cc.egui_ctx,
-                screenshot,
-                open,
-            )))
+            let mut app = breadify::app::Breadify::new(&cc.egui_ctx, screenshot, open);
+            if let Some(index) = step {
+                app.start_on(index);
+            }
+            Ok(Box::new(app))
         }),
     );
 
@@ -107,7 +112,7 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         .map(|stem| stem.to_string_lossy().into_owned())
         .unwrap_or_default();
 
-    let sheets = layout::day(&routes, dates, &CrateRules::default(), &source);
+    let sheets = layout::day(&routes, dates, &Settings::default(), &source);
     let pages: Vec<_> = sheets.iter().map(|sheet| sheet.content.clone()).collect();
 
     match pdf::write(Path::new(target), &pages, "Breadify pick lists") {
@@ -168,8 +173,8 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     };
 
     let dates = date::from_filename(&path).ok();
-    let rules = CrateRules::default();
-    print!("{}", dump::route(wanted, dates, &rules));
+    let settings = Settings::default();
+    print!("{}", dump::route(wanted, dates, &settings.crates));
 
     let Some(target) = pdf else {
         return ExitCode::SUCCESS;
@@ -179,7 +184,7 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         .file_stem()
         .map(|stem| stem.to_string_lossy().into_owned())
         .unwrap_or_default();
-    let sheets = layout::paginate(wanted, dates, &rules, &source);
+    let sheets = layout::paginate(wanted, dates, &settings, &source);
     let pages: Vec<_> = sheets.iter().map(|sheet| sheet.content.clone()).collect();
 
     match pdf::write(Path::new(target), &pages, &format!("Route {nickname}")) {

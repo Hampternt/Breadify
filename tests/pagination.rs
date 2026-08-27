@@ -2,8 +2,8 @@
 
 mod support;
 
-use breadify::crates::CrateRules;
 use breadify::geometry::FOOTER_CLEARANCE;
+use breadify::layout::Settings;
 use breadify::layout::{self, Sheet};
 use breadify::page::Primitive;
 use breadify::route::{self, Route};
@@ -18,7 +18,7 @@ fn day() -> Vec<Sheet> {
     layout::day(
         &routes(),
         None,
-        &CrateRules::default(),
+        &Settings::default(),
         "PSR-BREAD-2026-03-04",
     )
 }
@@ -172,7 +172,7 @@ fn a_route_that_needs_two_sheets_gets_two() {
         .find(|route| route.nickname == "5")
         .expect("route 5 is in the sample");
 
-    let sheets = layout::paginate(route_five, None, &CrateRules::default(), "PSR-BREAD");
+    let sheets = layout::paginate(route_five, None, &Settings::default(), "PSR-BREAD");
     assert_eq!(sheets.len(), 2);
     assert_eq!((sheets[0].number, sheets[0].of), (1, 2));
     assert_eq!((sheets[1].number, sheets[1].of), (2, 2));

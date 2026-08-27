@@ -2,9 +2,10 @@
 
 use super::metrics::*;
 use super::{Cursor, crate_glyph, text_from_top};
-use crate::crates::{self, CrateRules};
+use crate::crates::{self};
 use crate::font::Face;
 use crate::geometry::{Mm, Point, Rect};
+use crate::layout::Settings;
 use crate::order::{Line, Order};
 use crate::page::{self, Page};
 use crate::supplier;
@@ -17,7 +18,7 @@ use crate::text::{self, Style};
 /// Laying a block out before knowing where it goes is what lets the paginator
 /// ask how tall it is without a second formula that could disagree with the
 /// drawing.
-pub fn block(stop: &Order, rules: &CrateRules, column: &Cursor) -> (Page, Mm) {
+pub fn block(stop: &Order, settings: &Settings, column: &Cursor) -> (Page, Mm) {
     let mut page = Page::new();
     let mut own = Cursor {
         y: 0.0,
@@ -36,14 +37,15 @@ pub fn block(stop: &Order, rules: &CrateRules, column: &Cursor) -> (Page, Mm) {
     );
 
     let refuses = !stop.accept_alternatives;
-    let left = if refuses {
+    let barred = refuses && settings.marker.has_rule();
+    let left = if barred {
         cursor.left + NO_SUBSTITUTES_INDENT
     } else {
         cursor.left
     };
 
     cursor.advance(BLOCK_PADDING_TOP);
-    heading(page, cursor, stop, rules, left);
+    heading(page, cursor, stop, settings, left);
     cursor.advance(HEADING_TO_LINES);
 
     for (index, line) in stop.lines.iter().enumerate() {
@@ -52,7 +54,7 @@ pub fn block(stop: &Order, rules: &CrateRules, column: &Cursor) -> (Page, Mm) {
 
     cursor.advance(BLOCK_PADDING_BOTTOM);
 
-    if refuses {
+    if barred {
         page.vertical_rule(
             Point::new(cursor.left, top),
             cursor.y - top,
@@ -72,7 +74,7 @@ pub fn block(stop: &Order, rules: &CrateRules, column: &Cursor) -> (Page, Mm) {
 /// name and a 38-character department — the box and the crates drop to a
 /// second line rather than run off the sheet. The design handoff has no case
 /// long enough to need this; the export does.
-fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, rules: &CrateRules, left: Mm) {
+fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, settings: &Settings, left: Mm) {
     let name = Style::new(Face::ArchivoExtraBold, SIZE_CUSTOMER).tracked(TRACK_CUSTOMER);
     let top = cursor.y;
     let height = text_from_top(
@@ -84,23 +86,28 @@ fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, rules: &CrateRule
     );
     let middle = top + height / 2.0;
 
-    let order_id = stop.id.to_string();
     let id_style = Style::new(Face::MonoRegular, SIZE_ORDER_ID);
-    let id_width = text::width(&order_id, id_style);
-    page.text(
-        Point::new(
-            cursor.right() - id_width,
-            middle + text::ascent(id_style) / 2.0 - 0.4,
-        ),
-        &order_id,
-        id_style,
-        page::FAINTEST,
-    );
+    let id_width = if settings.show_order_id {
+        let order_id = stop.id.to_string();
+        let width = text::width(&order_id, id_style);
+        page.text(
+            Point::new(
+                cursor.right() - width,
+                middle + text::ascent(id_style) / 2.0 - 0.4,
+            ),
+            &order_id,
+            id_style,
+            page::FAINTEST,
+        );
+        width + MARKER_GAP
+    } else {
+        0.0
+    };
 
-    let marker_right = cursor.right() - id_width - MARKER_GAP;
-    marker(page, marker_right, middle, stop);
+    let marker_right = cursor.right() - id_width;
+    marker(page, marker_right, middle, stop, settings);
 
-    let count = crates::count(stop, rules);
+    let count = crates::count(stop, &settings.crates);
     let crates_width = crate_run_width(count.large + count.small);
     let department_width = stop
         .department
@@ -119,7 +126,7 @@ fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, rules: &CrateRule
         } else {
             0.0
         };
-    let available = marker_right - marker_width(stop) - MARKER_GAP;
+    let available = marker_right - marker_width(stop, settings) - MARKER_GAP;
 
     if wanted <= available {
         let mut x = after_name;
@@ -150,7 +157,7 @@ fn crate_run_width(crates: u32) -> Mm {
 }
 
 /// Draws a stop's crates, full ones first.
-fn draw_crates(page: &mut Page, mut x: Mm, middle: Mm, count: crates::CrateCount) {
+fn draw_crates(page: &mut Page, mut x: Mm, middle: Mm, count: crate::crates::CrateCount) {
     for index in 0..count.large + count.small {
         crate_glyph(
             page,
@@ -162,17 +169,22 @@ fn draw_crates(page: &mut Page, mut x: Mm, middle: Mm, count: crates::CrateCount
 }
 
 /// How much room the marker takes, so the heading knows what is left.
-fn marker_width(stop: &Order) -> Mm {
+fn marker_width(stop: &Order, settings: &Settings) -> Mm {
     if stop.accept_alternatives {
         return text::width(
             "want substitute: true",
             Style::new(Face::MonoMedium, SIZE_MARKER),
         );
     }
-    text::width(
+
+    let words = text::width(
         "WANT SUBSTITUTE: FALSE",
         Style::new(Face::ArchivoExtraBold, SIZE_BADGE).tracked(TRACK_CUSTOMER),
-    ) + 2.0 * BADGE_PADDING.1
+    );
+    if settings.marker.has_badge() {
+        return words + 2.0 * BADGE_PADDING.1;
+    }
+    words
 }
 
 /// How wide the department box will be. [`department_box`] draws exactly this
@@ -235,7 +247,7 @@ fn department_box(page: &mut Page, at: Point, department: &str, line_height: Mm)
 }
 
 /// Quiet when substitutes are fine, inverted and loud when they are not.
-fn marker(page: &mut Page, right: Mm, middle: Mm, stop: &Order) {
+fn marker(page: &mut Page, right: Mm, middle: Mm, stop: &Order, settings: &Settings) {
     if stop.accept_alternatives {
         let style = Style::new(Face::MonoMedium, SIZE_MARKER);
         let run = "want substitute: true";
@@ -252,6 +264,17 @@ fn marker(page: &mut Page, right: Mm, middle: Mm, stop: &Order) {
     let style = Style::new(Face::ArchivoExtraBold, SIZE_BADGE).tracked(TRACK_CUSTOMER);
     let run = "WANT SUBSTITUTE: FALSE";
     let width = text::width(run, style);
+
+    if !settings.marker.has_badge() {
+        page.text(
+            Point::new(right - width, middle + text::ascent(style) / 2.0 - 0.4),
+            run,
+            style,
+            page::BLACK,
+        );
+        return;
+    }
+
     let height = text::line_height(style) + 2.0 * BADGE_PADDING.0;
     let badge = Rect::new(
         right - width - 2.0 * BADGE_PADDING.1,
