@@ -3,8 +3,8 @@
 mod support;
 
 use breadify::geometry::{MARGIN_SIDE, PAGE_HEIGHT, PAGE_WIDTH};
-use breadify::layout::Settings;
 use breadify::layout::{self, SheetContext};
+use breadify::layout::{MarkerTreatment, Settings};
 use breadify::page::{BRAND_RED, Page, Primitive};
 use breadify::route::{self, Route};
 use breadify::{order, pdf};
@@ -135,18 +135,32 @@ fn the_unsequenced_flag_appears_once_and_only_where_it_is_needed() {
     }
 }
 
+/// The words print whatever the treatment; the bar is what the badge adds,
+/// and it is not what a page prints unless the user asks for it.
 #[test]
-fn refusing_substitutes_shows_the_badge_and_the_bar() {
-    let routes = routes();
-    let page = sheet_of(&named(&routes, "8"));
+fn refusing_substitutes_says_so_and_only_the_badge_adds_a_bar() {
+    let route = named(&routes(), "8");
+    let heavy = |settings: &Settings| {
+        let context = SheetContext::single(&route, None, "PSR-BREAD-2026-03-04");
+        let page = layout::sheet(&route, &context, settings);
+        assert!(runs(&page).contains(&"WANT SUBSTITUTE: FALSE"));
+        page.primitives
+            .iter()
+            .filter(
+                |primitive| matches!(primitive, Primitive::Rule { weight, .. } if *weight >= 5.0),
+            )
+            .count()
+    };
 
-    assert!(runs(&page).contains(&"WANT SUBSTITUTE: FALSE"));
-    let heavy = page
-        .primitives
-        .iter()
-        .filter(|primitive| matches!(primitive, Primitive::Rule { weight, .. } if *weight >= 5.0))
-        .count();
-    assert_eq!(heavy, 1, "one block on route 8 refuses substitutes");
+    assert_eq!(heavy(&Settings::default()), 0, "the default is words alone");
+    assert_eq!(
+        heavy(&Settings {
+            marker: MarkerTreatment::InvertedBadge,
+            ..Settings::default()
+        }),
+        1,
+        "one block on route 8 refuses substitutes"
+    );
 }
 
 #[test]
@@ -212,7 +226,7 @@ fn no_heading_runs_into_its_own_right_hand_group() {
         BADGE_PADDING, CRATE_GAP, CRATE_GLYPH, MARKER_GAP, RULE_DEPARTMENT_BOX, SIZE_CUSTOMER,
         TRACK_CUSTOMER,
     };
-    use breadify::layout::{Cursor, MarkerTreatment, stop};
+    use breadify::layout::{Cursor, stop};
     use breadify::page::Stroke;
     use breadify::text::{self, Style};
 

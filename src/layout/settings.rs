@@ -8,20 +8,25 @@ use crate::crates::CrateRules;
 
 /// How the no-substitutes state is drawn. The quiet state is the same in every
 /// case; these are the three treatments the design offers for the loud one.
+///
+/// The words alone are the default. The design handoff argued for two
+/// independent channels — badge and bar — so the loud state survives a
+/// photocopy; the bakery asked for the plainer page, and the words are still
+/// set in the heading either way.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum MarkerTreatment {
+    /// The words alone, in the heading.
+    #[default]
+    WordOnly,
     /// White on solid black, with a heavy bar down the block. Two channels, so
     /// it survives a photocopy.
-    #[default]
     InvertedBadge,
     /// The bar alone.
     HeavyRule,
-    /// The words alone, in the heading.
-    WordOnly,
 }
 
 impl MarkerTreatment {
-    pub const ALL: [Self; 3] = [Self::InvertedBadge, Self::HeavyRule, Self::WordOnly];
+    pub const ALL: [Self; 3] = [Self::WordOnly, Self::InvertedBadge, Self::HeavyRule];
 
     pub fn label(self) -> &'static str {
         match self {
