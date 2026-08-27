@@ -81,8 +81,14 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 
 ## In flight
 
-Nothing. Breadify **v1.1.0** is built and tagged: seven packs, then two passes
-of changes from using it — the heading reshaped, crate sizes said in fractions
+🚧 **The freezer list** —
+[`manifests/2026-08-27-pack-8-freezer-list.md`](manifests/2026-08-27-pack-8-freezer-list.md).
+The same export in the same shape, for frozen goods rather than bread: more
+products, more suppliers, and a warehouse shelf position where bread has a
+bakery. Today the loader refuses the file outright. Drafted, not started.
+
+Breadify **v1.1.1** is built and tagged: seven packs, then two passes of
+changes from using it — the heading reshaped, crate sizes said in fractions
 and kept between runs, the window icon, and a review pass over the lot.
 
 What is deliberately not built, and why, is in

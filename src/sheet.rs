@@ -51,8 +51,11 @@ pub struct SheetRow {
     pub product_name: String,
     /// Text, never a number: `107_san`, `10022_bhb`, bare `115`, `21061bhb`.
     pub supplier_sku: String,
-    /// The supplier again, spelled `X-Sandnes Bakeri` / `X-Bakehuset`. Nothing
-    /// is grouped by it (decision D4).
+    /// Where the goods sit. On a bread export it is the supplier again,
+    /// spelled `X-Sandnes Bakeri` / `X-Bakehuset`; on a freezer export it is a
+    /// warehouse shelf — `W-05-02`, `U-Frysevare` — and 26 of 231 rows have no
+    /// cell at all. Empty means the export gave none. Nothing is grouped by it
+    /// and nothing prints it (decision D4).
     pub position: String,
     pub supplier: String,
     pub customer: String,
@@ -212,7 +215,7 @@ fn read_row(excel_row: usize, cells: &[Data]) -> Result<SheetRow, ReadError> {
         product_id: at(2).count()?,
         product_name: at(3).text()?,
         supplier_sku: at(4).text()?,
-        position: at(5).text()?,
+        position: at(5).optional_text()?.unwrap_or_default(),
         supplier: at(6).text()?,
         customer: at(7).text()?,
         department: at(8).optional_text()?,

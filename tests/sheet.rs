@@ -5,7 +5,7 @@
 
 mod support;
 
-use support::sample_rows;
+use support::{freezer_rows, sample_rows};
 
 #[test]
 fn reads_every_data_row() {
@@ -95,4 +95,31 @@ fn the_first_row_reads_exactly() {
     assert_eq!(first.route_ordering, 0);
     assert!(first.accept_alternatives);
     assert_eq!(first.region, "Stavanger");
+}
+
+/// The freezer export is the same shape with a warehouse shelf where bread has
+/// a bakery — and on 26 of its rows, no shelf at all. Reading Position as
+/// required text refused the whole file on row 2.
+#[test]
+fn the_freezer_export_reads_with_positions_missing() {
+    let rows = freezer_rows();
+    assert_eq!(rows.len(), 231);
+
+    let blank = rows.iter().filter(|row| row.position.is_empty()).count();
+    assert_eq!(blank, 26, "the freezer sample leaves Position off 26 rows");
+    assert!(
+        rows.iter().any(|row| row.position.starts_with("W-")),
+        "the rest carry a warehouse shelf"
+    );
+}
+
+/// Seven suppliers against the bread export's two, and none of them a bakery.
+#[test]
+fn the_freezer_export_comes_from_more_than_two_suppliers() {
+    let rows = freezer_rows();
+    let suppliers: std::collections::BTreeSet<&str> =
+        rows.iter().map(|row| row.supplier.as_str()).collect();
+
+    assert_eq!(suppliers.len(), 7);
+    assert!(!suppliers.contains("sandnes bakeri"));
 }
