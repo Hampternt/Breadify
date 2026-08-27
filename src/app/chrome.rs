@@ -199,21 +199,32 @@ pub fn action_bar(app: &mut Breadify, host: &mut egui::Ui) {
                 );
 
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                    let ready = match app.step {
-                        Step::Open => app.loaded.is_some(),
-                        Step::Print => false,
-                        _ => app.loaded.is_some(),
-                    };
+                    let ready = app.loaded.is_some();
                     let primary = ui.add_enabled(
-                        ready,
+                        ready && !(app.step == Step::Print && app.selected_sheets() == 0),
                         egui::Button::new(RichText::new(app.primary_label()).color(theme::VOID))
                             .fill(theme::ACCENT)
                             .min_size(Vec2::new(0.0, theme::CONTROL)),
                     );
-                    if primary.clicked()
-                        && let Some(next) = app.step.next()
-                    {
-                        app.step = next;
+
+                    if primary.clicked() {
+                        if app.step == Step::Print {
+                            crate::app::print::hand_to_system(app);
+                        } else if let Some(next) = app.step.next() {
+                            app.step = next;
+                        }
+                    }
+
+                    if app.step == Step::Print {
+                        let export = ui.add_enabled(
+                            ready && app.selected_sheets() > 0,
+                            egui::Button::new(RichText::new("Export PDF").color(theme::BODY))
+                                .fill(Color32::TRANSPARENT)
+                                .stroke(Stroke::new(1.0, theme::BORDER)),
+                        );
+                        if export.clicked() {
+                            crate::app::print::export(app);
+                        }
                     }
                 });
             });
