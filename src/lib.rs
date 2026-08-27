@@ -6,6 +6,7 @@
 //! what the printed page must say, and `print-layout.md` is the decision log
 //! those two are derived from.
 
+pub mod app;
 pub mod crates;
 pub mod date;
 pub mod dump;

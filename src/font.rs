@@ -30,6 +30,14 @@ pub enum Face {
     MonoBold,
 }
 
+/// The parsed faces, kept for the life of the process.
+///
+/// Parsing is not free and measurement asks for a face on every run of text —
+/// a window painting sixty times a second would otherwise re-parse a megabyte
+/// of font tables per frame.
+static PARSED: std::sync::LazyLock<Vec<ttf_parser::Face<'static>>> =
+    std::sync::LazyLock::new(|| ALL.iter().map(|face| face.parse()).collect());
+
 /// Every face, for tests and for embedding.
 pub const ALL: [Face; 8] = [
     Face::ArchivoExtraBold,
@@ -79,13 +87,23 @@ impl Face {
         }
     }
 
-    /// Parses the face for measuring.
-    ///
+    /// The parsed face, for measuring. Parsed once per process.
+    pub fn parsed(self) -> &'static ttf_parser::Face<'static> {
+        &PARSED[self.index()]
+    }
+
+    /// Where this face sits in [`ALL`].
+    fn index(self) -> usize {
+        ALL.iter()
+            .position(|face| *face == self)
+            .expect("every face is in ALL")
+    }
+
     /// # Panics
     ///
     /// If the embedded file is not a readable font, which would be a broken
     /// build rather than a runtime condition.
-    pub fn parsed(self) -> ttf_parser::Face<'static> {
+    fn parse(self) -> ttf_parser::Face<'static> {
         ttf_parser::Face::parse(self.bytes(), 0).unwrap_or_else(|error| {
             panic!("{} {} should parse: {error}", self.family(), self.weight())
         })

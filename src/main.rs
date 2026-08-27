@@ -17,6 +17,8 @@ fn main() -> ExitCode {
 
     let mut positional: Vec<&str> = Vec::new();
     let mut pdf: Option<&str> = None;
+    let mut screenshot: Option<&str> = None;
+    let mut open: Option<&str> = None;
     let mut rest = words.iter().copied();
     while let Some(word) = rest.next() {
         match word {
@@ -24,17 +26,54 @@ fn main() -> ExitCode {
                 Some(target) => pdf = Some(target),
                 None => return fail("--pdf needs a file to write to"),
             },
+            "--screenshot" => match rest.next() {
+                Some(target) => screenshot = Some(target),
+                None => return fail("--screenshot needs a file to write to"),
+            },
+            "--open" => match rest.next() {
+                Some(target) => open = Some(target),
+                None => return fail("--open needs a file to read"),
+            },
             unknown if unknown.starts_with("--") => return usage(),
             value => positional.push(value),
         }
     }
 
     match positional.as_slice() {
+        [] => window(screenshot.map(PathBuf::from), open.map(PathBuf::from)),
         ["dump", nickname] => run(nickname, None, pdf),
         ["dump", nickname, path] => run(nickname, Some(Path::new(path)), pdf),
         ["print"] => print_day(None, pdf),
         ["print", path] => print_day(Some(Path::new(path)), pdf),
         _ => usage(),
+    }
+}
+
+/// Opens the app window.
+fn window(screenshot: Option<PathBuf>, open: Option<PathBuf>) -> ExitCode {
+    let options = eframe::NativeOptions {
+        viewport: eframe::egui::ViewportBuilder::default()
+            .with_inner_size([1280.0, 864.0])
+            .with_min_inner_size([980.0, 640.0])
+            .with_title("Breadify"),
+        ..Default::default()
+    };
+
+    let outcome = eframe::run_native(
+        "Breadify",
+        options,
+        Box::new(move |cc| {
+            Ok(Box::new(breadify::app::Breadify::new(
+                &cc.egui_ctx,
+                screenshot,
+                open,
+            )))
+        }),
+    );
+
+    match outcome {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => fail(&error.to_string()),
     }
 }
 
@@ -93,6 +132,7 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
 fn usage() -> ExitCode {
     eprintln!("usage: breadify dump <route> [export.xlsx] [--pdf <file.pdf>]");
     eprintln!("       breadify print [export.xlsx] --pdf <file.pdf>");
+    eprintln!("       breadify            opens the window");
     eprintln!();
     eprintln!("Prints one route's stops, crates and total. With no file given,");
     eprintln!("looks for a single PSR-BREAD-*.xlsx in the current directory.");

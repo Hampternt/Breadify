@@ -44,6 +44,10 @@ pub enum FindingKind {
     ProductDetailsDisagree,
     /// A value this app has never seen in that column before.
     UnfamiliarValue,
+    /// Stops the export gave no position in their route.
+    UnsequencedStops,
+    /// The fifteenth column, which carries data but no header.
+    UnlabelledColumn,
 }
 
 /// Something worth telling the user about the file they opened.
@@ -71,6 +75,8 @@ pub fn run(rows: &[SheetRow]) -> Vec<Finding> {
     findings.extend(repeated_stop_sequences(rows));
     findings.extend(products_that_disagree(rows));
     findings.extend(unfamiliar_values(rows));
+    findings.extend(unsequenced_stops(rows));
+    findings.extend(unlabelled_column(rows));
     findings.sort_by(|left, right| {
         left.severity
             .cmp(&right.severity)
@@ -78,6 +84,59 @@ pub fn run(rows: &[SheetRow]) -> Vec<Finding> {
             .then(left.rows.cmp(&right.rows))
     });
     findings
+}
+
+/// Not a problem — but the user should know before printing that some stops
+/// will come out after the sequenced ones, under a flag, because the export
+/// gave them no position.
+fn unsequenced_stops(rows: &[SheetRow]) -> Option<Finding> {
+    let unsequenced: Vec<&SheetRow> = rows.iter().filter(|row| row.route_ordering == 0).collect();
+    if unsequenced.is_empty() {
+        return None;
+    }
+
+    let customers: BTreeSet<&str> = unsequenced
+        .iter()
+        .map(|row| row.customer.as_str())
+        .collect();
+    let routes: BTreeSet<&str> = unsequenced
+        .iter()
+        .map(|row| row.route_nickname.as_str())
+        .collect();
+
+    Some(Finding {
+        severity: Severity::Notice,
+        kind: FindingKind::UnsequencedStops,
+        headline: format!("{} rows have no position in their route", unsequenced.len()),
+        detail: format!(
+            "{} customers across {} routes. They print after the sequenced stops, \
+             under a flag saying the order is the driver's to choose.",
+            customers.len(),
+            routes.len()
+        ),
+        rows: unsequenced.iter().map(|row| row.excel_row).collect(),
+    })
+}
+
+/// The fifteenth column has data in every row and no header. Worth saying
+/// once, because a reader that trusts the header row drops it silently.
+fn unlabelled_column(rows: &[SheetRow]) -> Option<Finding> {
+    let values: BTreeSet<&str> = rows.iter().map(|row| row.region.as_str()).collect();
+    if values.is_empty() {
+        return None;
+    }
+
+    Some(Finding {
+        severity: Severity::Notice,
+        kind: FindingKind::UnlabelledColumn,
+        headline: "Column O carries no header".to_owned(),
+        detail: format!(
+            "Read positionally. It holds {} on all {} rows; nothing is keyed off it.",
+            quoted(&values.iter().map(|value| (*value).to_owned()).collect()),
+            rows.len()
+        ),
+        rows: Vec::new(),
+    })
 }
 
 /// The columns that must carry text. A cell can exist and still be blank,

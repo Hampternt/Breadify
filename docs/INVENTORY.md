@@ -47,6 +47,15 @@ crates and labels each crate; the driver delivers them in route order.
   total is ever cut, and every page keeps 10 mm clear above its footer. The
   sample day is 26 sheets.
 
+**The app window** — `src/app/`.
+
+- A four-step wizard in the design's dark palette: Open, Check, Configure,
+  Print. `breadify` with no arguments opens it.
+- Step 1 takes a dropped file, a chosen one or a recent one, and reads it off
+  the paint thread. Step 2 shows what was read and every finding computed from
+  that file — structural errors block, observations warn.
+- `breadify --screenshot <file.ppm>` renders a frame and writes it.
+
 **Tools**
 
 - [`../tools/inspect_xlsx.py`](../tools/inspect_xlsx.py) — stdlib-only dumper
@@ -54,9 +63,9 @@ crates and labels each crate; the driver delivers them in route order.
 
 ## In flight
 
-🚧 **Pack 4 — Window shell: Open and Check** →
+🚧 **Pack 5 — Configure** →
 `manifests/` — not yet written.
-The app window, its first two steps working on real files.
+Step 3's controls, wired to the paginator.
 
 ## Not built yet
 
