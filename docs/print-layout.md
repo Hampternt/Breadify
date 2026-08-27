@@ -150,6 +150,32 @@ The print step must tell the user to print at **actual size / 100 %, no
 scaling** — a viewer's default "fit to printable area" shrinks A4 by ~4 % and
 takes the 11 pt body below its floor.
 
+**D19 — The department sits under the customer name, not beside it.**
+(2026-08-27)
+A heading is one crate label in two parts, so it is set as two lines: the
+customer at 14 pt, and beneath it the `DPT` box at 10.4 pt against the
+handoff's 11.9. Side by side the two read as equals and the eye has to work
+out which is the site and which is the kitchen. This also frees the whole
+right-hand end of the heading line for **D20**. It costs about 5.5 mm on each
+of the blocks that carry a department; the sample day is 26 sheets either way.
+
+**D20 — The crate glyphs belong to the right-hand group.** (2026-08-27)
+They sit immediately left of the substitute marker rather than trailing the
+customer name, so crates, marker and order id form one column the eye finds
+once per block instead of a run that starts at a different place on every
+line. Where a long customer name would reach them — five of the sample's 148
+stops, the longest being 127 mm of a 194 mm column — the crates drop to the
+department's line rather than collide.
+
+**D21 — The words alone are the default no-substitutes marker.** (2026-08-27)
+This closes the question deferred below. The handoff argued for two
+independent channels — an inverted badge plus a heavy bar down the block — so
+a refusal survives a photocopy, and that is still one click away on the
+Configure step. It also makes one block in ten shout on a page that is read
+top to bottom, and the bakery asked for the plainer sheet. The words print in
+Archivo ExtraBold caps under every treatment, so nothing is lost by not
+choosing.
+
 ## Open
 
 Nothing blocking. The design handoff's eight overrides are settled (six adopted
@@ -161,8 +187,9 @@ Two calls are deferred to the pack that needs them rather than open:
 - The **actual size modifiers** per bread (D17 gives the mechanism and a
   default of 1.0; the numbers are the bakery's to set once someone looks at
   the crates).
-- The **unsequenced flag's rendering**, the default no-substitutes treatment,
-  and English vs Norwegian page copy — all land in pack 2 or 3.
+- The **unsequenced flag's rendering** and English vs Norwegian page copy.
+  (The default no-substitutes treatment was the third of these; **D21**
+  settles it.)
 
 ## Next
 

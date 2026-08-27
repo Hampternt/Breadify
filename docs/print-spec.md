@@ -69,8 +69,8 @@ and the bread they get. It is also one crate label.
 | Element | Source | Weight | Notes |
 | --- | --- | --- | --- |
 | Customer | `Customer` | **Loud** — block heading | Verbatim; up to 46 chars, ALL-CAPS and mixed case both occur |
-| Department | `Department` | **Loud** — outlined `DPT` box | The crate label. An order without one shows no box; its order ID tells it apart |
-| Crate count | derived | Loud — glyphs beside the name | How many crates that block's bread needs, at 10 and 5 per crate, adjusted by the small-items list |
+| Department | `Department` | **Loud** — outlined `DPT` box, on its own line under the customer name (**D19**) | The crate label. An order without one shows no box; its order ID tells it apart |
+| Crate count | derived | Loud — glyphs immediately left of the substitute marker (**D20**) | How many crates that block's bread needs, at 10 and 5 per crate, adjusted by the per-bread size |
 | Accept alternatives | `Accept alternatives` | Asymmetric — see §5 | Quiet when true, loud when false |
 | Quantity | `Quantity` | **Loud** — the number counted to | 1–48 |
 | Supplier | `Supplier` | Code on each line | `SB` / `BH`, spelled out in the legend and the totals. The code, not the name — that is what paid for 11 pt body text |
@@ -86,7 +86,8 @@ comment, no product ID, SKU, position or region.
 
 1. **Route** — findable without reading body text, from a held stack.
 2. **Customer + department** — what gets copied onto a crate; readable at
-   bench distance.
+   bench distance. Two lines, the department the smaller of them (**D19**), so
+   the site is found first and the kitchen read off it.
 3. **Quantity + bread type** — the picking work, read as a pair.
 
 Supplier code, tick boxes and order ID are reference marks and read as such.
@@ -97,10 +98,15 @@ The one field that changes the picker's behaviour when a bread is sold out.
 90 % of orders accept substitutes, 10 % refuse.
 
 - **Deliberately asymmetric.** `true` is quiet — a small mono line in the
-  block heading. `false` is loud: an inverted badge *plus* a heavy rule down
-  the left of the whole block.
-- **Two independent channels** for the loud state, so it survives a mono laser
-  printer and a photocopy.
+  block heading. `false` is loud: the words in Archivo ExtraBold caps, and
+  optionally an inverted badge *plus* a heavy rule down the left of the whole
+  block.
+- **Two independent channels** are available for the loud state, so it can
+  survive a mono laser printer and a photocopy — but **the words alone are the
+  default** (**D21**), which is one channel. That is a user decision against
+  this section's principle, taken because one block in ten shouting is worse
+  on a page read top to bottom than a photocopy being marginal. The badge and
+  the bar are a click away on the Configure step.
 - **Mono is the baseline.** The bakery's printer is sometimes colour and
   sometimes not, and the app cannot know which. Colour may reinforce; it must
   never be the only thing carrying a distinction. (**D13**)
@@ -191,6 +197,13 @@ not: measured off the embedded Space Grotesk 400 tables, the 57-character
 at 11 pt — 29.03 em over a 1000-unit em. Two independent parses agree, and
 kerning only tightens it further.
 
+The one line where width does bind is the **heading**, and only since **D20**
+put the crates in the right-hand group: the longest customer name is 127.13 mm
+at 14 pt — `Customer 001` — and five of the 148
+stops leave too little of the 194 mm column for their crates beside the
+marker. Those drop their crates to the department's line, which a test asserts
+by walking every stop under all three marker treatments.
+
 So the product column has roughly 37 mm of slack, and neither the supplier
 code nor the tight margins are forced by width. Keep both — the code reads
 faster than a repeated bakery name and the design is built around them — but
@@ -201,6 +214,8 @@ ever wanted.
 **Measured budget.** The app paginates the sample day into **26 sheets** —
 10 of the 16 routes take two, the other six take one — with every page holding
 its ≥ 10 mm clearance above the footer, asserted by test rather than by eye.
+**D19** cost about 5.5 mm on each block carrying a department and the day is
+still 26; that was re-measured, not assumed.
 
 That is two sheets more than the design pass's 24, and the difference is
 accounted for: the handoff measured without the unsequenced flag §6 reinstates
@@ -266,12 +281,14 @@ Route 8 — end of route          PSR-BREAD-2026-03-04 · Matvare Expressen
 
 Things to read off it: Customer 024's 14 units become one crate of ten plus one of
 five; the two unsequenced stops sit under the flag rather than looking like
-final deliveries; A3 refuses substitutes and gets both the badge and the left
-rule; the only ten-dot on the route is Trollhaugen's single line of 10.
+final deliveries; A3 refuses substitutes and says so in caps — the badge and
+the left rule the prototype draws are now the non-default treatment (**D21**); the only ten-dot on the route is Trollhaugen's single line of 10.
 
 **Grouped stops** work the same way with an address heading above the
 sub-blocks — `Customer 012 · Street 12 · one stop ·
-13 crates`, then nine `DPT` sub-blocks flush beneath it.
+13 crates`, then nine `DPT` sub-blocks flush beneath it. Since **D16** the
+address heading is gone and each department is its own block; since **D19**
+its `DPT` box sits under its customer name rather than beside it.
 
 Two corrections to the handoff here, both recomputed from the sample:
 
@@ -289,9 +306,11 @@ Two corrections to the handoff here, both recomputed from the sample:
 ## 11. Still open to design
 
 - Exact rendering of the unsequenced flag, within §6's register.
-- Which of the three no-substitutes treatments ships as the default.
 - Norwegian or English page copy (the design ships English labels with
   Norwegian data verbatim).
+
+Settled since: which of the three no-substitutes treatments ships as the
+default — the words alone, **D21**.
 
 ## 12. Non-goals
 

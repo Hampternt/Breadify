@@ -56,8 +56,9 @@ crates and labels each crate; the driver delivers them in route order.
   that file — structural errors block, observations warn.
 - Step 3 offers what is actually the user's to decide: whether the order ID
   prints, how a refusal to substitute is marked, and the crate arithmetic —
-  including how much room each bread takes. A sample block redraws from the
-  same display list the PDF is drawn from.
+  including how much room each bread takes, said in fractions of a slot on a
+  list that stays quiet about the breads nobody has changed. A sample block
+  redraws from the same display list the PDF is drawn from.
 - Step 4 lists every route with what it costs in paper, draws every sheet as a
   thumbnail, and either exports a PDF or hands it to the system to print.
 - `breadify --screenshot <file.ppm>` renders a frame and writes it;
@@ -87,5 +88,6 @@ Three things no test can settle:
   5 mm and plenty of office printers cannot print that low; the fills on the
   no-substitutes badge and the crate glyphs need `print-color-adjust` to
   survive. Print one day and look at the paper.
-- **The size of each bread**, in the Configure step. Every bread is one slot
-  until someone who packs the crates says otherwise. Only the active pack is planned in detail.
+- **The size of each bread**, in the Configure step. Every bread is a whole
+  slot until someone who packs the crates clicks 1/2 or 2 against the ones
+  that are not. Only the active pack is planned in detail.
