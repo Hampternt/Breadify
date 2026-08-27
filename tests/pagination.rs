@@ -163,3 +163,33 @@ fn bottom_of(primitive: &Primitive) -> f64 {
         Primitive::Box { rect, .. } => rect.bottom(),
     }
 }
+
+#[test]
+fn a_route_that_needs_two_sheets_gets_two() {
+    let routes = routes();
+    let route_five = routes
+        .iter()
+        .find(|route| route.nickname == "5")
+        .expect("route 5 is in the sample");
+
+    let sheets = layout::paginate(route_five, None, &CrateRules::default(), "PSR-BREAD");
+    assert_eq!(sheets.len(), 2);
+    assert_eq!((sheets[0].number, sheets[0].of), (1, 2));
+    assert_eq!((sheets[1].number, sheets[1].of), (2, 2));
+
+    // The total closes the last sheet, not the first.
+    let closes = |page: &breadify::page::Page| {
+        page.primitives.iter().any(|primitive| {
+            matches!(primitive, Primitive::Text { text, .. } if text == "Route 5 total")
+        })
+    };
+    assert!(!closes(&sheets[0].content));
+    assert!(closes(&sheets[1].content));
+}
+
+#[test]
+fn the_sample_day_is_twenty_six_sheets() {
+    // Measured, not quoted: the design handoff's 24 predates the unsequenced
+    // flag and D16's removal of address-level grouping.
+    assert_eq!(day().len(), 26);
+}

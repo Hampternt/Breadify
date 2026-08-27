@@ -245,6 +245,13 @@ fn rebalance(pieces: &[Piece], pages: &mut [Vec<usize>], top: Mm, limit: Mm) {
         return;
     }
 
+    // Moving this one down must not leave a separator as the last thing on the
+    // page it came from — the flag belongs above the stops it covers.
+    let left_behind = pages[previous][pages[previous].len() - 2];
+    if pieces[left_behind].keep_with_next {
+        return;
+    }
+
     let height = pieces[moved].height + pieces[total].height;
     if top + height > limit {
         return;

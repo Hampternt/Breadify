@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use breadify::crates::CrateRules;
-use breadify::layout::{self, SheetContext};
+use breadify::layout;
 use breadify::route::Route;
 use breadify::{date, dump, order, pdf, route, sheet, validate};
 
@@ -139,12 +139,12 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         .file_stem()
         .map(|stem| stem.to_string_lossy().into_owned())
         .unwrap_or_default();
-    let context = SheetContext::single(wanted, dates, source);
-    let sheet = layout::sheet(wanted, &context, &rules);
+    let sheets = layout::paginate(wanted, dates, &rules, &source);
+    let pages: Vec<_> = sheets.iter().map(|sheet| sheet.content.clone()).collect();
 
-    match pdf::write(Path::new(target), &[sheet], &format!("Route {nickname}")) {
+    match pdf::write(Path::new(target), &pages, &format!("Route {nickname}")) {
         Ok(()) => {
-            eprintln!("wrote {target}");
+            eprintln!("wrote {target} — {} sheet(s)", pages.len());
             ExitCode::SUCCESS
         }
         Err(error) => fail(&error.to_string()),
