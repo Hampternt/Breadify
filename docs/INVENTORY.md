@@ -22,6 +22,19 @@ crates and labels each crate; the driver delivers them in route order.
   window, plus HTML prototypes. Source of truth for appearance; `print-spec.md`
   overrides it on the unsequenced flag.
 
+**The data spine** — `src/`, a Rust library and binary.
+
+- Reads an export's one sheet into typed rows, and checks it against the
+  invariants the printed pages rely on, reporting rather than refusing.
+- Folds lines into orders, groups them into routes, and puts both into
+  printing order — routes naturally, stops by delivery sequence with the
+  unsequenced ones last.
+- Derives what the page needs but the file does not carry: the delivery date
+  from the filename, an order's crates, and each route's total with its
+  ten-dots.
+- `breadify dump <route> [export.xlsx]` prints one route in the shape of the
+  worked examples.
+
 **Tools**
 
 - [`../tools/inspect_xlsx.py`](../tools/inspect_xlsx.py) — stdlib-only dumper
@@ -29,12 +42,11 @@ crates and labels each crate; the driver delivers them in route order.
 
 ## In flight
 
-🚧 **Pack 1 — Data spine** →
-[`manifests/2026-08-27-pack-1-data-spine.md`](manifests/2026-08-27-pack-1-data-spine.md)
-The export becomes a validated, sorted, fully-derived print model.
+🚧 **Pack 2 — First sheet** →
+[`manifests/2026-08-27-pack-2-first-sheet.md`](manifests/2026-08-27-pack-2-first-sheet.md)
+Route 8 as a print-accurate A4 PDF.
 
 ## Not built yet
 
-The application itself. Packs 2–7 cover the printed sheet, pagination, the
-four-step window, printing and shipping; only the active pack is planned in
-detail.
+Pagination for a whole day, the four-step app window, printing and shipping —
+packs 3 to 7. Only the active pack is planned in detail.
