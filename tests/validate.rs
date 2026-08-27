@@ -51,6 +51,24 @@ fn shared_stop_sequences_are_reported_as_warnings() {
 }
 
 #[test]
+fn the_file_reports_what_it_is_as_well_as_what_is_wrong() {
+    let findings = validate::run(&sample_rows());
+    let notes: Vec<&str> = findings
+        .iter()
+        .filter(|finding| finding.severity == Severity::Notice)
+        .map(|finding| finding.headline.as_str())
+        .collect();
+
+    assert_eq!(
+        notes,
+        [
+            "37 rows have no position in their route",
+            "Column O carries no header",
+        ]
+    );
+}
+
+#[test]
 fn nothing_in_the_sample_is_unfamiliar() {
     let findings = validate::run(&sample_rows());
     let notices: Vec<&str> = findings
@@ -63,9 +81,13 @@ fn nothing_in_the_sample_is_unfamiliar() {
 }
 
 #[test]
-fn the_sample_produces_exactly_the_two_expected_findings() {
+fn the_sample_produces_exactly_the_expected_findings() {
     let findings = validate::run(&sample_rows());
-    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert_eq!(
+        findings.len(),
+        4,
+        "two warnings and two notes: {findings:#?}"
+    );
 }
 
 #[test]
