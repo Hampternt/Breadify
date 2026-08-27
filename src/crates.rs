@@ -14,6 +14,22 @@ use crate::order::Order;
 /// above `100`.
 pub const STANDARD_SIZE: u32 = 100;
 
+/// The sizes worth a button, as the fraction of a slot a picker would say out
+/// loud and the percentage the arithmetic runs on.
+///
+/// Thirds round down — three at `33` come to 99 hundredths and fill one slot,
+/// which is right; at `34` they would ask for two.
+pub const SIZE_PRESETS: [(&str, u32); 8] = [
+    ("1/4", 25),
+    ("1/3", 33),
+    ("1/2", 50),
+    ("2/3", 66),
+    ("1", STANDARD_SIZE),
+    ("1 1/2", 150),
+    ("2", 200),
+    ("3", 300),
+];
+
 /// The crate sizes, and how much room each bread takes in one.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CrateRules {
@@ -49,9 +65,32 @@ impl CrateRules {
 
     /// Marks a bread as taking `percent` of a slot: `50` for a roll, `200` for
     /// something that takes the room of two.
+    ///
+    /// Setting a bread back to a whole slot forgets it rather than recording
+    /// the default, so "which breads has someone had to say something about"
+    /// stays answerable — and so setting a standard bread to standard is not a
+    /// change the rest of the app has to react to.
     pub fn set_size(&mut self, product_id: u32, percent: u32) {
+        if percent == STANDARD_SIZE {
+            self.size_percent.remove(&product_id);
+            return;
+        }
         self.size_percent.insert(product_id, percent);
     }
+
+    /// Whether someone has said anything about this bread.
+    pub fn is_custom(&self, product_id: u32) -> bool {
+        self.size_percent.contains_key(&product_id)
+    }
+}
+
+/// How a size reads: the fraction if it is one of the buttons, and the bare
+/// percentage if someone typed something else.
+pub fn spoken(percent: u32) -> String {
+    SIZE_PRESETS
+        .iter()
+        .find(|(_, value)| *value == percent)
+        .map_or_else(|| format!("{percent} %"), |(label, _)| (*label).to_owned())
 }
 
 /// The crates one order needs.

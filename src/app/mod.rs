@@ -113,6 +113,9 @@ pub struct Breadify {
     pub selected: BTreeSet<String>,
     /// The last file written, so the step can say where it went.
     pub wrote: Option<PathBuf>,
+    /// The bread whose size buttons are open on the Configure step. The list
+    /// is one row per product, so only one opens at a time.
+    pub sizing: Option<u32>,
     /// The sheets the current selection comes to, worked out when it changes.
     day: Vec<crate::layout::Sheet>,
     /// Set while a file is being read on another thread.
@@ -140,6 +143,7 @@ impl Breadify {
             settings: Settings::default(),
             selected: BTreeSet::new(),
             wrote: None,
+            sizing: None,
             day: Vec::new(),
             loading: None,
             screenshot,

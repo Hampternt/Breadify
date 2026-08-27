@@ -165,3 +165,45 @@ fn order_of_products(lines: &[(u32, u32)]) -> Order {
             .collect(),
     }
 }
+
+/// The size buttons are the language the Configure step speaks; the
+/// arithmetic still runs on hundredths.
+#[test]
+fn every_preset_fraction_comes_to_the_slots_it_names() {
+    use breadify::crates::{SIZE_PRESETS, STANDARD_SIZE, spoken};
+
+    for (label, percent) in SIZE_PRESETS {
+        assert_eq!(spoken(percent), label, "{label} reads back as itself");
+    }
+    assert_eq!(spoken(175), "175 %", "anything typed reads as a percentage");
+
+    // Thirds round down, so three of them still fit one slot.
+    let third = SIZE_PRESETS
+        .iter()
+        .find(|(label, _)| *label == "1/3")
+        .expect("a third is one of the buttons")
+        .1;
+    assert_eq!(3 * third / STANDARD_SIZE, 0, "three thirds do not spill");
+    assert!(3 * third < STANDARD_SIZE);
+    assert!(4 * third > STANDARD_SIZE);
+}
+
+/// Setting a bread back to a whole slot forgets it rather than recording the
+/// default, so "which breads has someone said something about" stays
+/// answerable and a no-op change does not repaginate the day.
+#[test]
+fn saying_a_bread_is_standard_forgets_it() {
+    use breadify::crates::{CrateRules, STANDARD_SIZE};
+
+    let mut rules = CrateRules::default();
+    assert!(!rules.is_custom(7));
+
+    rules.set_size(7, 50);
+    assert!(rules.is_custom(7));
+    assert_eq!(rules.size_of(7), 50);
+
+    rules.set_size(7, STANDARD_SIZE);
+    assert!(!rules.is_custom(7));
+    assert_eq!(rules.size_of(7), STANDARD_SIZE);
+    assert_eq!(rules, CrateRules::default(), "and nothing is left behind");
+}
