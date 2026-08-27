@@ -1,6 +1,6 @@
 # Pack 1 — Data spine
 
-**Status:** in progress — items 1–5 of 9 done.
+**Status:** in progress — items 1–6 of 9 done.
 **Container:** Breadify v1 (7 packs — see [`../print-layout.md`](../print-layout.md) §Next).
 **Branch:** `pack-1-data-spine`.
 
@@ -61,7 +61,7 @@ assert numbers this repo has already re-derived.
 - [x] 3 — Validation findings · sample yields exactly 2 warnings
 - [x] 4 — Order model · 148 orders, 37 mixed-bakery, comments deduped
 - [x] 5 — Delivery date from the filename · ` (1)` suffix handled
-- [ ] 6 — The two sorts
+- [x] 6 — The two sorts · route 8 reproduces the worked example exactly
 - [ ] 7 — Crate arithmetic on slots
 - [ ] 8 — Route totals and ten-dots
 - [ ] 9 — `dump` subcommand and golden tests
