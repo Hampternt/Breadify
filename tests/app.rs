@@ -27,23 +27,30 @@ fn every_step_is_numbered_and_labelled() {
     assert_eq!(labels, ["Open", "Check", "Configure", "Print"]);
 }
 
-/// The Check step paints a bread roll behind itself at almost no opacity. It
-/// is a joke, but a joke that has to decode.
+/// Two steps paint a joke behind themselves at almost no opacity. They are
+/// jokes, but jokes that have to decode.
 #[test]
-fn the_mascot_is_a_picture() {
-    let (pixels, [width, height]) = breadify::app::mascot::decoded().expect("breadguy decodes");
+fn every_mascot_is_a_picture() {
+    for who in breadify::app::mascot::ALL {
+        let (pixels, [width, height]) =
+            breadify::app::mascot::decoded(who).unwrap_or_else(|| panic!("{who:?} decodes"));
 
-    assert!(
-        width > 64 && height > 64,
-        "{width}x{height} is not a picture"
-    );
-    assert_eq!(pixels.len(), width * height * 4, "four bytes to a pixel");
-    assert!(
-        pixels
-            .as_chunks::<4>()
-            .0
-            .iter()
-            .all(|pixel| pixel[3] == 0xFF),
-        "a JPEG has no transparency to lose"
-    );
+        assert!(
+            width > 64 && height > 64,
+            "{who:?} is {width}x{height}, not a picture"
+        );
+        assert_eq!(
+            pixels.len(),
+            width * height * 4,
+            "{who:?}: four bytes to a pixel"
+        );
+        assert!(
+            pixels
+                .as_chunks::<4>()
+                .0
+                .iter()
+                .all(|pixel| pixel[3] == 0xFF),
+            "{who:?}: a JPEG has no transparency to lose"
+        );
+    }
 }

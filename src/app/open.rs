@@ -3,6 +3,7 @@
 use eframe::egui::{self, Color32, CornerRadius, RichText, Stroke, Vec2};
 
 use super::Breadify;
+use super::mascot::{self, Mascot};
 use super::theme;
 
 /// The drop zone on the left, what has been opened before on the right.
@@ -53,6 +54,14 @@ fn drop_zone(app: &mut Breadify, ui: &mut egui::Ui) {
         egui::StrokeKind::Inside,
     );
     blueprint_grid(painter, rect);
+
+    // Only while nothing has been opened — which is the one moment in the day
+    // when there is, in fact, no bread. Coming back here from the rail with a
+    // file already read is not that moment.
+    if app.loaded.is_none() {
+        mascot::behind(app, ui, rect, Mascot::NoBread);
+    }
+    let painter = ui.painter();
 
     let centre = rect.center();
     let waiting = app.is_loading();

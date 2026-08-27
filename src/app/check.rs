@@ -32,7 +32,7 @@ pub fn show(app: &mut Breadify, ui: &mut egui::Ui) {
         return;
     }
 
-    mascot::behind(app, ui);
+    mascot::behind(app, ui, ui.max_rect(), mascot::Mascot::BreadGuy);
 
     let Some(loaded) = &app.loaded else {
         return;

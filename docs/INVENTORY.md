@@ -64,6 +64,9 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
   the same display list the PDF is drawn from.
 - Step 4 lists every route with what it costs in paper, draws every sheet as a
   thumbnail, and either exports a PDF or hands it to the system to print.
+- Two steps carry a joke at low opacity behind everything they draw: a bread
+  roll at a computer behind Check, and Megamind asking `NO BREAD?` behind Open
+  while nothing has been opened. They are why `image` is a dependency.
 - `breadify --screenshot <file.ppm>` renders a frame and writes it;
   `--step <n>` opens on a given step; `--version` says which build it is.
 - The Matvare Expressen symbol is rasterised from the same SVG the masthead

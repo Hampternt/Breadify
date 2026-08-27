@@ -117,8 +117,8 @@ pub struct Breadify {
     /// The bread whose size buttons are open on the Configure step. The list
     /// is one row per product, so only one opens at a time.
     pub sizing: Option<u32>,
-    /// The mascot, once a frame has asked for him.
-    pub mascot: Option<egui::TextureHandle>,
+    /// The mascots, each once a frame has asked for it.
+    pub mascots: [Option<egui::TextureHandle>; 2],
     /// Where the crate rules were last written, so the step can say so.
     pub crates_kept: Option<PathBuf>,
     /// Set when the crate rules change; written out once the user lets go.
@@ -157,7 +157,7 @@ impl Breadify {
             selected: BTreeSet::new(),
             wrote: None,
             sizing: None,
-            mascot: None,
+            mascots: [None, None],
             crates_kept: None,
             crates_dirty: false,
             day: Vec::new(),
