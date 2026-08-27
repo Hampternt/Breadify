@@ -2,8 +2,8 @@
 
 use eframe::egui::{self, CornerRadius, RichText, Stroke, Vec2};
 
-use super::theme;
 use super::{Breadify, Loaded};
+use super::{mascot, theme};
 use crate::validate::{Finding, Severity};
 
 /// The sentence the action bar carries on this step.
@@ -24,10 +24,17 @@ pub fn summary(app: &Breadify) -> String {
     }
 }
 
-/// Five stat cards, then one card per finding.
+/// Five stat cards, then one card per finding — over a bread roll nobody
+/// asked for.
 pub fn show(app: &mut Breadify, ui: &mut egui::Ui) {
-    let Some(loaded) = &app.loaded else {
+    if app.loaded.is_none() {
         ui.label("No file open.");
+        return;
+    }
+
+    mascot::behind(app, ui);
+
+    let Some(loaded) = &app.loaded else {
         return;
     };
 

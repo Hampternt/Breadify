@@ -26,3 +26,20 @@ fn every_step_is_numbered_and_labelled() {
     assert_eq!(numbers, ["01", "02", "03", "04"]);
     assert_eq!(labels, ["Open", "Check", "Configure", "Print"]);
 }
+
+/// The Check step paints a bread roll behind itself at almost no opacity. It
+/// is a joke, but a joke that has to decode.
+#[test]
+fn the_mascot_is_a_picture() {
+    let (pixels, [width, height]) = breadify::app::mascot::decoded().expect("breadguy decodes");
+
+    assert!(
+        width > 64 && height > 64,
+        "{width}x{height} is not a picture"
+    );
+    assert_eq!(pixels.len(), width * height * 4, "four bytes to a pixel");
+    assert!(
+        pixels.chunks_exact(4).all(|pixel| pixel[3] == 0xFF),
+        "a JPEG has no transparency to lose"
+    );
+}

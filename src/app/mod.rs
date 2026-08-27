@@ -4,6 +4,7 @@
 pub mod check;
 pub mod chrome;
 pub mod configure;
+pub mod mascot;
 pub mod open;
 pub mod preview;
 pub mod print;
@@ -116,6 +117,8 @@ pub struct Breadify {
     /// The bread whose size buttons are open on the Configure step. The list
     /// is one row per product, so only one opens at a time.
     pub sizing: Option<u32>,
+    /// The mascot, once a frame has asked for him.
+    pub mascot: Option<egui::TextureHandle>,
     /// The sheets the current selection comes to, worked out when it changes.
     day: Vec<crate::layout::Sheet>,
     /// Set while a file is being read on another thread.
@@ -144,6 +147,7 @@ impl Breadify {
             selected: BTreeSet::new(),
             wrote: None,
             sizing: None,
+            mascot: None,
             day: Vec::new(),
             loading: None,
             screenshot,

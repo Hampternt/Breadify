@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 calamine = "0.36.1"
+image = { version = "0.25.10", default-features = false, features = ["jpeg"] }
 eframe = { version = "0.36.1", default-features = false, features = ["default_fonts", "glow", "wayland", "x11"] }
 opener = "0.8.5"
 printpdf = { version = "=0.12.6", default-features = false }
