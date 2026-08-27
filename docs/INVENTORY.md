@@ -35,6 +35,17 @@ crates and labels each crate; the driver delivers them in route order.
 - `breadify dump <route> [export.xlsx]` prints one route in the shape of the
   worked examples.
 
+**The printed sheet** — `src/layout/`, `src/pdf.rs`, `assets/fonts/`.
+
+- Eight embedded typefaces, text measured off the font tables rather than any
+  toolkit's layout.
+- A display list of positioned primitives is the only interface between
+  deciding where things go and drawing them, so the paper and the app's
+  preview cannot disagree.
+- `breadify dump <route> --pdf <file>` draws a route as an A4 sheet: masthead,
+  legend, stop blocks with tick boxes and crate glyphs, the unsequenced flag,
+  and the route total.
+
 **Tools**
 
 - [`../tools/inspect_xlsx.py`](../tools/inspect_xlsx.py) — stdlib-only dumper
@@ -42,11 +53,10 @@ crates and labels each crate; the driver delivers them in route order.
 
 ## In flight
 
-🚧 **Pack 2 — First sheet** →
-[`manifests/2026-08-27-pack-2-first-sheet.md`](manifests/2026-08-27-pack-2-first-sheet.md)
-Route 8 as a print-accurate A4 PDF.
+🚧 **Pack 3 — The whole day** →
+[`manifests/2026-08-27-pack-3-whole-day.md`](manifests/2026-08-27-pack-3-whole-day.md)
+Every route paginated onto sheets.
 
 ## Not built yet
 
-Pagination for a whole day, the four-step app window, printing and shipping —
-packs 3 to 7. Only the active pack is planned in detail.
+The four-step app window, printing and shipping — packs 4 to 7. Only the active pack is planned in detail.
