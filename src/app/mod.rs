@@ -310,7 +310,13 @@ impl Breadify {
         });
 
         match crate::store::save(&self.settings.crates, &names) {
-            Ok(path) => self.crates_kept = Some(path),
+            Ok(path) => {
+                // The action bar shows one message. A save that worked
+                // supersedes whatever it was saying, the way a print that
+                // worked does.
+                self.error = None;
+                self.crates_kept = Some(path);
+            }
             Err(message) => self.error = Some(message),
         }
     }
