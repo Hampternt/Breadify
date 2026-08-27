@@ -7,6 +7,11 @@ The bakeries drop the morning's bread at the warehouse in one heap. Each driver
 picks their own route out of it, packs and labels the crates, and drives it.
 This is the sheet they do both jobs from.
 
+The freezer export (`PSR-FREEZER-…`) works the same way and prints as a
+**check list** instead: the freezer goods arrive already packed, so the sheet
+is held against the box — same blocks, tick boxes per item, no crate maths and
+no totals.
+
 ## Get it
 
 Grab it from

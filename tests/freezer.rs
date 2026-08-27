@@ -9,10 +9,44 @@ mod support;
 use std::collections::{BTreeMap, BTreeSet};
 
 use breadify::date::ExportKind;
+use breadify::layout::{self, Settings};
+use breadify::page::{Page, Primitive};
 use breadify::route::{self, Route};
 use breadify::validate::{self, Severity};
-use breadify::{order, sheet};
+use breadify::{dump, order, sheet};
 use support::{freezer_path, freezer_rows};
+
+fn freezer_settings() -> Settings {
+    Settings {
+        kind: ExportKind::Freezer,
+        ..Settings::default()
+    }
+}
+
+fn freezer_route(nickname: &str) -> Route {
+    route::group(order::fold(&freezer_rows()))
+        .into_iter()
+        .find(|route| route.nickname == nickname)
+        .expect("route is in the freezer sample")
+}
+
+/// Every text run on every sheet of a route, laid out as a freezer list.
+fn freezer_runs(route: &Route) -> Vec<String> {
+    layout::paginate(route, None, &freezer_settings(), "PSR-FREEZER-2026-01-23")
+        .into_iter()
+        .flat_map(|sheet| runs(&sheet.content))
+        .collect()
+}
+
+fn runs(page: &Page) -> Vec<String> {
+    page.primitives
+        .iter()
+        .filter_map(|primitive| match primitive {
+            Primitive::Text { text, .. } => Some(text.clone()),
+            _ => None,
+        })
+        .collect()
+}
 
 #[test]
 fn reads_every_data_row() {
@@ -141,4 +175,83 @@ fn reading_the_same_file_twice_gives_the_same_rows() {
     let once = sheet::read(&freezer_path()).unwrap();
     let twice = sheet::read(&freezer_path()).unwrap();
     assert_eq!(once, twice);
+}
+
+/// The freezer sheet is the bread sheet minus the picking machinery: every
+/// customer and product still prints, but no crate glyphs are explained, no
+/// route total closes the route, and the page says what it is.
+#[test]
+fn the_freezer_sheet_is_a_check_list_without_crates_or_totals() {
+    let route = freezer_route("4");
+    let set = freezer_runs(&route);
+
+    for stop in &route.stops {
+        assert!(set.contains(&stop.customer), "{} is missing", stop.customer);
+        for line in &stop.lines {
+            assert!(
+                set.contains(&line.product.name),
+                "{} is missing",
+                line.product.name
+            );
+        }
+    }
+
+    assert!(
+        set.iter().any(|run| run.contains("check list")),
+        "the page note says what this sheet is"
+    );
+    assert!(
+        !set.iter().any(|run| run == "CRATES"),
+        "no crate legend on a checking list"
+    );
+    assert!(
+        !set.iter().any(|run| run.contains("total")),
+        "no route total on a checking list: {set:?}"
+    );
+}
+
+/// `P` means packed on the freezer legend, and the supplier key names the
+/// wholesalers this route actually draws from rather than the two bakeries.
+#[test]
+fn the_freezer_legend_speaks_freezer() {
+    let set = freezer_runs(&freezer_route("4"));
+
+    assert!(set.iter().any(|run| run == "Packed"));
+    assert!(!set.iter().any(|run| run == "Picked"));
+    assert!(
+        !set.iter().any(|run| run.contains("Sandnes Bakeri")),
+        "the bakeries have no place on a freezer sheet"
+    );
+    assert!(
+        set.iter()
+            .any(|run| run.contains("Asko") && run.contains(" · ")),
+        "the route's own suppliers are the key: {set:?}"
+    );
+}
+
+/// The same route through the bread layout still carries its total — the
+/// difference is the kind, not the data.
+#[test]
+fn the_same_route_as_bread_would_carry_a_total() {
+    let route = freezer_route("4");
+    let sheets = layout::paginate(&route, None, &Settings::default(), "PSR-FREEZER-2026-01-23");
+    let set: Vec<String> = sheets
+        .into_iter()
+        .flat_map(|sheet| runs(&sheet.content))
+        .collect();
+
+    assert!(set.iter().any(|run| run.contains("total")));
+    assert!(set.iter().any(|run| run == "CRATES"));
+}
+
+/// The terminal dump follows the page: heading, marker and lines, but no crate
+/// glyphs and no closing total.
+#[test]
+fn a_freezer_route_dumps_without_crates_or_totals() {
+    let text = dump::route(&freezer_route("13"), None, &freezer_settings());
+
+    assert!(text.starts_with("ROUTE 13 — date unknown — 8 stops, 19 lines"));
+    assert!(text.contains("Customer 012"));
+    assert!(!text.contains('■'), "no crate glyphs: {text}");
+    assert!(!text.contains("total"), "no route total: {text}");
 }

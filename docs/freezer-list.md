@@ -5,9 +5,10 @@ made about what the freezer version is and what its printed sheet must do,
 in the user's own terms. Input-side facts live in
 [`freezer-format.md`](freezer-format.md).
 
-**Status: accumulating.** The loader work (F2, F3) is built; the printed
-sheet is not — a freezer export currently prints through the bread layout,
-which is legible but says more than this job needs.
+**Status: built.** The loader work (F2, F3) and the freezer page (F6, F7)
+are both in; what stays open is listed at the bottom. The sample freezer
+day prints as 15 routes over 17 sheets — the same day through the bread
+layout was 24.
 
 ## Decided
 
@@ -53,22 +54,40 @@ settled for bread — the checker must know **whose** items they are
 confirming, and the freezer sample leans on it the same way (Customer 012
 Department 35: one address, eight department orders on one route).
 
+**F6 — Boxes are not modelled. The sheet lists the items.** (2026-08-27)
+The user's call: *you don't need to track boxes or any of that — just the
+items.* Nothing in the file names a box and nothing on the sheet pretends
+to: the customer/department blocks (F5) are the only grouping, and the
+route-per-sheet structure transfers from the bread page whole.
+
+**F7 — The freezer page is the bread page minus the picking machinery.**
+(2026-08-27)
+Everything the bread sheet settled carries over unchanged — masthead,
+blocks in delivery order, the department box, the substitute marker, the
+unsequenced flag, and the `P` / `M` / `F` tick boxes on every line, which
+were already a checklist waiting for this job. What changes:
+
+- **No crate glyphs** and no slot arithmetic anywhere (F4): a checker
+  counts nothing into crates.
+- **No route total**: it was a receiving check against the bakeries'
+  unsorted delivery (D15), and the freezer goods arrive packed.
+- **The legend reads `P Packed`** instead of `P Picked`, drops the crate
+  key, and its supplier key names the wholesalers *on this route* (code
+  and name; codes alone if a crowded route runs out of band) rather than
+  the two house bakeries.
+- **The page note says `check list`** where the bread page says `in full`,
+  so the two sheets cannot be mistaken for one another in a stack.
+
+On the sample day this takes route 13's Customer 012 page from crate-glyph rows
+and a 19-line total down to eight clean blocks, and the day from 24 sheets
+to 17.
+
 ## Open
 
-- **What is a box?** Nothing in the file names one. If one box = one route,
-  the bread sheet's route-per-page structure transfers whole; if boxes are
-  packed per customer, the sheet needs per-box boundaries beyond the
-  customer blocks. Needs the warehouse's answer, not the file's.
-- **The checklist rendering** — whether lines carry a tick box, and what
-  else changes against the bread block (crate glyphs and slot arithmetic
-  presumably go; `Accept alternatives` presumably stays, since a checker
-  meeting a substitute needs to know whether one was allowed).
-- **Whether `Position` prints** as a small hint (see F3).
+- **Whether `Position` prints** as a small where-to-look-first hint (see
+  F3). The loader carries it; the page currently does not show it.
 - The wording of the unsequenced-stops notice — "no position in their
   route" now collides with the `Position` column meaning a pick slot.
-
-## Next
-
-The loader accepts freezer exports (see `freezer-format.md` §4 for what
-that means); the checklist page is the next pack, and starts by settling
-the box question above.
+- The Configure step still offers the crate-size table when a freezer file
+  is loaded. Harmless — nothing on a freezer sheet reads the sizes — but
+  it could hide itself once the step knows the kind.

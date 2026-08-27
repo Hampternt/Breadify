@@ -83,12 +83,13 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 ## In flight
 
 **The freezer list.** A second export kind — `PSR-FREEZER-*.xlsx`, the list
-a packed freezer box is checked against rather than picked from. The loader
-side is done: both kinds are recognised by filename, `Position` (a warehouse
-pick slot there, absent for some products) reads as optional, and validation
-knows each list's own suppliers and route-name shapes. A freezer export
-currently prints through the bread layout; the checklist page it should get
-is the next pack. Decisions and open questions:
+a packed freezer box is checked against rather than picked from. Both kinds
+are recognised by filename; `Position` (a warehouse pick slot there, absent
+for some products) reads as optional; validation knows each list's own
+suppliers and route-name shapes; and the freezer sheet prints as the bread
+sheet minus the picking machinery — no crate glyphs, no route total, a
+`P Packed` legend keyed to the route's own suppliers, and a page note that
+says `check list`. Decisions and what stays open:
 [`freezer-list.md`](freezer-list.md).
 
 Before that, Breadify **v1.1.0** was built and tagged: seven packs, then two passes

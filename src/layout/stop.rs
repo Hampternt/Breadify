@@ -92,7 +92,13 @@ fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, settings: &Settin
 
     let right = cursor.right();
     let name_right = left + text::width(&stop.customer, face);
-    let count = crates::count(stop, &settings.crates);
+    // The freezer list draws no crates: its boxes are already packed, and the
+    // slot arithmetic is the picker's, not the checker's (decision F4).
+    let count = if settings.is_bread() {
+        crates::count(stop, &settings.crates)
+    } else {
+        crates::CrateCount::default()
+    };
     let crates_width = crate_run_width(count.total());
     let marks = stamp_width(stop, settings);
 

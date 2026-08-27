@@ -214,6 +214,10 @@ impl Breadify {
                 self.loading = None;
                 self.remember(&loaded.path);
                 self.selected = print::everything(&loaded.routes);
+                // Which list this is belongs to the file, not the user, so it
+                // rides along in the settings rather than being asked about.
+                self.settings.kind = crate::date::export_kind(&loaded.path)
+                    .unwrap_or(crate::date::ExportKind::Bread);
                 self.loaded = Some(*loaded);
                 self.step = self.start_on.unwrap_or(Step::Check);
                 self.stale = true;

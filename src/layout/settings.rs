@@ -5,6 +5,7 @@
 //! to accept substitutes is marked, and the crate arithmetic.
 
 use crate::crates::CrateRules;
+use crate::date::ExportKind;
 
 /// How the no-substitutes state is drawn. The quiet state is the same in every
 /// case; these are the three treatments the design offers for the loud one.
@@ -47,18 +48,32 @@ impl MarkerTreatment {
     }
 }
 
-/// Everything the user can change about a printed sheet.
+/// Everything the user can change about a printed sheet — plus the one thing
+/// the *file* changes about it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Settings {
+    /// Which list is being printed. Read from the filename, not the user's to
+    /// change: a bread sheet is a picking list with crate glyphs and a route
+    /// total; a freezer sheet is a checking list with neither (decisions
+    /// F1, F4 in `docs/freezer-list.md`).
+    pub kind: ExportKind,
     /// The one field that is the user's to show or hide.
     pub show_order_id: bool,
     pub marker: MarkerTreatment,
     pub crates: CrateRules,
 }
 
+impl Settings {
+    /// Whether the sheet being laid out is the bread picking list.
+    pub fn is_bread(&self) -> bool {
+        self.kind == ExportKind::Bread
+    }
+}
+
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            kind: ExportKind::Bread,
             show_order_id: true,
             marker: MarkerTreatment::default(),
             crates: CrateRules::default(),
