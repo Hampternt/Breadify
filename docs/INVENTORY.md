@@ -6,8 +6,7 @@ docs and the code; this file only says what exists and for whom.
 ## The product
 
 A Rust desktop app for Windows and Linux that reads Matvare Expressen's daily
-order export — the bread list or the freezer one — and prints A4 picking
-lists. The bakeries deliver to the
+bread-order export and prints A4 picking lists. The bakeries deliver to the
 warehouse; each driver picks their own route out of that delivery, packs and
 labels the crates, and drives it — one person, two jobs, the same sheet.
 
@@ -27,9 +26,7 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 **The data spine** — `src/`, a Rust library and binary.
 
 - Reads an export's one sheet into typed rows, and checks it against the
-  invariants the printed pages rely on, reporting rather than refusing. Which
-  list it is and which day it covers both come from the filename, and the
-  checks that ask "have we seen this before" ask it per list.
+  invariants the printed pages rely on, reporting rather than refusing.
 - Folds lines into orders, groups them into routes, and puts both into
   printing order — routes naturally, stops by delivery sequence with the
   unsequenced ones last.
@@ -49,10 +46,7 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 - `breadify dump <route> --pdf <file>` draws one route; `breadify print --pdf
   <file>` draws the whole day. Every route starts a fresh page, no block or
   total is ever cut, and every page keeps 10 mm clear above its footer. The
-  bread sample day is 27 sheets, the freezer one 26.
-- A freezer sheet says FREEZER ROUTE on its masthead, keys its legend to the
-  route's own suppliers rather than the two bakeries, and counts no crates —
-  the arithmetic is bread-shaped and frozen goods are not (D24).
+  sample day is 26 sheets.
 
 **The app window** — `src/app/`.
 
@@ -64,8 +58,7 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 - Step 3 offers what is actually the user's to decide: whether the order ID
   prints, how a refusal to substitute is marked, and the crate arithmetic —
   including how much room each bread takes, said in fractions of a slot on a
-  list that stays quiet about the breads nobody has changed — a freezer list
-  gets a sentence saying why there is nothing to set instead. Crate capacities
+  list that stays quiet about the breads nobody has changed. Crate capacities
   and bread sizes are written to the OS config directory and come back next
   time; nothing else about a print is remembered. A sample block redraws from
   the same display list the PDF is drawn from.
@@ -88,10 +81,9 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 
 ## In flight
 
-Nothing. Breadify **v1.2.0** is built and tagged: seven packs, two passes of
-changes from using it — the heading reshaped, crate sizes said in fractions and
-kept between runs, the window icon — and then the freezer list, which brought
-with it a printed-page fault that had been shipping since v1.0.0.
+Nothing. Breadify **v1.1.0** is built and tagged: seven packs, then two passes
+of changes from using it — the heading reshaped, crate sizes said in fractions
+and kept between runs, the window icon, and a review pass over the lot.
 
 What is deliberately not built, and why, is in
 [`manifests/2026-08-27-pack-7-ship.md`](manifests/2026-08-27-pack-7-ship.md).

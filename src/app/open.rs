@@ -81,14 +81,14 @@ fn drop_zone(app: &mut Breadify, ui: &mut egui::Ui) {
     painter.text(
         centre + egui::vec2(0.0, 16.0),
         egui::Align2::CENTER_CENTER,
-        "PSR-BREAD-…xlsx or PSR-FREEZER-…xlsx — one sheet named Data, 14 headers",
+        "PSR-BREAD-<from>-to-<to>.xlsx — one sheet named Data, 14 headers plus one",
         egui::FontId::new(12.5, theme::mono()),
         theme::MUTED,
     );
     painter.text(
         centre + egui::vec2(0.0, 34.0),
         egui::Align2::CENTER_CENTER,
-        "plus one unlabelled column. Which list and which day come from the name.",
+        "unlabelled column. The delivery date is read from the filename.",
         egui::FontId::new(12.5, theme::mono()),
         theme::MUTED,
     );

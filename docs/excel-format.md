@@ -4,31 +4,9 @@ What the exported order file looks like, derived by unpacking the OOXML of the
 one sample in the repo. This describes **input only** — nothing about the app's
 own behaviour beyond what the data forces.
 
-- **Samples:** `PSR-BREAD-2026-03-04-to-2026-03-04 (1).xlsx` (27 994 bytes) and
-  `PSR-FREEZER-2026-01-23-to-2026-01-23 (1).xlsx` (23 565 bytes)
-- **Derived:** 2026-08-26 from the bread file, re-checked 2026-08-27 against
-  the freezer one, by reading `xl/worksheets/sheet1.xml` directly
+- **Sample:** `PSR-BREAD-2026-03-04-to-2026-03-04 (1).xlsx` (27 994 bytes)
+- **Derived:** 2026-08-26, by reading `xl/worksheets/sheet1.xml` directly
   (`tools/inspect_xlsx.py` re-derives everything here)
-
-## 0. Two lists, one shape
-
-The exporter writes a bread list and a freezer list, and they are the same file
-format: one sheet named `Data`, the same fourteen headers, the same unlabelled
-fifteenth column. Only the filename says which is which (**D23**).
-
-Where the freezer file stretched what the bread file taught, and what it cost:
-
-| | Bread, 352 rows | Freezer, 231 rows | |
-| --- | --- | --- | --- |
-| Distinct products | 35 | 113 | |
-| Suppliers | 2, both bakeries | 7, all seven on route 8 | the route total was drawn for two columns (**D25**) |
-| **Position** (F) | always a bakery heap | warehouse shelf codes, **no cell at all on 26 rows** | read as required text, which refused the whole file on row 2 |
-| Route nicknames | `1`–`14`, `hau 1`, `hau 2` | `1`–`13`, `hau`, `Svg Employee` | the nickname check wanted a trailing number |
-
-Product IDs do not collide across the pair — 35 against 113, none shared — so a
-size rule saved against one list cannot reach the other. That is a property of
-these two files and not a guarantee; if crates ever apply to a freezer sheet
-(**D24** says they do not), the store key needs the list in it.
 
 Every claim below is tagged:
 
@@ -84,7 +62,7 @@ silently drops it; a reader that asserts `headers.len() == row.len()` breaks.
 | C | `Product ID` | number | 0 | 35 | Internal product key |
 | D | `Product Name` | string | 0 | 35 | Display name, 22–57 chars |
 | E | `Supplier SKU` | **string** | 0 | 35 | Not numeric — see below |
-| F | `Position` | string | 0 in bread, 26 in freezer | 2 in bread, 38 in freezer | `X-Sandnes Bakeri`; `W-05-02`, `U-Frysevare` |
+| F | `Position` | string | 0 | 2 | `X-Sandnes Bakeri`, `X-Bakehuset` |
 | G | `Supplier` | string | 0 | 2 | `sandnes bakeri`, `bakehuset` |
 | H | `Customer` | string | 0 | 120 | Free text, not a key |
 | I | `Department` | string | **261** | 34 | Sub-location within customer |
@@ -134,9 +112,6 @@ an integer loses most of the catalogue.
 **F/G — Position and Supplier.** Two values each and 1:1 with each other; the
 `Position` string is `"X-"` + the supplier name in title case **[O]**.
 `Supplier` is lower-case in this file, so compare case-insensitively.
-On the freezer list it is not the supplier at all but a warehouse shelf, and
-sometimes nothing. Nothing reads it either way (**D24**).
-
 **Confirmed 2026-08-26: `Position` is just the supplier again, not a pick
 location** — the two columns carry the same fact in two spellings, so use
 `Supplier` and treat `Position` as redundant. Nothing splits or groups by it,
@@ -361,9 +336,7 @@ mis-sorted list is worse than a refused file:
 1. **Shape** — sheet named `Data` exists; header row matches the 14 expected
    strings exactly, in order; a 15th unlabelled column is present.
    Any header change is a hard error.
-2. **Required cells** — `A,B,C,D,E,G,H,J,L,M,N` non-empty on every data row.
-   **Not `F`:** the freezer export leaves `Position` off 26 of its 231 rows,
-   and reading it as required text refused the whole file at row 2.
+2. **Required cells** — `A,B,C,D,E,F,G,H,J,L,M,N` non-empty on every data row.
 3. **Types** — `A,B,C,M` numeric and integral; `N` boolean; `E,L` read as text
    regardless of how they look.
 4. **Order consistency** — all lines sharing an `Order ID` agree on customer,
@@ -376,15 +349,8 @@ mis-sorted list is worse than a refused file:
 6. **Product consistency** — `Product ID` maps to one name, one SKU, one
    supplier across the file.
 7. **Unknowns** — surface, don't reject: an unlabelled-column value other than
-   `Stavanger`, and a supplier the list in question has not bought from
-   before. The familiar suppliers are **per list** — two bakeries for bread,
-   seven for freezer — because the bread pair raised nine notices on a clean
-   freezer file, which teaches the reader that the step is noise.
-
-   A route nickname is checked against **what the sorter can place**, not
-   against a shape: `route::natural_key` has always handled a bare name, so
-   `hau` and `Svg Employee` are not findings. Asking the sorter is the only
-   version of this check whose reason survives reading.
+   `Stavanger`, a third supplier/position, a route nickname that is neither
+   numeric nor `hau N`.
 
 ---
 

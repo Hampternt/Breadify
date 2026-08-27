@@ -71,23 +71,6 @@ fn choices(app: &mut Breadify, ui: &mut egui::Ui) {
                     }
                 }
 
-                if !app.settings.has_crates() {
-                    ui.add_space(14.0);
-                    heading(ui, "CRATES");
-                    ui.label(
-                        RichText::new(format!(
-                            "Not on a {} list. The arithmetic is bread's — a whole\nslot, and \
-                             fractions of one — and frozen goods do not\nmeasure that way, so \
-                             the sheet counts none.",
-                            app.settings.list.to_string().to_lowercase()
-                        ))
-                        .family(theme::mono())
-                        .size(11.0)
-                        .color(theme::FAINT),
-                    );
-                    return;
-                }
-
                 ui.add_space(14.0);
                 heading(ui, "CRATES");
                 let mut large = app.settings.crates.large_capacity;
@@ -333,25 +316,18 @@ fn sample_block(app: &Breadify, ui: &mut egui::Ui) {
         );
 
         ui.add_space(10.0);
-        // The block above respects the list; this line has to as well, or it
-        // reports crates the sheet beside it does not draw.
-        let summary = if app.settings.has_crates() {
-            let count = crates::count(&stop, &app.settings.crates);
-            format!(
+        let count = crates::count(&stop, &app.settings.crates);
+        ui.label(
+            RichText::new(format!(
                 "{} units · {} slots · {} large + {} small",
                 stop.units(),
                 crates::slots(&stop, &app.settings.crates),
                 count.large,
                 count.small
-            )
-        } else {
-            format!("{} units · no crates on this list", stop.units())
-        };
-        ui.label(
-            RichText::new(summary)
-                .family(theme::mono())
-                .size(11.5)
-                .color(theme::MUTED),
+            ))
+            .family(theme::mono())
+            .size(11.5)
+            .color(theme::MUTED),
         );
     });
 }

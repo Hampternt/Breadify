@@ -1,7 +1,7 @@
 //! The route total that closes a route's last page.
 
 use super::metrics::*;
-use super::{Cursor, Settings, rule, text_from_top};
+use super::{Cursor, rule, text_from_top};
 use crate::font::Face;
 use crate::geometry::{Mm, Point, Rect};
 use crate::page::{self, Page};
@@ -11,8 +11,8 @@ use crate::text::{self, Style};
 use crate::total::{self, SupplierColumn};
 
 /// Lays out the whole total — title, the two meta lines, then one column per
-/// supplier — on a page of its own, the way a stop block is laid out.
-pub fn block(route: &Route, settings: &Settings, column: &Cursor) -> (Page, Mm) {
+/// bakery — on a page of its own, the way a stop block is laid out.
+pub fn block(route: &Route, column: &Cursor) -> (Page, Mm) {
     let total = total::of(route);
     let mut own = Page::new();
     let mut cursor = Cursor {
@@ -38,16 +38,10 @@ pub fn block(route: &Route, settings: &Settings, column: &Cursor) -> (Page, Mm) 
     cursor.advance(height + 0.6);
 
     let meta = Style::new(Face::MonoRegular, SIZE_TOTAL_META);
-    let types = match settings.list.modifier() {
-        "" => format!("{} {}", total.types(), plural(total.types() as u32, "type")),
-        word => format!(
-            "{} {word} {}",
-            total.types(),
-            plural(total.types() as u32, "type")
-        ),
-    };
     let summary = format!(
-        "{types} · {} {} · most to least",
+        "{} bread {} · {} {} · most to least",
+        total.types(),
+        plural(total.types() as u32, "type"),
         total.units(),
         plural(total.units(), "unit")
     );
@@ -90,34 +84,24 @@ fn dot_note(page: &mut Page, cursor: &mut Cursor, dots: u32) {
     cursor.advance(height + 1.8);
 }
 
-/// One column per supplier, side by side, each as tall as it needs to be —
-/// and no more than [`TOTAL_COLUMNS_MAX`] of them across, the rest on a
-/// further row.
-///
-/// The width is set by how many stand in a row, not by how many there are, so
-/// a route with seven suppliers gets the same column a route with two gets
-/// rather than a seventh of the page. Bread, which never has more than two,
-/// lays out exactly as it did before.
+/// One column per bakery, side by side, each as tall as it needs to be.
 fn columns(page: &mut Page, cursor: &mut Cursor, columns: &[SupplierColumn]) {
     if columns.is_empty() {
         return;
     }
 
-    let across = columns.len().min(TOTAL_COLUMNS_MAX);
-    let width = (cursor.width - TOTAL_COLUMN_GAP * (across - 1) as f64) / across as f64;
-    let mut top = cursor.y;
+    let count = columns.len() as f64;
+    let width = (cursor.width - TOTAL_COLUMN_GAP * (count - 1.0)) / count;
+    let top = cursor.y;
+    let mut lowest = top;
 
-    for row in columns.chunks(across) {
-        let mut lowest = top;
-        for (index, column) in row.iter().enumerate() {
-            let left = cursor.left + (width + TOTAL_COLUMN_GAP) * index as f64;
-            let bottom = supplier_column(page, Point::new(left, top), width, column);
-            lowest = lowest.max(bottom);
-        }
-        top = lowest + TOTAL_COLUMN_ROW_GAP;
+    for (index, column) in columns.iter().enumerate() {
+        let left = cursor.left + (width + TOTAL_COLUMN_GAP) * index as f64;
+        let bottom = supplier_column(page, Point::new(left, top), width, column);
+        lowest = lowest.max(bottom);
     }
 
-    cursor.y = top - TOTAL_COLUMN_ROW_GAP;
+    cursor.y = lowest;
 }
 
 /// A column: its head, then its breads most needed first.
@@ -168,25 +152,11 @@ fn supplier_column(page: &mut Page, at: Point, width: Mm, column: &SupplierColum
 }
 
 /// A row of the total: how many, of what, and its full trays.
-///
-/// The name gets the room between the quantity and the tray dots, and wraps
-/// inside it. It used to be written from its left edge with nothing bounding
-/// its right, which put `Holdbart Havrebrød Skåret 750g Bakehuset (har Vært
-/// Fryst)` 20 mm past the edge of the paper on bread route 4.
 fn total_row(page: &mut Page, at: Point, width: Mm, line: &crate::total::TotalLine) -> Mm {
     let quantity = Style::new(Face::MonoSemiBold, SIZE_TOTAL_QUANTITY);
     let name = Style::new(Face::SpaceGrotesk, SIZE_TOTAL_NAME);
-
-    let left = at.x + TOTAL_QUANTITY_COLUMN + TOTAL_NAME_INDENT;
-    let room = (at.x + width - TOTAL_DOT_COLUMN - left).max(1.0);
-    let lines = text::wrap(&line.product.name, name, room);
-
-    let single = text::line_height(quantity) + 0.7;
-    let stacked = text::line_height(name) * lines.len() as f64 + 0.7;
-    let height = single.max(stacked);
-    // The first line of the name sits where a one-line row would have put it,
-    // so a wrapped row and an unwrapped one start level with each other.
-    let middle = at.y + single / 2.0;
+    let height = text::line_height(quantity) + 0.7;
+    let middle = at.y + height / 2.0;
 
     let units = line.units.to_string();
     let units_width = text::width(&units, quantity);
@@ -200,11 +170,15 @@ fn total_row(page: &mut Page, at: Point, width: Mm, line: &crate::total::TotalLi
         page::BLACK,
     );
 
-    let mut baseline = middle + text::ascent(name) / 2.0 - 0.4;
-    for run in &lines {
-        page.text(Point::new(left, baseline), run, name, page::INK_SOFT);
-        baseline += text::line_height(name);
-    }
+    page.text(
+        Point::new(
+            at.x + TOTAL_QUANTITY_COLUMN + 2.4,
+            middle + text::ascent(name) / 2.0 - 0.4,
+        ),
+        &line.product.name,
+        name,
+        page::INK_SOFT,
+    );
 
     dots(page, at.x + width, middle, line.full_tens);
 

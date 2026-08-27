@@ -108,17 +108,6 @@ pub const TOTAL_MARGIN_TOP: Mm = 5.0;
 pub const TOTAL_PADDING_TOP: Mm = 2.1;
 pub const TOTAL_COLUMN_GAP: Mm = 8.4;
 pub const TOTAL_QUANTITY_COLUMN: Mm = 8.4;
-/// The gap between a total row's quantity and its product name.
-pub const TOTAL_NAME_INDENT: Mm = 2.4;
-/// How many supplier columns may stand side by side.
-///
-/// Bread comes from two bakeries and the total was drawn for two. The freezer
-/// list has seven suppliers on route 8, and seven columns across the 194 mm
-/// page leave 20 mm each — narrower than a product name is long. More than
-/// this many wrap onto a further row of columns instead.
-pub const TOTAL_COLUMNS_MAX: usize = 2;
-/// The gap between one row of supplier columns and the next.
-pub const TOTAL_COLUMN_ROW_GAP: Mm = 4.6;
 pub const TOTAL_DOT_COLUMN: Mm = 18.0;
 pub const TOTAL_DOT: Mm = 2.7;
 pub const NOTE_DOT: Mm = 2.5;

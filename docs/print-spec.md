@@ -228,21 +228,17 @@ do not treat width as the constraint that settles layout arguments. Sheet
 count is decided by height, and adding a column is a real option if one is
 ever wanted.
 
-**Measured budget.** The app paginates the sample bread day into **27 sheets**
-with every page holding its ≥ 10 mm clearance above the footer, asserted by
-test rather than by eye. **D19** cost about 5.5 mm on each block carrying a
-department and left the day at 26; **D25** added the twenty-seventh when the
-route total began wrapping product names inside their column instead of
-writing them off the edge of the paper. Both were re-measured, not assumed.
+**Measured budget.** The app paginates the sample day into **26 sheets** —
+10 of the 16 routes take two, the other six take one — with every page holding
+its ≥ 10 mm clearance above the footer, asserted by test rather than by eye.
+**D19** cost about 5.5 mm on each block carrying a department and the day is
+still 26; that was re-measured, not assumed.
 
-The freezer sample — a shorter file, 231 lines over 15 routes — comes to
-**26 sheets**.
-
-That is three sheets more than the design pass's 24, and the difference is
+That is two sheets more than the design pass's 24, and the difference is
 accounted for: the handoff measured without the unsequenced flag §6 reinstates
 (nine routes gain a line) and with address-level grouping, which **D16**
 replaced — a stop is one order, so a site with several departments no longer
-shares one heading. Both are deliberate. Treat 27 as the number, and re-measure
+shares one heading. Both are deliberate. Treat 26 as the number, and re-measure
 rather than quote it if the layout changes.
 
 ## 10. Worked example — route 8

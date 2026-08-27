@@ -224,17 +224,13 @@ fn write_and(
 }
 
 fn save_dialog(app: &Breadify) -> Option<PathBuf> {
-    // Named for the list as well as the day: both lists of one day used to
-    // offer the same `2026-03-04.pdf`, and saving the second over the first is
-    // a thing a person does once.
-    let list = app.settings.list.to_string().to_lowercase();
     let name = app
         .loaded
         .as_ref()
         .and_then(|loaded| loaded.dates)
         .map_or_else(
-            || format!("{list}-pick-lists.pdf"),
-            |dates| format!("{list}-{dates}.pdf"),
+            || "pick-lists.pdf".to_owned(),
+            |dates| format!("{dates}.pdf"),
         );
 
     rfd::FileDialog::new()

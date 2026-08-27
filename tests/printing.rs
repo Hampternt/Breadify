@@ -21,7 +21,7 @@ fn everything_means_every_route() {
 
     assert_eq!(all.len(), 16);
     let sheets = print::day_for(&routes, &all, None, &Settings::default(), "PSR-BREAD");
-    assert_eq!(sheets.len(), 27);
+    assert_eq!(sheets.len(), 26);
 }
 
 #[test]

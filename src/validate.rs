@@ -8,8 +8,6 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::list::Kind;
-use crate::route::RouteKey;
 use crate::sheet::SheetRow;
 
 /// A column name paired with a way of reading that column off a row, as text.
@@ -67,13 +65,13 @@ pub struct Finding {
 ///
 /// Returns the findings most severe first; an empty list means the file
 /// matches every invariant the specification relies on.
-pub fn run(rows: &[SheetRow], list: &Kind) -> Vec<Finding> {
+pub fn run(rows: &[SheetRow]) -> Vec<Finding> {
     let mut findings = Vec::new();
     findings.extend(blank_required_fields(rows));
     findings.extend(orders_that_disagree(rows));
     findings.extend(addresses_on_two_routes(rows));
     findings.extend(products_that_disagree(rows));
-    findings.extend(unfamiliar_values(rows, list));
+    findings.extend(unfamiliar_values(rows));
     findings.extend(unsequenced_stops(rows));
     findings.extend(unlabelled_column(rows));
     findings.sort_by(|left, right| {
@@ -308,43 +306,21 @@ fn products_that_disagree(rows: &[SheetRow]) -> Vec<Finding> {
 
 /// Values outside what every export so far has contained. Not wrong — the app
 /// has simply never seen them, and someone should look before printing.
-fn unfamiliar_values(rows: &[SheetRow], list: &Kind) -> Vec<Finding> {
+fn unfamiliar_values(rows: &[SheetRow]) -> Vec<Finding> {
     let mut findings = Vec::new();
 
     findings.extend(unfamiliar(rows, "region", |row| {
         (row.region != "Stavanger").then(|| row.region.clone())
     }));
     findings.extend(unfamiliar(rows, "supplier", |row| {
-        (!is_familiar_supplier(&row.supplier, list)).then(|| row.supplier.clone())
+        let known = matches!(row.supplier.as_str(), "sandnes bakeri" | "bakehuset");
+        (!known).then(|| row.supplier.clone())
     }));
     findings.extend(unfamiliar(rows, "route nickname", |row| {
         (!is_familiar_route(&row.route_nickname)).then(|| row.route_nickname.clone())
     }));
 
     findings
-}
-
-/// Who each list buys from. Bread comes from two bakeries; the freezer list
-/// from these seven, every one of which appears in the sample export.
-///
-/// A kind the app has never met has no familiar suppliers, so every one of
-/// them is worth a look the first time — which is the whole point of the
-/// check.
-fn is_familiar_supplier(supplier: &str, list: &Kind) -> bool {
-    let known: &[&str] = match list {
-        Kind::Bread => &["sandnes bakeri", "bakehuset"],
-        Kind::Freezer => &[
-            "asko",
-            "fatland",
-            "gabbas",
-            "holmens as",
-            "møremat",
-            "sørlandskjøtt as",
-            "ytterøy",
-        ],
-        Kind::Other(_) => &[],
-    };
-    known.iter().any(|name| name.eq_ignore_ascii_case(supplier))
 }
 
 /// Collects one finding per unfamiliar value, naming every row it appears on.
@@ -375,18 +351,18 @@ fn unfamiliar(
         .collect()
 }
 
-/// A route nickname is familiar if [`crate::route::natural_key`] can sort it:
-/// a number, a name, or a name followed by a number — `7`, `hau`, `hau 2`.
-///
-/// It used to require the number, which made `hau` and `Svg Employee` — two
-/// real routes on the freezer list — into findings that told the user to go
-/// and look at nothing. The sorter never had a problem with either; the check
-/// was stricter than the thing it was protecting.
+/// A route nickname is familiar if it is a number, or a name followed by one —
+/// `7`, `hau 2`. Both sort naturally; anything else needs a human.
 fn is_familiar_route(nickname: &str) -> bool {
-    match crate::route::natural_key(nickname) {
-        RouteKey::Numbered(..) => true,
-        RouteKey::Named(name, _) => !name.trim().is_empty(),
+    if nickname.chars().all(|character| character.is_ascii_digit()) {
+        return !nickname.is_empty();
     }
+    let Some((name, number)) = nickname.rsplit_once(' ') else {
+        return false;
+    };
+    !name.is_empty()
+        && !number.is_empty()
+        && number.chars().all(|character| character.is_ascii_digit())
 }
 
 /// Groups rows by a key, keeping both the keys and the rows within each key in
