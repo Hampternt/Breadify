@@ -127,8 +127,12 @@ fn strip_download_suffix(stem: &str) -> &str {
 fn parse_stem(stem: &str) -> Option<(String, DeliveryDates)> {
     let rest = stem.strip_prefix(PREFIX)?;
     let (head, to) = rest.rsplit_once(SEPARATOR)?;
-    let (word, from) = head.split_at(head.len().checked_sub(DATE_WIDTH)?);
-    let word = word.strip_suffix('-')?;
+    // `get` rather than `split_at`: a name whose bytes put a multi-byte
+    // character across the cut would make `split_at` panic, and an oddly named
+    // file is a file to shrug at, not to crash on.
+    let cut = head.len().checked_sub(DATE_WIDTH)?;
+    let word = head.get(..cut)?.strip_suffix('-')?;
+    let from = head.get(cut..)?;
     if word.is_empty() {
         return None;
     }

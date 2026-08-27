@@ -104,3 +104,26 @@ fn a_missing_list_word_is_not_an_export() {
         assert_eq!(date::list_word(path), None, "{name} carries no list word");
     }
 }
+
+/// The list word is cut off the stem ten bytes from the end of the dates. A
+/// name whose bytes put a multi-byte character across that cut would have
+/// panicked inside `split_at`.
+#[test]
+fn an_oddly_named_file_is_shrugged_at_rather_than_crashed_on() {
+    for name in [
+        "PSR-€abcdefghi-to-2026-03-04.xlsx",
+        "PSR-Ø-to-2026.xlsx",
+        "PSR-æøå-2026-03-04-to-2026-03-04.xlsx",
+        "PSR-.xlsx",
+        "PSR-",
+    ] {
+        let path = Path::new(name);
+        let _ = date::from_filename(path);
+        let _ = date::list_word(path);
+    }
+
+    // The one of those that is a real name still parses.
+    let path = Path::new("PSR-æøå-2026-03-04-to-2026-03-04.xlsx");
+    assert_eq!(date::list_word(path).as_deref(), Some("æøå"));
+    assert_eq!(date::from_filename(path).unwrap().to_string(), "2026-03-04");
+}
