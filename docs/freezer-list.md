@@ -114,6 +114,10 @@ The override is per-file: the next file opened is read from its own name
 again. The CLI has no flag for this — a renamed file there still validates
 as bread — and gets one only if someone actually renames files at a
 terminal.
+*Refined the same day, at the user's ask: the control grew from a pill row
+under the stat cards into a full-width banner above them, worn in the
+list's own colour — crust yellow for bread, iced light blue for freezer —
+so the mode is impossible to miss.*
 
 ## Open
 

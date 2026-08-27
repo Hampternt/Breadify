@@ -35,15 +35,15 @@ pub fn show(app: &mut Breadify, ui: &mut egui::Ui) {
 
     mascot::behind(app, ui);
 
+    kind_banner(app, ui);
+    ui.add_space(14.0);
+
     {
         let Some(loaded) = &app.loaded else {
             return;
         };
         stats(ui, loaded);
     }
-
-    ui.add_space(14.0);
-    kind_bar(app, ui);
     ui.add_space(14.0);
 
     let Some(loaded) = &app.loaded else {
@@ -78,61 +78,90 @@ pub fn show(app: &mut Breadify, ui: &mut egui::Ui) {
     });
 }
 
-/// Which list the file is being treated as: read from the filename, but the
-/// user's to flip right here when the name is wrong or custom (decision
-/// F10). Flipping re-runs the checks below it, since what is familiar
-/// depends on which list this is.
-fn kind_bar(app: &mut Breadify, ui: &mut egui::Ui) {
-    ui.horizontal(|ui| {
-        ui.label(
-            RichText::new("TREATED AS")
-                .family(theme::mono())
-                .size(10.5)
-                .color(theme::FAINT),
-        );
-        ui.add_space(4.0);
+/// The mode banner: which list the file is being treated as, worn as a
+/// full-width band between the step rail and the stat cards, in the list's
+/// own colour — crust yellow for bread, iced blue for freezer — so it cannot
+/// be missed (decision F10). The filename decides it; the two buttons on the
+/// band flip it when the name is wrong or custom, re-running the checks
+/// below, since what is familiar depends on which list this is.
+fn kind_banner(app: &mut Breadify, ui: &mut egui::Ui) {
+    let freezer = app.settings.kind == ExportKind::Freezer;
+    let (band, title) = if freezer {
+        (theme::FREEZER_MODE, "FREEZER — CHECK LIST")
+    } else {
+        (theme::BREAD_MODE, "BREAD — PICKING LIST")
+    };
 
-        for (kind, label) in [(ExportKind::Bread, "BREAD"), (ExportKind::Freezer, "FREEZER")] {
-            if pill(ui, label, app.settings.kind == kind) {
-                app.set_kind(kind);
-            }
-        }
+    egui::Frame::NONE
+        .fill(band)
+        .corner_radius(CornerRadius::same(theme::RADIUS_CARD))
+        .inner_margin(egui::Margin::symmetric(16, 10))
+        .show(ui, |ui| {
+            ui.set_min_width(ui.available_width());
+            ui.horizontal(|ui| {
+                ui.vertical(|ui| {
+                    ui.spacing_mut().item_spacing.y = 2.0;
+                    ui.label(
+                        RichText::new("THIS FILE IS TREATED AS")
+                            .family(theme::mono())
+                            .size(10.0)
+                            .color(theme::VOID),
+                    );
+                    ui.label(
+                        RichText::new(title)
+                            .family(theme::heading())
+                            .size(21.0)
+                            .color(theme::VOID),
+                    );
+                });
 
-        ui.add_space(8.0);
-        ui.label(
-            RichText::new("picking list or check list — read from the filename; flip it if the file was renamed")
-                .family(theme::mono())
-                .size(10.5)
-                .color(theme::FAINT),
-        );
-    });
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    // Right-to-left: the first pill lands at the far right.
+                    if mode_pill(ui, "FREEZER", freezer, band) {
+                        app.set_kind(ExportKind::Freezer);
+                    }
+                    if mode_pill(ui, "BREAD", !freezer, band) {
+                        app.set_kind(ExportKind::Bread);
+                    }
+                    ui.add_space(6.0);
+                    ui.label(
+                        RichText::new("read from the filename — wrong? click the other one")
+                            .family(theme::mono())
+                            .size(10.5)
+                            .color(theme::VOID),
+                    );
+                });
+            });
+        });
 }
 
-/// One of the two kind buttons: solid when it is the current answer, an
-/// outline waiting to be clicked when it is not.
-fn pill(ui: &mut egui::Ui, label: &str, chosen: bool) -> bool {
-    let (rect, response) = ui.allocate_exact_size(Vec2::new(92.0, 28.0), egui::Sense::click());
+/// One of the two mode buttons on the banner: the current answer is punched
+/// dark through the band with the band's colour as its type; the other waits
+/// as an outline.
+fn mode_pill(ui: &mut egui::Ui, label: &str, chosen: bool, band: egui::Color32) -> bool {
+    let (rect, response) = ui.allocate_exact_size(Vec2::new(100.0, 32.0), egui::Sense::click());
 
-    let (fill, border, text) = if chosen {
-        (theme::ACCENT, theme::ACCENT, theme::VOID)
+    let fill = if chosen {
+        theme::VOID
     } else if response.hovered() {
-        (theme::CARD, theme::BORDER_STRONG, theme::STRONG)
+        egui::Color32::from_black_alpha(64)
     } else {
-        (theme::CARD, theme::BORDER, theme::MUTED)
+        egui::Color32::TRANSPARENT
     };
+    let text = if chosen { band } else { theme::VOID };
 
     ui.painter().rect(
         rect,
         CornerRadius::same(theme::RADIUS_CONTROL),
         fill,
-        Stroke::new(1.0, border),
+        Stroke::new(1.2, theme::VOID),
         egui::StrokeKind::Inside,
     );
     ui.painter().text(
         rect.center(),
         egui::Align2::CENTER_CENTER,
         label,
-        egui::FontId::new(12.0, theme::heading()),
+        egui::FontId::new(13.0, theme::heading()),
         text,
     );
 
