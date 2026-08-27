@@ -1,8 +1,8 @@
 # Pack 1 — Data spine
 
-**Status:** planned, not started. Awaiting go.
+**Status:** in progress — items 1–2 of 9 done.
 **Container:** Breadify v1 (7 packs — see [`../print-layout.md`](../print-layout.md) §Next).
-**Branch:** `pack-1-data-spine` (not yet created).
+**Branch:** `pack-1-data-spine`.
 
 ## Goal
 
@@ -56,8 +56,8 @@ assert numbers this repo has already re-derived.
 
 ## Ledger
 
-- [ ] 1 — Repo skeleton and the two gates
-- [ ] 2 — xlsx loader keyed off cell references
+- [x] 1 — Repo skeleton and the two gates · `d9a5d00`
+- [x] 2 — xlsx loader keyed off cell references · 7 tests green
 - [ ] 3 — Validation findings
 - [ ] 4 — Order model
 - [ ] 5 — Delivery date from the filename
