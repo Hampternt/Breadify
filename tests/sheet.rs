@@ -85,7 +85,7 @@ fn the_first_row_reads_exactly() {
     assert_eq!(first.product_id, 431);
     assert_eq!(first.product_name, "Barnehagebrødet - Oppskåret 750g");
     assert_eq!(first.supplier_sku, "10828");
-    assert_eq!(first.position, "X-Bakehuset");
+    assert_eq!(first.position.as_deref(), Some("X-Bakehuset"));
     assert_eq!(first.supplier, "bakehuset");
     assert_eq!(first.customer, "Customer 001");
     assert_eq!(first.department, None);

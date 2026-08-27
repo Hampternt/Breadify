@@ -5,9 +5,10 @@ use super::metrics::*;
 use super::{Cursor, micro_label, rule, text_from_right, text_from_top};
 use crate::font::Face;
 use crate::geometry::{MARGIN_SIDE, MARGIN_TOP, Mm, PAGE_WIDTH, Point, Rect};
-use crate::layout::SheetContext;
+use crate::layout::{Settings, SheetContext};
 use crate::page::{self, Page};
 use crate::route::Route;
+use crate::supplier;
 use crate::text::{self, Style};
 
 /// The logo panel, the route, the date and the page counter, over the brand
@@ -98,18 +99,25 @@ fn logo_panel(page: &mut Page, at: Point) {
 
 /// One sentence of context on the left, the substitute convention on the
 /// right.
-pub fn page_note(page: &mut Page, cursor: &mut Cursor, route: &Route) {
+pub fn page_note(page: &mut Page, cursor: &mut Cursor, route: &Route, settings: &Settings) {
     let style = Style::new(Face::MonoRegular, SIZE_PAGE_NOTE);
     let unsequenced = route.unsequenced().count();
 
+    // The bread sheet is picked from; the freezer sheet is checked against a
+    // box somebody already packed (decision F1), and says so.
+    let what = if settings.is_bread() {
+        "in full"
+    } else {
+        "check list"
+    };
     let left = match unsequenced {
         0 => format!(
-            "Route {} in full — {} stops.",
+            "Route {} {what} — {} stops.",
             route.nickname,
             route.stops.len()
         ),
         _ => format!(
-            "Route {} in full — {} stops, {unsequenced} with no position assigned.",
+            "Route {} {what} — {} stops, {unsequenced} with no position assigned.",
             route.nickname,
             route.stops.len()
         ),
@@ -135,7 +143,12 @@ pub fn page_note(page: &mut Page, cursor: &mut Cursor, route: &Route) {
 
 /// The tinted band that explains the boxes, the crate glyphs and the supplier
 /// codes.
-pub fn legend(page: &mut Page, cursor: &mut Cursor) {
+///
+/// The two lists differ here in three ways: the freezer sheet has no crates
+/// to explain (decision F4), its `P` means *packed* rather than *picked*, and
+/// its suppliers are not the two house bakeries but whichever wholesalers
+/// this route actually draws from — so those are read off the route.
+pub fn legend(page: &mut Page, cursor: &mut Cursor, route: &Route, settings: &Settings) {
     let text_style = Style::new(Face::MonoRegular, SIZE_LEGEND);
     let bold = Style::new(Face::MonoBold, SIZE_LEGEND).tracked(TRACK_TAG);
     let height = SWATCH + 2.0 * LEGEND_PADDING.0;
@@ -158,25 +171,34 @@ pub fn legend(page: &mut Page, cursor: &mut Cursor) {
     let middle = band.y + height / 2.0;
     let mut x = band.x + LEGEND_PADDING.1;
 
+    let boxes: &[(&str, &str)] = if settings.is_bread() {
+        &[("P", "Picked"), ("M", "Missing"), ("F", "Fixed")]
+    } else {
+        &[("C", "Checked"), ("M", "Missing")]
+    };
     x += write_middle(page, x, middle, "BOXES", bold, page::BLACK) + LEGEND_ITEM_GAP;
-    for (letter, word) in [("P", "Picked"), ("M", "Missing"), ("F", "Fixed")] {
+    for (letter, word) in boxes {
         swatch(page, Point::new(x, middle - SWATCH / 2.0), letter);
         x += SWATCH + 1.0;
         x += write_middle(page, x, middle, word, text_style, page::INK_QUIET) + LEGEND_ITEM_GAP;
     }
 
-    x += write_middle(page, x, middle, "CRATES", bold, page::BLACK) + LEGEND_ITEM_GAP;
-    for (full, count) in [(true, "10"), (false, "5")] {
-        super::crate_glyph(page, Point::new(x, middle - CRATE_GLYPH.1 / 2.0), full);
-        x += CRATE_GLYPH.0 + 1.0;
-        x += write_middle(page, x, middle, count, text_style, page::INK_QUIET) + LEGEND_ITEM_GAP;
+    if settings.is_bread() {
+        x += write_middle(page, x, middle, "CRATES", bold, page::BLACK) + LEGEND_ITEM_GAP;
+        for (full, count) in [(true, "10"), (false, "5")] {
+            super::crate_glyph(page, Point::new(x, middle - CRATE_GLYPH.1 / 2.0), full);
+            x += CRATE_GLYPH.0 + 1.0;
+            x +=
+                write_middle(page, x, middle, count, text_style, page::INK_QUIET) + LEGEND_ITEM_GAP;
+        }
     }
 
-    let suppliers = crate::supplier::KNOWN
-        .iter()
-        .map(|(_, code, name)| format!("{code} {name}"))
-        .collect::<Vec<_>>()
-        .join(" · ");
+    let suppliers = supplier_key(
+        route,
+        settings,
+        band.right() - LEGEND_PADDING.1 - x,
+        text_style,
+    );
     let width = text::width(&suppliers, text_style);
     write_middle(
         page,
@@ -188,6 +210,47 @@ pub fn legend(page: &mut Page, cursor: &mut Cursor) {
     );
 
     cursor.y = band.bottom() + 2.2;
+}
+
+/// The supplier key on the legend's right: code and name for every supplier
+/// the sheet's lines can carry.
+///
+/// The bread list spells out its two bakeries. The freezer list draws from a
+/// whole warehouse, so it names only the suppliers on *this route*, in the
+/// same order their codes sort elsewhere — and when even those will not fit
+/// the room the left of the band has left over, the codes stand alone.
+fn supplier_key(route: &Route, settings: &Settings, room: Mm, style: Style) -> String {
+    if settings.is_bread() {
+        return supplier::KNOWN
+            .iter()
+            .map(|(_, code, name)| format!("{code} {name}"))
+            .collect::<Vec<_>>()
+            .join(" · ");
+    }
+
+    let mut suppliers: Vec<&str> = route
+        .stops
+        .iter()
+        .flat_map(|stop| &stop.lines)
+        .map(|line| line.product.supplier.as_str())
+        .collect();
+    suppliers.sort_unstable_by_key(|name| supplier::column_position(name));
+    suppliers.dedup();
+
+    let spelled = suppliers
+        .iter()
+        .map(|name| format!("{} {}", supplier::code(name), supplier::display_name(name)))
+        .collect::<Vec<_>>()
+        .join(" · ");
+    if text::width(&spelled, style) <= room {
+        return spelled;
+    }
+
+    suppliers
+        .iter()
+        .map(|name| supplier::code(name))
+        .collect::<Vec<_>>()
+        .join(" · ")
 }
 
 /// A legend swatch: the tick box with its letter, at a quarter strength so it

@@ -81,7 +81,7 @@ fn drop_zone(app: &mut Breadify, ui: &mut egui::Ui) {
     painter.text(
         centre + egui::vec2(0.0, 16.0),
         egui::Align2::CENTER_CENTER,
-        "PSR-BREAD-<from>-to-<to>.xlsx — one sheet named Data, 14 headers plus one",
+        "PSR-BREAD- or PSR-FREEZER-<from>-to-<to>.xlsx — one sheet named Data, 14 headers plus one",
         egui::FontId::new(12.5, theme::mono()),
         theme::MUTED,
     );
@@ -184,7 +184,7 @@ fn blueprint_grid(painter: &egui::Painter, rect: egui::Rect) {
 /// Opens the system file dialog.
 fn choose_file(app: &mut Breadify) {
     let picked = rfd::FileDialog::new()
-        .add_filter("Bread order export", &["xlsx"])
+        .add_filter("Order export", &["xlsx"])
         .set_title("Choose today's export")
         .pick_file();
 

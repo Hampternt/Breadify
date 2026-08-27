@@ -16,3 +16,6 @@ Printer page formatting application.zip
 
 # The released binary, downloaded here for testing.
 breadify-v1.0.0
+
+# Python bytecode from tools/
+__pycache__/

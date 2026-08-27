@@ -214,6 +214,10 @@ impl Breadify {
                 self.loading = None;
                 self.remember(&loaded.path);
                 self.selected = print::everything(&loaded.routes);
+                // Which list this is belongs to the file, not the user, so it
+                // rides along in the settings rather than being asked about.
+                self.settings.kind = crate::date::export_kind(&loaded.path)
+                    .unwrap_or(crate::date::ExportKind::Bread);
                 self.loaded = Some(*loaded);
                 self.step = self.start_on.unwrap_or(Step::Check);
                 self.stale = true;
@@ -261,6 +265,22 @@ impl Breadify {
                 "Print at actual size — 100 %, no scaling. One route per sheet set.".to_owned()
             }
         }
+    }
+
+    /// Treats the open file as the other list — the Check step's escape hatch
+    /// for a renamed or custom-named export (decision F10). The filename's
+    /// answer stays the default; this only overrides it for the file that is
+    /// open. Validation re-runs because what counts as familiar depends on
+    /// the kind, and the sheets re-paginate.
+    pub fn set_kind(&mut self, kind: crate::date::ExportKind) {
+        if self.settings.kind == kind {
+            return;
+        }
+        self.settings.kind = kind;
+        if let Some(loaded) = &mut self.loaded {
+            loaded.findings = crate::validate::run(&loaded.rows, kind);
+        }
+        self.resettle();
     }
 
     /// Marks what a changed setting invalidates.
@@ -373,7 +393,8 @@ impl Breadify {
 /// Reads an export and derives everything the steps need from it.
 fn read(path: PathBuf) -> LoadResult {
     let rows = crate::sheet::read(&path).map_err(|error| error.to_string())?;
-    let findings = crate::validate::run(&rows);
+    let kind = crate::date::export_kind(&path).unwrap_or(crate::date::ExportKind::Bread);
+    let findings = crate::validate::run(&rows, kind);
     let orders = crate::order::fold(&rows);
     let routes = crate::route::group(orders.clone());
     let dates = crate::date::from_filename(&path).ok();

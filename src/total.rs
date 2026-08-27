@@ -111,6 +111,24 @@ pub fn of(route: &Route) -> RouteTotal {
     RouteTotal { columns }
 }
 
+/// The same total flattened into one list, most needed first — the freezer
+/// sheet's closing count, where the supplier is a lookup cue on the line
+/// rather than a column of its own (decisions F4, F9).
+pub fn flat(route: &Route) -> Vec<TotalLine> {
+    let mut lines: Vec<TotalLine> = of(route)
+        .columns
+        .into_iter()
+        .flat_map(|column| column.lines)
+        .collect();
+    lines.sort_by(|left, right| {
+        right
+            .units
+            .cmp(&left.units)
+            .then_with(|| left.product.name.cmp(&right.product.name))
+    });
+    lines
+}
+
 /// `6 types · 33 units`, pluralised — a route with one bread reads
 /// `1 type · 10 units`.
 pub fn summary(types: usize, units: u32) -> String {

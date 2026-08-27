@@ -95,11 +95,12 @@ fn window(screenshot: Option<PathBuf>, open: Option<PathBuf>, step: Option<usize
 }
 
 /// The same rules the window uses: the warehouse's crate sizes as last saved,
-/// and the printed form's defaults for everything else. A route dumped from
-/// the terminal has to come to the same crates as the same route printed from
-/// the window, or one of them is lying.
-fn settings() -> Settings {
+/// which list the filename says this is, and the printed form's defaults for
+/// everything else. A route dumped from the terminal has to come to the same
+/// sheet as the same route printed from the window, or one of them is lying.
+fn settings(path: &Path) -> Settings {
     Settings {
+        kind: date::export_kind(path).unwrap_or(date::ExportKind::Bread),
         crates: breadify::store::load().unwrap_or_default(),
         ..Settings::default()
     }
@@ -124,7 +125,8 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         Ok(rows) => rows,
         Err(error) => return fail(&error.to_string()),
     };
-    for finding in validate::run(&rows) {
+    let settings = settings(&path);
+    for finding in validate::run(&rows, settings.kind) {
         warn(&format!("{:?}: {}\n", finding.severity, finding.headline));
     }
 
@@ -135,7 +137,7 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         .map(|stem| stem.to_string_lossy().into_owned())
         .unwrap_or_default();
 
-    let sheets = layout::day(&routes, dates, &settings(), &source);
+    let sheets = layout::day(&routes, dates, &settings, &source);
     let pages: Vec<_> = sheets.iter().map(|sheet| sheet.content.clone()).collect();
 
     match pdf::write(Path::new(target), &pages, "Breadify pick lists") {
@@ -198,8 +200,8 @@ Flags:
   --step <0-3>           open the window on a given step
   --screenshot <f.ppm>   render one frame, write it, and close
 
-With no file given, looks for a single PSR-BREAD-*.xlsx in this folder.
-The delivery date is read from the filename.
+With no file given, looks for a single PSR-BREAD-*.xlsx or PSR-FREEZER-*.xlsx
+in this folder. The delivery date is read from the filename.
 ",
     );
     ExitCode::FAILURE
@@ -259,7 +261,8 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         Err(error) => return fail(&error.to_string()),
     };
 
-    for finding in validate::run(&rows) {
+    let settings = settings(&path);
+    for finding in validate::run(&rows, settings.kind) {
         warn(&format!("{:?}: {}\n", finding.severity, finding.headline));
     }
 
@@ -272,8 +275,7 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     };
 
     let dates = date::from_filename(&path).ok();
-    let settings = settings();
-    let dumped = say(&dump::route(wanted, dates, &settings.crates));
+    let dumped = say(&dump::route(wanted, dates, &settings));
     if dumped != ExitCode::SUCCESS {
         return dumped;
     }
@@ -298,8 +300,9 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     }
 }
 
-/// The single `PSR-BREAD-*.xlsx` in the working directory, if there is exactly
-/// one — the common case while working on a day's orders.
+/// The single `PSR-BREAD-*.xlsx` or `PSR-FREEZER-*.xlsx` in the working
+/// directory, if there is exactly one — the common case while working on a
+/// day's orders.
 fn export_here() -> Result<PathBuf, String> {
     let entries =
         std::fs::read_dir(".").map_err(|error| format!("cannot read this folder: {error}"))?;
@@ -312,7 +315,10 @@ fn export_here() -> Result<PathBuf, String> {
     exports.sort();
 
     match exports.len() {
-        0 => Err("no PSR-BREAD-*.xlsx here — give the file as the second argument".to_owned()),
+        0 => Err(
+            "no PSR-BREAD-*.xlsx or PSR-FREEZER-*.xlsx here — give the file as the second argument"
+                .to_owned(),
+        ),
         1 => Ok(exports.remove(0)),
         _ => Err(format!(
             "several exports here — say which: {}",
@@ -329,7 +335,7 @@ fn is_export(path: &Path) -> bool {
     let Some(name) = path.file_name().map(|name| name.to_string_lossy()) else {
         return false;
     };
-    name.starts_with("PSR-BREAD-") && name.ends_with(".xlsx")
+    name.ends_with(".xlsx") && date::export_kind(path).is_some()
 }
 
 fn nicknames(routes: &[Route]) -> String {

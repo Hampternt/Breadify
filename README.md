@@ -7,6 +7,12 @@ The bakeries drop the morning's bread at the warehouse in one heap. Each driver
 picks their own route out of it, packs and labels the crates, and drives it.
 This is the sheet they do both jobs from.
 
+The freezer export (`PSR-FREEZER-…`) works the same way and prints as a
+**check list** instead: the freezer goods arrive already packed, so the sheet
+is held against the box — same blocks, a checked box, a dotted note field and
+a missing box on every item, no crate maths, and a flat item total closing
+each route.
+
 ## Get it
 
 Grab it from
@@ -37,6 +43,10 @@ or two. Click it and pick a fraction. Set once — it's remembered from then on.
 **Getting back.** Click **01 Open** at the top whenever you want a different
 file.
 
+**Renamed file?** Which list a file is comes from its name. If the name is
+wrong or custom, the Check step's **TREATED AS** buttons flip it between
+bread and freezer for the file that's open.
+
 <p align="center">
   <img src="assets/nobread.jpg" alt="NO BREAD?" width="280">
   <br>
@@ -49,10 +59,14 @@ file.
 <details>
 <summary>For developers</summary>
 
-- [`docs/excel-format.md`](docs/excel-format.md) — the export's structure and
-  the checks the loader performs.
+- [`docs/excel-format.md`](docs/excel-format.md) — the bread export's
+  structure and the checks the loader performs.
+- [`docs/freezer-format.md`](docs/freezer-format.md) — the freezer export,
+  as deltas against the bread one.
 - [`docs/print-spec.md`](docs/print-spec.md) — what the page must say and do.
 - [`docs/print-layout.md`](docs/print-layout.md) — the decision log, D1 to D22.
+- [`docs/freezer-list.md`](docs/freezer-list.md) — the freezer version's
+  decisions and open questions.
 - [`docs/INVENTORY.md`](docs/INVENTORY.md) — what exists, and what is left to a
   person.
 

@@ -92,6 +92,9 @@ pub const TICK_BOX_RADIUS: Mm = 0.35;
 pub const TICK_BOX_GAP: Mm = 1.5;
 pub const QUANTITY_COLUMN: Mm = 10.1;
 pub const SUPPLIER_COLUMN: Mm = 8.0;
+/// Air on either side of the freezer line's dotted note field (**F8**), so
+/// the dots read as a place to write rather than part of the name or the box.
+pub const NOTE_FIELD_GAP: Mm = 3.4;
 
 /// Crate glyphs.
 pub const CRATE_GLYPH: (Mm, Mm) = (7.1, 4.1);

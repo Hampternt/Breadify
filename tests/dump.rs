@@ -2,7 +2,7 @@
 
 mod support;
 
-use breadify::crates::CrateRules;
+use breadify::layout::Settings;
 use breadify::route::Route;
 use breadify::{date, dump, order, route};
 use support::{sample_path, sample_rows};
@@ -17,7 +17,7 @@ fn route_eight() -> Route {
 #[test]
 fn a_route_dumps_in_the_shape_of_the_worked_example() {
     let dates = date::from_filename(&sample_path()).ok();
-    let text = dump::route(&route_eight(), dates, &CrateRules::default());
+    let text = dump::route(&route_eight(), dates, &Settings::default());
 
     assert!(text.starts_with("ROUTE 8 — 2026-03-04 — 5 stops, 13 lines"));
 
@@ -53,7 +53,7 @@ fn a_route_with_no_unsequenced_stops_shows_no_flag() {
         .find(|route| route.nickname == "1")
         .expect("route 1 is in the sample");
 
-    let text = dump::route(&route_one, None, &CrateRules::default());
+    let text = dump::route(&route_one, None, &Settings::default());
     assert!(!text.contains("no position assigned"));
     assert!(text.starts_with("ROUTE 1 — date unknown — 11 stops, 24 lines"));
 }

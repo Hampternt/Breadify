@@ -64,7 +64,7 @@ fn every_row_matches_the_design_pass_extraction() {
         );
         assert_eq!(Some(row.supplier_sku.as_str()), at("sku"), "{context} sku");
         assert_eq!(
-            Some(row.position.as_str()),
+            row.position.as_deref(),
             at("position"),
             "{context} position"
         );

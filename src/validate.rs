@@ -8,6 +8,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::date::ExportKind;
 use crate::sheet::SheetRow;
 
 /// A column name paired with a way of reading that column off a row, as text.
@@ -63,15 +64,20 @@ pub struct Finding {
 
 /// Runs every check over a file's rows.
 ///
+/// The invariants are the same for both lists; what counts as *familiar* —
+/// suppliers, route nickname shapes — depends on which list this is, so the
+/// caller says. A file whose name reveals nothing validates as bread, the
+/// kind every check was first derived from.
+///
 /// Returns the findings most severe first; an empty list means the file
 /// matches every invariant the specification relies on.
-pub fn run(rows: &[SheetRow]) -> Vec<Finding> {
+pub fn run(rows: &[SheetRow], kind: ExportKind) -> Vec<Finding> {
     let mut findings = Vec::new();
     findings.extend(blank_required_fields(rows));
     findings.extend(orders_that_disagree(rows));
     findings.extend(addresses_on_two_routes(rows));
     findings.extend(products_that_disagree(rows));
-    findings.extend(unfamiliar_values(rows));
+    findings.extend(unfamiliar_values(rows, kind));
     findings.extend(unsequenced_stops(rows));
     findings.extend(unlabelled_column(rows));
     findings.sort_by(|left, right| {
@@ -304,20 +310,41 @@ fn products_that_disagree(rows: &[SheetRow]) -> Vec<Finding> {
         .collect()
 }
 
-/// Values outside what every export so far has contained. Not wrong — the app
-/// has simply never seen them, and someone should look before printing.
-fn unfamiliar_values(rows: &[SheetRow]) -> Vec<Finding> {
+/// The suppliers every export of a kind so far has drawn from, in the
+/// spelling the file uses, compared case-insensitively. Bread has its two
+/// bakeries; the freezer list draws on a warehouse of wholesalers.
+fn known_suppliers(kind: ExportKind) -> &'static [&'static str] {
+    match kind {
+        ExportKind::Bread => &["sandnes bakeri", "bakehuset"],
+        ExportKind::Freezer => &[
+            "asko",
+            "fatland",
+            "møremat",
+            "ytterøy",
+            "holmens as",
+            "sørlandskjøtt as",
+            "gabbas",
+        ],
+    }
+}
+
+/// Values outside what every export of this kind so far has contained. Not
+/// wrong — the app has simply never seen them, and someone should look before
+/// printing.
+fn unfamiliar_values(rows: &[SheetRow], kind: ExportKind) -> Vec<Finding> {
     let mut findings = Vec::new();
 
     findings.extend(unfamiliar(rows, "region", |row| {
         (row.region != "Stavanger").then(|| row.region.clone())
     }));
     findings.extend(unfamiliar(rows, "supplier", |row| {
-        let known = matches!(row.supplier.as_str(), "sandnes bakeri" | "bakehuset");
+        let known = known_suppliers(kind)
+            .iter()
+            .any(|name| name.eq_ignore_ascii_case(&row.supplier));
         (!known).then(|| row.supplier.clone())
     }));
     findings.extend(unfamiliar(rows, "route nickname", |row| {
-        (!is_familiar_route(&row.route_nickname)).then(|| row.route_nickname.clone())
+        (!is_familiar_route(&row.route_nickname, kind)).then(|| row.route_nickname.clone())
     }));
 
     findings
@@ -352,10 +379,19 @@ fn unfamiliar(
 }
 
 /// A route nickname is familiar if it is a number, or a name followed by one —
-/// `7`, `hau 2`. Both sort naturally; anything else needs a human.
-fn is_familiar_route(nickname: &str) -> bool {
+/// `7`, `hau 2`. The freezer list also names routes with words alone — `hau`,
+/// `Svg Employee` — so a digit-free name is familiar there too. Everything
+/// here sorts naturally; anything else needs a human.
+fn is_familiar_route(nickname: &str, kind: ExportKind) -> bool {
+    if nickname.is_empty() {
+        return false;
+    }
     if nickname.chars().all(|character| character.is_ascii_digit()) {
-        return !nickname.is_empty();
+        return true;
+    }
+    if kind == ExportKind::Freezer && !nickname.chars().any(|character| character.is_ascii_digit())
+    {
+        return true;
     }
     let Some((name, number)) = nickname.rsplit_once(' ') else {
         return false;

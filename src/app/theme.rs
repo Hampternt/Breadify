@@ -41,6 +41,13 @@ pub const WARNING: Color32 = Color32::from_rgb(0xFF, 0xB5, 0x70);
 pub const DANGER: Color32 = Color32::from_rgb(0xF7, 0x76, 0x8E);
 pub const INFO: Color32 = Color32::from_rgb(0x7A, 0xA2, 0xF7);
 
+/// The two list kinds, as the Check step's mode banner wears them (decision
+/// F10): bread a warm crust yellow, freezer an iced light blue. Bright on
+/// purpose — the banner exists to be impossible to miss on a dark window —
+/// so everything set on them is dark.
+pub const BREAD_MODE: Color32 = Color32::from_rgb(0xF2, 0xC4, 0x4D);
+pub const FREEZER_MODE: Color32 = Color32::from_rgb(0x9E, 0xD3, 0xF2);
+
 /// Radii.
 pub const RADIUS_BADGE: u8 = 3;
 pub const RADIUS_CONTROL: u8 = 5;

@@ -60,6 +60,106 @@ pub fn block(route: &Route, column: &Cursor) -> (Page, Mm) {
     (page.clone(), cursor.y)
 }
 
+/// The flat total that closes a freezer route: one list, most needed first,
+/// in two balanced columns — no bakery columns, no ten-dots, and no supplier
+/// code either: that cue lives on the stop lines, and the longest freezer
+/// names need the room here (decision F9).
+pub fn check_block(route: &Route, column: &Cursor) -> (Page, Mm) {
+    let lines = total::flat(route);
+    let units: u32 = lines.iter().map(|line| line.units).sum();
+    let mut own = Page::new();
+    let mut cursor = Cursor {
+        y: 0.0,
+        left: column.left,
+        width: column.width,
+    };
+    let page = &mut own;
+    let cursor = &mut cursor;
+
+    cursor.advance(TOTAL_MARGIN_TOP);
+    rule(page, cursor, RULE_TOTAL, page::BLACK);
+    cursor.advance(TOTAL_PADDING_TOP);
+
+    let title = Style::new(Face::ArchivoExtraBold, SIZE_TOTAL_TITLE).tracked(TRACK_CUSTOMER);
+    let height = text_from_top(
+        page,
+        Point::new(cursor.left, cursor.y),
+        &format!("Route {} total", route.nickname),
+        title,
+        page::BLACK,
+    );
+    cursor.advance(height + 0.6);
+
+    let meta = Style::new(Face::MonoRegular, SIZE_TOTAL_META);
+    let summary = format!("{} · most to least", total::summary(lines.len(), units));
+    let height = text_from_top(
+        page,
+        Point::new(cursor.left, cursor.y),
+        &summary,
+        meta,
+        page::NOTE,
+    );
+    cursor.advance(height + 1.8);
+
+    // Read down the first column, then down the second. A one-line route
+    // keeps the full width rather than an empty twin.
+    let split = lines.len().div_ceil(2);
+    let count: f64 = if lines.len() > 1 { 2.0 } else { 1.0 };
+    let width = (cursor.width - TOTAL_COLUMN_GAP * (count - 1.0)) / count;
+    let top = cursor.y;
+    let mut lowest = top;
+
+    for (index, half) in [&lines[..split], &lines[split..]].into_iter().enumerate() {
+        let left = cursor.left + (width + TOTAL_COLUMN_GAP) * index as f64;
+        let mut y = top;
+        for line in half {
+            y = check_row(page, Point::new(left, y), width, line);
+        }
+        lowest = lowest.max(y);
+    }
+    cursor.y = lowest;
+
+    (page.clone(), cursor.y)
+}
+
+/// A row of the flat total: how many, and of what.
+fn check_row(page: &mut Page, at: Point, width: Mm, line: &total::TotalLine) -> Mm {
+    let quantity = Style::new(Face::MonoSemiBold, SIZE_TOTAL_QUANTITY);
+    let name = Style::new(Face::SpaceGrotesk, SIZE_TOTAL_NAME);
+    let height = text::line_height(quantity) + 0.7;
+    let middle = at.y + height / 2.0;
+
+    let units = line.units.to_string();
+    let units_width = text::width(&units, quantity);
+    page.text(
+        Point::new(
+            at.x + TOTAL_QUANTITY_COLUMN - units_width,
+            middle + text::ascent(quantity) / 2.0 - 0.45,
+        ),
+        &units,
+        quantity,
+        page::BLACK,
+    );
+
+    page.text(
+        Point::new(
+            at.x + TOTAL_QUANTITY_COLUMN + 2.4,
+            middle + text::ascent(name) / 2.0 - 0.4,
+        ),
+        &line.product.name,
+        name,
+        page::INK_SOFT,
+    );
+
+    page.horizontal_rule(
+        Point::new(at.x, at.y + height),
+        width,
+        RULE_BREAD_LINE,
+        page::RULE_LINE,
+    );
+    at.y + height
+}
+
 /// What a ten-dot means, and how many the route has.
 fn dot_note(page: &mut Page, cursor: &mut Cursor, dots: u32) {
     let style = Style::new(Face::MonoRegular, SIZE_DOT_NOTE);
