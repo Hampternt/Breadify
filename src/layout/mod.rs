@@ -158,11 +158,9 @@ pub fn paginate(
 }
 
 /// Everything a route puts on paper, in order: its stops, the flag above the
-/// unsequenced ones, and — on the bread list — the total that closes it.
-///
-/// The freezer list has no total: it exists as a receiving check against the
-/// bakeries' unsorted delivery, and the freezer goods arrive already packed
-/// (decision F4).
+/// unsequenced ones, and the total that closes it — the bread list's split by
+/// bakery with its ten-dots, the freezer list's flat and most-to-least
+/// (decision F9).
 fn pieces(route: &Route, settings: &Settings, column: &Cursor) -> Vec<Piece> {
     let mut pieces = Vec::new();
     let mut flagged = false;
@@ -185,14 +183,16 @@ fn pieces(route: &Route, settings: &Settings, column: &Cursor) -> Vec<Piece> {
         });
     }
 
-    if settings.is_bread() {
-        let (content, height) = total::block(route, column);
-        pieces.push(Piece {
-            content,
-            height,
-            keep_with_next: false,
-        });
-    }
+    let (content, height) = if settings.is_bread() {
+        total::block(route, column)
+    } else {
+        total::check_block(route, column)
+    };
+    pieces.push(Piece {
+        content,
+        height,
+        keep_with_next: false,
+    });
     pieces
 }
 

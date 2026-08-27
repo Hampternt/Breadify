@@ -178,10 +178,10 @@ fn reading_the_same_file_twice_gives_the_same_rows() {
 }
 
 /// The freezer sheet is the bread sheet minus the picking machinery: every
-/// customer and product still prints, but no crate glyphs are explained, no
-/// route total closes the route, and the page says what it is.
+/// customer and product still prints, no crate glyphs are explained, the page
+/// says what it is, and a flat total closes the route (decision F9).
 #[test]
-fn the_freezer_sheet_is_a_check_list_without_crates_or_totals() {
+fn the_freezer_sheet_is_a_check_list_with_a_flat_total() {
     let route = freezer_route("4");
     let set = freezer_runs(&route);
 
@@ -205,19 +205,41 @@ fn the_freezer_sheet_is_a_check_list_without_crates_or_totals() {
         "no crate legend on a checking list"
     );
     assert!(
-        !set.iter().any(|run| run.contains("total")),
-        "no route total on a checking list: {set:?}"
+        set.iter().any(|run| run == "Route 4 total"),
+        "the flat total closes the route: {set:?}"
+    );
+    assert!(
+        set.iter().any(|run| run.contains("most to least")),
+        "the total says its order"
     );
 }
 
-/// `P` means packed on the freezer legend, and the supplier key names the
-/// wholesalers this route actually draws from rather than the two bakeries.
+/// The freezer line is checked box, item, dotted note field, missing box —
+/// no fixed box anywhere (decision F8).
+#[test]
+fn the_freezer_line_is_check_note_missing() {
+    let set = freezer_runs(&freezer_route("4"));
+
+    assert!(set.iter().any(|run| run == "C"), "the checked box");
+    assert!(set.iter().any(|run| run == "M"), "the missing box");
+    assert!(!set.iter().any(|run| run == "F"), "no fixed box");
+    assert!(
+        set.iter()
+            .any(|run| run.len() >= 3 && run.chars().all(|character| character == '.')),
+        "the dotted note field is set as a leader of full stops"
+    );
+}
+
+/// The legend reads the freezer line's own words, and its supplier key names
+/// the wholesalers this route actually draws from rather than the two
+/// bakeries.
 #[test]
 fn the_freezer_legend_speaks_freezer() {
     let set = freezer_runs(&freezer_route("4"));
 
-    assert!(set.iter().any(|run| run == "Packed"));
+    assert!(set.iter().any(|run| run == "Checked"));
     assert!(!set.iter().any(|run| run == "Picked"));
+    assert!(!set.iter().any(|run| run == "Fixed"));
     assert!(
         !set.iter().any(|run| run.contains("Sandnes Bakeri")),
         "the bakeries have no place on a freezer sheet"
@@ -229,10 +251,32 @@ fn the_freezer_legend_speaks_freezer() {
     );
 }
 
-/// The same route through the bread layout still carries its total — the
-/// difference is the kind, not the data.
+/// The longest name on the freezer list fits the flat total's half column, so
+/// no row ever runs into its neighbour.
 #[test]
-fn the_same_route_as_bread_would_carry_a_total() {
+fn every_product_name_fits_the_total_column() {
+    use breadify::geometry::CONTENT_WIDTH;
+    use breadify::layout::metrics::{SIZE_TOTAL_NAME, TOTAL_COLUMN_GAP, TOTAL_QUANTITY_COLUMN};
+    use breadify::text::{self, Style};
+
+    let column = (CONTENT_WIDTH - TOTAL_COLUMN_GAP) / 2.0;
+    let room = column - (TOTAL_QUANTITY_COLUMN + 2.4);
+    let style = Style::new(breadify::font::Face::SpaceGrotesk, SIZE_TOTAL_NAME);
+
+    for row in freezer_rows() {
+        let width = text::width(&row.product_name, style);
+        assert!(
+            width <= room,
+            "{:?} is {width:.1} mm against {room:.1} mm of column",
+            row.product_name
+        );
+    }
+}
+
+/// The same route through the bread layout still carries its crates and its
+/// per-bakery total — the difference is the kind, not the data.
+#[test]
+fn the_same_route_as_bread_would_carry_crates() {
     let route = freezer_route("4");
     let sheets = layout::paginate(&route, None, &Settings::default(), "PSR-FREEZER-2026-01-23");
     let set: Vec<String> = sheets
@@ -240,18 +284,21 @@ fn the_same_route_as_bread_would_carry_a_total() {
         .flat_map(|sheet| runs(&sheet.content))
         .collect();
 
-    assert!(set.iter().any(|run| run.contains("total")));
     assert!(set.iter().any(|run| run == "CRATES"));
+    assert!(set.iter().any(|run| run == "Route 4 total"));
 }
 
-/// The terminal dump follows the page: heading, marker and lines, but no crate
-/// glyphs and no closing total.
+/// The terminal dump follows the page: heading, marker and lines, no crate
+/// glyphs, and the flat total at the bottom.
 #[test]
-fn a_freezer_route_dumps_without_crates_or_totals() {
+fn a_freezer_route_dumps_with_a_flat_total() {
     let text = dump::route(&freezer_route("13"), None, &freezer_settings());
 
     assert!(text.starts_with("ROUTE 13 — date unknown — 8 stops, 19 lines"));
     assert!(text.contains("Customer 012"));
     assert!(!text.contains('■'), "no crate glyphs: {text}");
-    assert!(!text.contains("total"), "no route total: {text}");
+    assert!(
+        text.contains("Route 13 total — ") && text.contains("most to least"),
+        "the flat total closes the dump: {text}"
+    );
 }

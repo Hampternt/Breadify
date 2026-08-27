@@ -49,7 +49,7 @@ pub fn block(stop: &Order, settings: &Settings, column: &Cursor) -> (Page, Mm) {
     cursor.advance(HEADING_TO_LINES);
 
     for (index, line) in stop.lines.iter().enumerate() {
-        bread_line(page, cursor, line, left, index % 2 == 1);
+        bread_line(page, cursor, line, settings, left, index % 2 == 1);
     }
 
     cursor.advance(BLOCK_PADDING_BOTTOM);
@@ -376,9 +376,20 @@ fn marker(page: &mut Page, right: Mm, middle: Mm, stop: &Order, settings: &Setti
     );
 }
 
-/// Tick box, quantity, supplier code, product name, then the missing and fixed
-/// boxes — with every second line tinted.
-fn bread_line(page: &mut Page, cursor: &mut Cursor, line: &Line, left: Mm, tinted: bool) {
+/// One product line, with every second line tinted.
+///
+/// The bread list writes a pick line: `P` box, quantity, code, name, then the
+/// fixed and missing boxes at the right. The freezer list writes a check
+/// line (decision F8): a *checked* box on the left, a dotted field for a note
+/// in the slack after the name, and only the *missing* box on the right.
+fn bread_line(
+    page: &mut Page,
+    cursor: &mut Cursor,
+    line: &Line,
+    settings: &Settings,
+    left: Mm,
+    tinted: bool,
+) {
     let name = Style::new(Face::SpaceGrotesk, SIZE_PRODUCT);
     let height = TICK_BOX.max(text::line_height(name)) + 2.0 * LINE_PADDING.0;
     let row = Rect::new(left, cursor.y, cursor.right() - left, height);
@@ -390,7 +401,8 @@ fn bread_line(page: &mut Page, cursor: &mut Cursor, line: &Line, left: Mm, tinte
     let middle = row.y + height / 2.0;
     let mut x = row.x + LINE_PADDING.1;
 
-    tick_box(page, Point::new(x, middle - TICK_BOX / 2.0), "P");
+    let first = if settings.is_bread() { "P" } else { "C" };
+    tick_box(page, Point::new(x, middle - TICK_BOX / 2.0), first);
     x += TICK_BOX + LINE_GAP;
 
     let quantity = Style::new(Face::MonoSemiBold, SIZE_QUANTITY);
@@ -424,9 +436,19 @@ fn bread_line(page: &mut Page, cursor: &mut Cursor, line: &Line, left: Mm, tinte
     );
 
     let mut boxes = row.right() - LINE_PADDING.1 - TICK_BOX;
-    for letter in ["F", "M"] {
-        tick_box(page, Point::new(boxes, middle - TICK_BOX / 2.0), letter);
-        boxes -= TICK_BOX + TICK_BOX_GAP;
+    if settings.is_bread() {
+        for letter in ["F", "M"] {
+            tick_box(page, Point::new(boxes, middle - TICK_BOX / 2.0), letter);
+            boxes -= TICK_BOX + TICK_BOX_GAP;
+        }
+    } else {
+        tick_box(page, Point::new(boxes, middle - TICK_BOX / 2.0), "M");
+        note_field(
+            page,
+            x + text::width(&line.product.name, name) + NOTE_FIELD_GAP,
+            boxes - NOTE_FIELD_GAP,
+            middle,
+        );
     }
 
     page.horizontal_rule(
@@ -436,6 +458,26 @@ fn bread_line(page: &mut Page, cursor: &mut Cursor, line: &Line, left: Mm, tinte
         page::RULE_LINE,
     );
     cursor.advance(height);
+}
+
+/// The dotted field between the product and the missing box, for the
+/// checker's pen — how many short, what was substituted. Set as a leader of
+/// full stops so it reads as a place to write, not a rule. A long product
+/// name that leaves no room simply has no field.
+fn note_field(page: &mut Page, left: Mm, right: Mm, middle: Mm) {
+    let style = Style::new(Face::MonoRegular, SIZE_PRODUCT);
+    let dot = text::width(".", style);
+    let dots = ((right - left) / dot).floor();
+    if dots < 3.0 {
+        return;
+    }
+
+    page.text(
+        Point::new(left, middle + text::ascent(style) / 2.0 - 0.45),
+        ".".repeat(dots as usize),
+        style,
+        page::RULE_SUB,
+    );
 }
 
 /// An empty box for the driver's pen, with its letter set faintly inside so it

@@ -9,8 +9,9 @@ This is the sheet they do both jobs from.
 
 The freezer export (`PSR-FREEZER-…`) works the same way and prints as a
 **check list** instead: the freezer goods arrive already packed, so the sheet
-is held against the box — same blocks, tick boxes per item, no crate maths and
-no totals.
+is held against the box — same blocks, a checked box, a dotted note field and
+a missing box on every item, no crate maths, and a flat item total closing
+each route.
 
 ## Get it
 

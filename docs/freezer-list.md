@@ -5,10 +5,10 @@ made about what the freezer version is and what its printed sheet must do,
 in the user's own terms. Input-side facts live in
 [`freezer-format.md`](freezer-format.md).
 
-**Status: built.** The loader work (F2, F3) and the freezer page (F6, F7)
-are both in; what stays open is listed at the bottom. The sample freezer
-day prints as 15 routes over 17 sheets — the same day through the bread
-layout was 24.
+**Status: built.** The loader work (F2, F3) and the freezer page (F6–F9)
+are in; what stays open is listed at the bottom. The sample freezer day
+prints as 15 routes over 21 sheets — the same day through the bread layout
+was 24.
 
 ## Decided
 
@@ -79,8 +79,28 @@ were already a checklist waiting for this job. What changes:
   so the two sheets cannot be mistaken for one another in a stack.
 
 On the sample day this takes route 13's Customer 012 page from crate-glyph rows
-and a 19-line total down to eight clean blocks, and the day from 24 sheets
-to 17.
+and a 19-line total down to eight clean blocks.
+*Partly superseded the same day: **F8** reshapes the line (the `F` box is
+gone and `P` became `C`) and **F9** brings a total back in flat form — the
+legend now reads `C Checked · M Missing` and the day is 21 sheets.*
+
+**F8 — The check line: checked box, dotted note field, missing box.**
+(2026-08-27)
+The user's call: *there doesn't need to be a missing and fixed box any
+more — a checked/confirmed box on the left, a missing box on the right,
+and a dotted comment field in between.* So the freezer line is
+`C` box · quantity · supplier code · product name · a leader of full stops
+for the checker's pen (how many short, what was substituted) · `M` box at
+the right edge. The bread line keeps its `P` / `F` / `M` boxes untouched.
+A name long enough to leave no room simply has no field — nothing wraps.
+
+**F9 — Totals come back, flat.** (2026-08-27)
+The user's call: *at the bottom have totals.* Each route closes with
+`Route N total — {types} · {units} · most to least`: one list in two
+balanced columns, read down the first then down the second. No bakery
+columns and no ten-dots (those are receiving-check machinery, D15), and no
+supplier code either — that cue lives on the stop lines, and the longest
+freezer names need the room a totals half-column has.
 
 ## Open
 

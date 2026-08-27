@@ -171,13 +171,13 @@ pub fn legend(page: &mut Page, cursor: &mut Cursor, route: &Route, settings: &Se
     let middle = band.y + height / 2.0;
     let mut x = band.x + LEGEND_PADDING.1;
 
-    let picked = if settings.is_bread() {
-        "Picked"
+    let boxes: &[(&str, &str)] = if settings.is_bread() {
+        &[("P", "Picked"), ("M", "Missing"), ("F", "Fixed")]
     } else {
-        "Packed"
+        &[("C", "Checked"), ("M", "Missing")]
     };
     x += write_middle(page, x, middle, "BOXES", bold, page::BLACK) + LEGEND_ITEM_GAP;
-    for (letter, word) in [("P", picked), ("M", "Missing"), ("F", "Fixed")] {
+    for (letter, word) in boxes {
         swatch(page, Point::new(x, middle - SWATCH / 2.0), letter);
         x += SWATCH + 1.0;
         x += write_middle(page, x, middle, word, text_style, page::INK_QUIET) + LEGEND_ITEM_GAP;

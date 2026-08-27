@@ -15,8 +15,9 @@ use crate::supplier;
 use crate::total;
 
 /// Renders one route: its stops in delivery order, the unsequenced ones under
-/// a flag, then — on the bread list — the route total. The freezer list is a
-/// checking list: no crates, no total (decisions F1 and F4).
+/// a flag, then the route total — split by bakery on the bread list, flat and
+/// most-to-least on the freezer list, which also carries no crates
+/// (decisions F1, F4 and F9).
 pub fn route(route: &Route, dates: Option<DeliveryDates>, settings: &Settings) -> String {
     let mut out = String::new();
     let date = dates.map_or_else(|| "date unknown".to_owned(), |dates| dates.to_string());
@@ -43,6 +44,8 @@ pub fn route(route: &Route, dates: Option<DeliveryDates>, settings: &Settings) -
 
     if settings.is_bread() {
         let _ = write!(out, "\n{}", route_total(route));
+    } else {
+        let _ = write!(out, "\n{}", check_total(route));
     }
     out
 }
@@ -111,6 +114,26 @@ fn route_total(route: &Route) -> String {
                 "  ●".repeat(line.full_tens as usize)
             );
         }
+    }
+
+    out
+}
+
+/// The freezer route's closing count: flat, most needed first, no supplier
+/// columns — the code cue lives on the stop lines (decision F9).
+fn check_total(route: &Route) -> String {
+    let lines = total::flat(route);
+    let units: u32 = lines.iter().map(|line| line.units).sum();
+    let mut out = String::new();
+
+    let _ = writeln!(
+        out,
+        "Route {} total — {} · most to least",
+        route.nickname,
+        total::summary(lines.len(), units)
+    );
+    for line in &lines {
+        let _ = writeln!(out, "  {:>3}  {}", line.units, line.product.name);
     }
 
     out
