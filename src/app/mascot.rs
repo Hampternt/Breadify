@@ -18,7 +18,8 @@ use super::Breadify;
 /// Which joke, and where it belongs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mascot {
-    /// Behind the Check step: a bread roll at a computer, sweating.
+    /// Behind the Check step: a bread roll at a computer in a Matvare
+    /// Expressen cap, sweating.
     BreadGuy,
     /// Behind the Open step, and only while nothing has been opened — which is
     /// the one moment in the day when there is, in fact, no bread.
@@ -31,7 +32,7 @@ pub const ALL: [Mascot; 2] = [Mascot::BreadGuy, Mascot::NoBread];
 impl Mascot {
     fn jpeg(self) -> &'static [u8] {
         match self {
-            Self::BreadGuy => include_bytes!("../../assets/breadguy.jpg"),
+            Self::BreadGuy => include_bytes!("../../assets/breadmve.jpg"),
             Self::NoBread => include_bytes!("../../assets/nobread.jpg"),
         }
     }
@@ -87,7 +88,7 @@ impl Mascot {
 
     fn name(self) -> &'static str {
         match self {
-            Self::BreadGuy => "breadguy",
+            Self::BreadGuy => "breadmve",
             Self::NoBread => "nobread",
         }
     }
