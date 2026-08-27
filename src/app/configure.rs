@@ -71,6 +71,23 @@ fn choices(app: &mut Breadify, ui: &mut egui::Ui) {
                     }
                 }
 
+                if !app.settings.has_crates() {
+                    ui.add_space(14.0);
+                    heading(ui, "CRATES");
+                    ui.label(
+                        RichText::new(format!(
+                            "Not on a {} list. The arithmetic is bread's — a whole\nslot, and \
+                             fractions of one — and frozen goods do not\nmeasure that way, so \
+                             the sheet counts none.",
+                            app.settings.list.to_string().to_lowercase()
+                        ))
+                        .family(theme::mono())
+                        .size(11.0)
+                        .color(theme::FAINT),
+                    );
+                    return;
+                }
+
                 ui.add_space(14.0);
                 heading(ui, "CRATES");
                 let mut large = app.settings.crates.large_capacity;

@@ -6,8 +6,9 @@
 
 use std::fmt::Write as _;
 
-use crate::crates::{self, CrateRules};
+use crate::crates;
 use crate::date::DeliveryDates;
+use crate::layout::Settings;
 use crate::order::Order;
 use crate::route::Route;
 use crate::supplier;
@@ -15,7 +16,7 @@ use crate::total;
 
 /// Renders one route: its stops in delivery order, the unsequenced ones under
 /// a flag, then the route total.
-pub fn route(route: &Route, dates: Option<DeliveryDates>, rules: &CrateRules) -> String {
+pub fn route(route: &Route, dates: Option<DeliveryDates>, settings: &Settings) -> String {
     let mut out = String::new();
     let date = dates.map_or_else(|| "date unknown".to_owned(), |dates| dates.to_string());
 
@@ -36,7 +37,7 @@ pub fn route(route: &Route, dates: Option<DeliveryDates>, rules: &CrateRules) ->
                 "\n─── no position assigned — driver decides the order ───"
             );
         }
-        let _ = write!(out, "\n{}", stop_block(stop, rules));
+        let _ = write!(out, "\n{}", stop_block(stop, settings));
     }
 
     let _ = write!(out, "\n{}", route_total(route));
@@ -44,7 +45,7 @@ pub fn route(route: &Route, dates: Option<DeliveryDates>, rules: &CrateRules) ->
 }
 
 /// One stop: the heading a crate label is copied from, then its bread.
-fn stop_block(stop: &Order, rules: &CrateRules) -> String {
+fn stop_block(stop: &Order, settings: &Settings) -> String {
     let mut out = String::new();
     let heading = match &stop.department {
         Some(department) => format!("{} — {department}", stop.customer),
@@ -54,7 +55,7 @@ fn stop_block(stop: &Order, rules: &CrateRules) -> String {
     let _ = writeln!(
         out,
         "{heading}  {}  {}  {}",
-        crate_glyphs(stop, rules),
+        crate_glyphs(stop, settings),
         substitute_marker(stop),
         stop.id
     );
@@ -110,9 +111,13 @@ fn route_total(route: &Route) -> String {
     out
 }
 
-/// `■` for a crate of ten, `◪` for a crate of five.
-fn crate_glyphs(stop: &Order, rules: &CrateRules) -> String {
-    let count = crates::count(stop, rules);
+/// `■` for a crate of ten, `◪` for a crate of five — and nothing at all on a
+/// list whose goods do not go in crates.
+fn crate_glyphs(stop: &Order, settings: &Settings) -> String {
+    if !settings.has_crates() {
+        return String::new();
+    }
+    let count = crates::count(stop, &settings.crates);
     let glyphs = "■ ".repeat(count.large as usize) + &"◪ ".repeat(count.small as usize);
     glyphs.trim_end().to_owned()
 }

@@ -379,11 +379,11 @@ impl Breadify {
 /// Reads an export and derives everything the steps need from it.
 fn read(path: PathBuf) -> LoadResult {
     let rows = crate::sheet::read(&path).map_err(|error| error.to_string())?;
-    let findings = crate::validate::run(&rows);
+    let list = Kind::of(&path);
+    let findings = crate::validate::run(&rows, &list);
     let orders = crate::order::fold(&rows);
     let routes = crate::route::group(orders.clone());
     let dates = crate::date::from_filename(&path).ok();
-    let list = Kind::of(&path);
     Ok(Box::new(Loaded {
         path,
         rows,

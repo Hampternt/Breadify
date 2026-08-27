@@ -127,7 +127,7 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         Ok(rows) => rows,
         Err(error) => return fail(&error.to_string()),
     };
-    for finding in validate::run(&rows) {
+    for finding in validate::run(&rows, &Kind::of(&path)) {
         warn(&format!("{:?}: {}\n", finding.severity, finding.headline));
     }
 
@@ -263,7 +263,7 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         Err(error) => return fail(&error.to_string()),
     };
 
-    for finding in validate::run(&rows) {
+    for finding in validate::run(&rows, &Kind::of(&path)) {
         warn(&format!("{:?}: {}\n", finding.severity, finding.headline));
     }
 
@@ -277,7 +277,7 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
 
     let dates = date::from_filename(&path).ok();
     let settings = settings(&path);
-    let dumped = say(&dump::route(wanted, dates, &settings.crates));
+    let dumped = say(&dump::route(wanted, dates, &settings));
     if dumped != ExitCode::SUCCESS {
         return dumped;
     }
