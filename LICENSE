@@ -1,0 +1,35 @@
+MIT License
+
+Copyright (c) 2026 Jesper Løvland
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Two things in this repository are not covered by the licence above.
+
+The three typefaces embedded in the binary — Archivo, Space Grotesk and
+IBM Plex Mono — are each under the SIL Open Font License 1.1. Their licence
+texts ship in `assets/fonts/` and are reproduced there in full. The OFL permits
+bundling them in a larger work; they remain under the OFL, not under the MIT
+licence above. Run `breadify licences` for the list.
+
+The Matvare Expressen wordmark, in `assets/matvare-expressen.svg` and drawn on
+every printed sheet, is that company's own mark. It is used here with their
+work and is not licensed to anyone by this file.

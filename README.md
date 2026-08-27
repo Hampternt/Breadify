@@ -74,7 +74,12 @@ cargo build --release
 ```
 
 The window needs `libxkbcommon`, `libwayland` and GTK development packages on
-Linux. Tagged pushes build both binaries in CI. Three typefaces are embedded,
-all SIL Open Font License 1.1 — `breadify licences`.
+Linux. Tagged pushes build both binaries in CI.
 
 </details>
+
+---
+
+MIT licensed — © 2026 Jesper Løvland. See [`LICENSE`](LICENSE). The three
+embedded typefaces stay under the SIL Open Font License 1.1 and the Matvare
+Expressen wordmark is that company's own; `breadify licences` says so too.

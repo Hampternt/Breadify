@@ -186,8 +186,15 @@ fn usage() -> ExitCode {
 
 /// What ships inside the binary, and under what terms.
 fn licences() -> ExitCode {
-    println!("Breadify embeds three typefaces, all under the SIL Open Font License 1.1.");
+    println!(
+        "Breadify {} — © 2026 {}, MIT licensed. See LICENSE.",
+        env!("CARGO_PKG_VERSION"),
+        env!("CARGO_PKG_AUTHORS")
+    );
+    println!();
+    println!("It embeds three typefaces, all under the SIL Open Font License 1.1.");
     println!("The licence texts ship in assets/fonts/ and are reproduced in full there.");
+    println!("They stay under the OFL; the MIT licence above does not cover them.");
     println!();
     for (family, source, licence) in [
         (
