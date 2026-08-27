@@ -22,6 +22,7 @@ pub mod route;
 pub mod sheet;
 pub mod store;
 pub mod supplier;
+pub mod terminal;
 pub mod text;
 pub mod total;
 pub mod validate;

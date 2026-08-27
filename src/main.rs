@@ -9,6 +9,7 @@ use std::process::ExitCode;
 use breadify::layout;
 use breadify::layout::Settings;
 use breadify::route::Route;
+use breadify::terminal;
 use breadify::{date, dump, order, pdf, route, sheet, validate};
 
 fn main() -> ExitCode {
@@ -124,7 +125,7 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         Err(error) => return fail(&error.to_string()),
     };
     for finding in validate::run(&rows) {
-        eprintln!("{:?}: {}", finding.severity, finding.headline);
+        warn(&format!("{:?}: {}\n", finding.severity, finding.headline));
     }
 
     let routes = route::group(order::fold(&rows));
@@ -139,63 +140,82 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
 
     match pdf::write(Path::new(target), &pages, "Breadify pick lists") {
         Ok(()) => {
-            println!(
-                "{} routes · {} sheets · wrote {target}",
+            let mut out = format!(
+                "{} routes · {} sheets · wrote {target}\n",
                 routes.len(),
                 sheets.len()
             );
             for sheet in &sheets {
                 if sheet.of > 1 && sheet.number == 1 {
-                    println!("  route {} needs {} sheets", sheet.route, sheet.of);
+                    out.push_str(&format!(
+                        "  route {} needs {} sheets\n",
+                        sheet.route, sheet.of
+                    ));
                 }
             }
-            ExitCode::SUCCESS
+            say(&out)
         }
         Err(error) => fail(&error.to_string()),
     }
 }
 
+/// Everything the binary says on stdout goes through here. See
+/// [`breadify::terminal`] for why it is not `println!`.
+fn say(text: &str) -> ExitCode {
+    match terminal::write(&mut std::io::stdout().lock(), text) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            warn(&format!("breadify: could not write output: {error}\n"));
+            ExitCode::FAILURE
+        }
+    }
+}
+
+/// The same for stderr, where a failure has nowhere left to be reported to.
+fn warn(text: &str) {
+    let _ = terminal::write(&mut std::io::stderr().lock(), text);
+}
+
 /// Which build this is, so a report from the warehouse can be pinned to one.
 fn version() -> ExitCode {
-    println!("breadify {}", env!("CARGO_PKG_VERSION"));
-    ExitCode::SUCCESS
+    say(&format!("breadify {}\n", env!("CARGO_PKG_VERSION")))
 }
 
 /// What the binary can do, for anyone who asks it wrongly.
 fn usage() -> ExitCode {
-    eprintln!("breadify — bread order exports into printed A4 picking lists");
-    eprintln!();
-    eprintln!("  breadify                                    open the window");
-    eprintln!("  breadify dump <route> [export.xlsx]         print one route to the terminal");
-    eprintln!("  breadify print [export.xlsx] --pdf <file>   draw every route");
-    eprintln!(
-        "  breadify licences                           what is embedded, and under what terms"
+    warn(
+        "breadify — bread order exports into printed A4 picking lists
+
+  breadify                                    open the window
+  breadify dump <route> [export.xlsx]         print one route to the terminal
+  breadify print [export.xlsx] --pdf <file>   draw every route
+  breadify licences                           what is embedded, and under what terms
+  breadify --version                          which build this is
+
+Flags:
+  --pdf <file.pdf>       also draw the route(s) as A4 sheets
+  --open <export.xlsx>   open the window with a file already loaded
+  --step <0-3>           open the window on a given step
+  --screenshot <f.ppm>   render one frame, write it, and close
+
+With no file given, looks for a single PSR-BREAD-*.xlsx in this folder.
+The delivery date is read from the filename.
+",
     );
-    eprintln!("  breadify --version                          which build this is");
-    eprintln!();
-    eprintln!("Flags:");
-    eprintln!("  --pdf <file.pdf>       also draw the route(s) as A4 sheets");
-    eprintln!("  --open <export.xlsx>   open the window with a file already loaded");
-    eprintln!("  --step <0-3>           open the window on a given step");
-    eprintln!("  --screenshot <f.ppm>   render one frame, write it, and close");
-    eprintln!();
-    eprintln!("With no file given, looks for a single PSR-BREAD-*.xlsx in this folder.");
-    eprintln!("The delivery date is read from the filename.");
     ExitCode::FAILURE
 }
 
 /// What ships inside the binary, and under what terms.
 fn licences() -> ExitCode {
-    println!(
-        "Breadify {} — © 2026 {}, MIT licensed. See LICENSE.",
+    let mut out = format!(
+        "Breadify {} — © 2026 {}, MIT licensed. See LICENSE.\n\n\
+         It embeds three typefaces, all under the SIL Open Font License 1.1.\n\
+         The licence texts ship in assets/fonts/ and are reproduced in full there.\n\
+         They stay under the OFL; the MIT licence above does not cover them.\n\n",
         env!("CARGO_PKG_VERSION"),
         env!("CARGO_PKG_AUTHORS")
     );
-    println!();
-    println!("It embeds three typefaces, all under the SIL Open Font License 1.1.");
-    println!("The licence texts ship in assets/fonts/ and are reproduced in full there.");
-    println!("They stay under the OFL; the MIT licence above does not cover them.");
-    println!();
+
     for (family, source, licence) in [
         (
             "Archivo (ExtraBold, Black)",
@@ -213,13 +233,15 @@ fn licences() -> ExitCode {
             "assets/fonts/IBMPlexMono-OFL.txt",
         ),
     ] {
-        println!("  {family}");
-        println!("    from {source}");
-        println!("    licence {licence}");
+        out.push_str(&format!(
+            "  {family}\n    from {source}\n    licence {licence}\n"
+        ));
     }
-    println!();
-    println!("The Matvare Expressen wordmark is the customer's own and is not licensed here.");
-    ExitCode::SUCCESS
+
+    out.push_str(
+        "\nThe Matvare Expressen wordmark is the customer's own and is not licensed here.\n",
+    );
+    say(&out)
 }
 
 fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
@@ -238,7 +260,7 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     };
 
     for finding in validate::run(&rows) {
-        eprintln!("{:?}: {}", finding.severity, finding.headline);
+        warn(&format!("{:?}: {}\n", finding.severity, finding.headline));
     }
 
     let routes = route::group(order::fold(&rows));
@@ -251,7 +273,10 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
 
     let dates = date::from_filename(&path).ok();
     let settings = settings();
-    print!("{}", dump::route(wanted, dates, &settings.crates));
+    let dumped = say(&dump::route(wanted, dates, &settings.crates));
+    if dumped != ExitCode::SUCCESS {
+        return dumped;
+    }
 
     let Some(target) = pdf else {
         return ExitCode::SUCCESS;
@@ -266,7 +291,7 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
 
     match pdf::write(Path::new(target), &pages, &format!("Route {nickname}")) {
         Ok(()) => {
-            eprintln!("wrote {target} — {} sheet(s)", pages.len());
+            warn(&format!("wrote {target} — {} sheet(s)\n", pages.len()));
             ExitCode::SUCCESS
         }
         Err(error) => fail(&error.to_string()),
@@ -316,6 +341,6 @@ fn nicknames(routes: &[Route]) -> String {
 }
 
 fn fail(message: &str) -> ExitCode {
-    eprintln!("breadify: {message}");
+    warn(&format!("breadify: {message}\n"));
     ExitCode::FAILURE
 }
