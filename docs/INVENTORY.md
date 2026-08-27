@@ -58,6 +58,8 @@ crates and labels each crate; the driver delivers them in route order.
   prints, how a refusal to substitute is marked, and the crate arithmetic —
   including how much room each bread takes. A sample block redraws from the
   same display list the PDF is drawn from.
+- Step 4 lists every route with what it costs in paper, draws every sheet as a
+  thumbnail, and either exports a PDF or hands it to the system to print.
 - `breadify --screenshot <file.ppm>` renders a frame and writes it;
   `--step <n>` opens on a given step.
 
@@ -68,9 +70,10 @@ crates and labels each crate; the driver delivers them in route order.
 
 ## In flight
 
-🚧 **Pack 6 — Print** →
+🚧 **Pack 7 — Ship** →
 `manifests/` — not yet written.
-Step 4's route table and both output paths.
+One binary per platform, licences in order, proven on the printer that will
+run it.
 
 ## Not built yet
 

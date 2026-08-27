@@ -6,8 +6,10 @@ pub mod chrome;
 pub mod configure;
 pub mod open;
 pub mod preview;
+pub mod print;
 pub mod theme;
 
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::sync::mpsc::{Receiver, TryRecvError, channel};
 
@@ -110,6 +112,12 @@ pub struct Breadify {
     pub error: Option<String>,
     pub recent: Vec<PathBuf>,
     pub settings: Settings,
+    /// Which routes are going to print.
+    pub selected: BTreeSet<String>,
+    /// The last file written, so the step can say where it went.
+    pub wrote: Option<PathBuf>,
+    /// The sheets the current selection comes to, worked out when it changes.
+    day: Vec<crate::layout::Sheet>,
     /// Set while a file is being read on another thread.
     loading: Option<Receiver<LoadResult>>,
     /// Renders one frame and asks for a screenshot, for looking at the window
@@ -133,6 +141,9 @@ impl Breadify {
             error: None,
             recent: Vec::new(),
             settings: Settings::default(),
+            selected: BTreeSet::new(),
+            wrote: None,
+            day: Vec::new(),
             loading: None,
             screenshot,
             start_on: None,
@@ -185,8 +196,10 @@ impl Breadify {
             Ok(Ok(loaded)) => {
                 self.loading = None;
                 self.remember(&loaded.path);
+                self.selected = print::everything(&loaded.routes);
                 self.loaded = Some(*loaded);
                 self.step = self.start_on.unwrap_or(Step::Check);
+                self.stale = true;
             }
         }
     }
@@ -206,7 +219,10 @@ impl Breadify {
                 _ => "Continue anyway".to_owned(),
             },
             Step::Configure => "Preview sheets".to_owned(),
-            Step::Print => "Print".to_owned(),
+            Step::Print => match self.selected_sheets() {
+                0 => "Print".to_owned(),
+                sheets => format!("Print {sheets} sheets"),
+            },
         }
     }
 
@@ -218,7 +234,15 @@ impl Breadify {
             }
             Step::Check => check::summary(self),
             Step::Configure => "Six fields always print; the order ID is yours.".to_owned(),
-            Step::Print => "One route per sheet set.".to_owned(),
+            Step::Print => {
+                if let Some(path) = &self.wrote {
+                    return format!(
+                        "Wrote {}. Print at actual size — 100 %, no scaling.",
+                        path.display()
+                    );
+                }
+                "Print at actual size — 100 %, no scaling. One route per sheet set.".to_owned()
+            }
         }
     }
 
@@ -237,6 +261,7 @@ impl Breadify {
             return;
         }
         self.stale = false;
+        self.day = print::selected_day(self);
 
         let settings = self.settings.clone();
         let Some(loaded) = &mut self.loaded else {
@@ -249,6 +274,32 @@ impl Breadify {
             &loaded.path.to_string_lossy(),
         )
         .len();
+    }
+
+    /// The sheets the current selection comes to. Worked out when something
+    /// changes, and lent out rather than copied — a day is a few thousand
+    /// positioned primitives, and this is read on every frame.
+    pub fn day(&self) -> &[crate::layout::Sheet] {
+        &self.day
+    }
+
+    /// How many sheets the selection comes to.
+    pub fn selected_sheets(&self) -> usize {
+        self.day.len()
+    }
+
+    /// How many sheets one route needs on its own, or `None` while a changed
+    /// setting has yet to be worked through.
+    pub fn sheets_for(&self, route: &Route) -> Option<usize> {
+        if self.stale {
+            return None;
+        }
+        Some(
+            self.day
+                .iter()
+                .filter(|sheet| sheet.route == route.nickname)
+                .count(),
+        )
     }
 
     pub fn blocking_count(&self) -> usize {
@@ -305,9 +356,7 @@ impl eframe::App for Breadify {
                 Step::Open => open::show(self, ui),
                 Step::Check => check::show(self, ui),
                 Step::Configure => configure::show(self, ui),
-                Step::Print => {
-                    ui.label("Not built yet — pack 6.");
-                }
+                Step::Print => print::show(self, ui),
             });
 
         self.take_screenshot(&context);
