@@ -79,8 +79,8 @@ pub fn masthead(page: &mut Page, cursor: &mut Cursor, route: &Route, context: &S
     cursor.advance(2.6);
 }
 
-/// The wordmark on its dark panel. The supplied SVG is white type on
-/// transparency, so it can only sit on the panel — never on the paper.
+/// The wordmark on its dark panel. The mark is white type beside a red bag, so
+/// it can only sit on the panel — never on the paper.
 fn logo_panel(page: &mut Page, at: Point) {
     let (width, height) = LOGO_PANEL;
     let panel = Rect::new(
@@ -90,16 +90,9 @@ fn logo_panel(page: &mut Page, at: Point) {
         height + 2.0 * LOGO_PADDING.0,
     );
     page.fill(panel, page::NEAR_BLACK);
-
-    // Stands in for assets/matvare-expressen.svg until the PDF backend imports
-    // vector artwork; the panel and the white wordmark are what the page needs.
-    let wordmark = Style::new(Face::ArchivoBlack, 4.6).tracked(0.02);
-    let baseline = at.y + LOGO_PADDING.0 + height / 2.0 + text::ascent(wordmark) / 2.0 - 0.3;
-    page.text(
-        Point::new(at.x + LOGO_PADDING.1, baseline),
-        "MATVARE EXPRESSEN",
-        wordmark,
-        page::WHITE,
+    page.artwork(
+        Rect::new(at.x + LOGO_PADDING.1, at.y + LOGO_PADDING.0, width, height),
+        page::Art::Wordmark,
     );
 }
 

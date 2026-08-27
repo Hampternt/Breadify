@@ -83,7 +83,9 @@ fn nothing_is_drawn_outside_the_sheet() {
                 let (x, y) = match primitive {
                     Primitive::Text { baseline_start, .. } => (baseline_start.x, baseline_start.y),
                     Primitive::Rule { from, to, .. } => (from.x.min(to.x), from.y.min(to.y)),
-                    Primitive::Box { rect, .. } => (rect.x, rect.y),
+                    Primitive::Artwork { rect, .. } | Primitive::Box { rect, .. } => {
+                        (rect.x, rect.y)
+                    }
                 };
                 assert!(
                     (MARGIN_SIDE - 0.001..=PAGE_WIDTH - MARGIN_SIDE).contains(&x),

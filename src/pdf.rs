@@ -16,7 +16,7 @@ use printpdf::{
 
 use crate::font::{ALL, Face};
 use crate::geometry::{Mm, PAGE_HEIGHT, PAGE_WIDTH, Point, mm_to_pt};
-use crate::page::{Colour, Page, Primitive, Stroke};
+use crate::page::{Art, Colour, Page, Primitive, Stroke};
 
 /// Renders pages to PDF bytes.
 ///
@@ -139,6 +139,11 @@ fn operations(page: &Page, fonts: &HashMap<Face, FontId>) -> Vec<Op> {
                 });
             }
 
+            Primitive::Artwork { rect, art } => {
+                let Art::Wordmark = art;
+                ops.extend(artwork(*rect, crate::artwork::wordmark()));
+            }
+
             Primitive::Box {
                 rect,
                 fill,
@@ -176,6 +181,45 @@ fn operations(page: &Page, fonts: &HashMap<Face, FontId>) -> Vec<Op> {
     }
 
     ops
+}
+
+/// Draws a piece of artwork into a rectangle, in its own colours.
+///
+/// The artwork's coordinates are its own — y down from its top-left — and get
+/// the same flip everything else on the page does.
+fn artwork(rect: crate::geometry::Rect, art: &crate::artwork::Artwork) -> Vec<Op> {
+    let scale = rect.width / art.width;
+    let place = |vertex: &crate::artwork::Vertex| LinePoint {
+        p: PdfPoint {
+            x: PdfPt(mm_to_pt(rect.x + vertex.x * scale) as f32),
+            y: PdfPt(mm_to_pt(flip(rect.y + vertex.y * scale)) as f32),
+        },
+        bezier: vertex.control,
+    };
+
+    art.shapes
+        .iter()
+        .flat_map(|shape| {
+            [
+                Op::SetFillColor {
+                    col: ink(shape.fill),
+                },
+                Op::DrawPolygon {
+                    polygon: Polygon {
+                        rings: shape
+                            .rings
+                            .iter()
+                            .map(|ring| PolygonRing {
+                                points: ring.iter().map(place).collect(),
+                            })
+                            .collect(),
+                        mode: PaintMode::Fill,
+                        winding_order: WindingOrder::NonZero,
+                    },
+                },
+            ]
+        })
+        .collect()
 }
 
 /// A box with rounded corners, as a polygon whose corner points are bezier

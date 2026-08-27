@@ -160,7 +160,7 @@ fn bottom_of(primitive: &Primitive) -> f64 {
     match primitive {
         Primitive::Text { baseline_start, .. } => baseline_start.y,
         Primitive::Rule { from, to, .. } => from.y.max(to.y),
-        Primitive::Box { rect, .. } => rect.bottom(),
+        Primitive::Artwork { rect, .. } | Primitive::Box { rect, .. } => rect.bottom(),
     }
 }
 

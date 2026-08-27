@@ -79,9 +79,9 @@ a matter of discipline.
   — a 32-character name with a 38-character department — drew 8 mm off the
   right edge of the sheet. A test now asserts nothing on any of the 16 routes
   is drawn outside the page.
-- The logo is a white wordmark on its dark panel rather than the supplied SVG;
-  the PDF backend does not import vector artwork yet. The panel, its colour and
-  its position are right, so this is a swap of one primitive when it lands.
+- ~~The logo is a white wordmark on its dark panel rather than the supplied
+  SVG.~~ **Closed 2026-08-27:** the mark is drawn from its own SVG now. See
+  the note below.
 - Item 2 turned up a wrong figure in the design handoff: the longest product
   name is 112.65 mm at 11 pt, not the ~148 mm the handoff calls the binding
   constraint. `print-spec.md` §9 now records the measurement and what follows
@@ -96,6 +96,13 @@ a matter of discipline.
 3. The PDF renderer discarded every box's corner radius, printing tick boxes
    and crate glyphs square. Rounded boxes are drawn as bezier-cornered
    polygons now.
+
+**Later:** the real mark landed on 2026-08-27, after the container closed.
+printpdf's own `svg` feature is unbuildable here — it pulls `azul-layout`,
+which wants a `roxmltree` this index does not carry — so the eighteen paths
+are read directly instead. The file is `M`/`L`/`H`/`V`/`C`/`Z` in two colours
+with no text, transforms or gradients, which is a hundred lines of parser
+rather than a dependency, and it stays vector at 26 mm on every sheet.
 
 **Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, then
 69 tests across 10 files, all green. Route 8's sheet was also rendered and

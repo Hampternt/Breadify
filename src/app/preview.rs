@@ -8,7 +8,7 @@ use eframe::egui::{self, Color32, CornerRadius, Pos2, Rect, Stroke, Vec2};
 
 use super::theme;
 use crate::geometry::{Mm, PAGE_HEIGHT, PAGE_WIDTH, pt_to_mm};
-use crate::page::{Colour, Page, Primitive};
+use crate::page::{Art, Colour, Page, Primitive};
 
 /// Draws `page` with its top-left corner at `origin`, `scale` pixels to the
 /// millimetre.
@@ -50,6 +50,23 @@ pub fn draw(painter: &egui::Painter, page: &Page, origin: Pos2, scale: f32) {
                         origin + Vec2::new(to.x as f32, to.y as f32) * scale,
                     ],
                     Stroke::new(thickness(*weight, scale), ink(*colour)),
+                );
+            }
+
+            Primitive::Artwork { rect, art } => {
+                // The preview stands the mark in with its own name: on screen
+                // the box is what matters, and egui has no vector renderer.
+                let Art::Wordmark = art;
+                let on_screen = Rect::from_min_size(
+                    origin + Vec2::new(rect.x as f32, rect.y as f32) * scale,
+                    Vec2::new(rect.width as f32, rect.height as f32) * scale,
+                );
+                painter.text(
+                    on_screen.center(),
+                    egui::Align2::CENTER_CENTER,
+                    "MATVARE EXPRESSEN",
+                    egui::FontId::new((on_screen.height() * 0.5).max(3.0), theme::heading()),
+                    Color32::WHITE,
                 );
             }
 

@@ -7,6 +7,7 @@
 //! those two are derived from.
 
 pub mod app;
+pub mod artwork;
 pub mod crates;
 pub mod date;
 pub mod dump;

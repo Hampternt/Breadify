@@ -72,6 +72,18 @@ pub struct Stroke {
     pub colour: Colour,
 }
 
+/// Artwork the page places but does not draw itself.
+///
+/// The layout decides where it goes and how big it is; each renderer draws it
+/// however it can — the PDF writer embeds the vector original, the on-screen
+/// preview does something cheaper.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Art {
+    /// The Matvare Expressen mark. White type beside a red bag, so it only
+    /// ever sits on a dark panel.
+    Wordmark,
+}
+
 /// One thing to draw. Positions are final; nothing here is measured again.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Primitive {
@@ -89,6 +101,8 @@ pub enum Primitive {
         weight: Pt,
         colour: Colour,
     },
+    /// A piece of artwork, fitted to a rectangle.
+    Artwork { rect: Rect, art: Art },
     /// A filled or outlined box: tick boxes, crate glyphs, badges, tints.
     Box {
         rect: Rect,
@@ -124,6 +138,13 @@ impl Primitive {
                 to: to.offset(0.0, down),
                 weight: *weight,
                 colour: *colour,
+            },
+            Self::Artwork { rect, art } => Self::Artwork {
+                rect: Rect {
+                    y: rect.y + down,
+                    ..*rect
+                },
+                art: *art,
             },
             Self::Box {
                 rect,
@@ -200,6 +221,11 @@ impl Page {
         });
     }
 
+    /// Places a piece of artwork in a rectangle.
+    pub fn artwork(&mut self, rect: Rect, art: Art) {
+        self.primitives.push(Primitive::Artwork { rect, art });
+    }
+
     /// Outlines a box.
     pub fn outline(&mut self, rect: Rect, weight: Pt, colour: Colour, radius: Mm) {
         self.primitives.push(Primitive::Box {
@@ -253,7 +279,7 @@ impl Page {
             .map(|primitive| match primitive {
                 Primitive::Text { baseline_start, .. } => baseline_start.y,
                 Primitive::Rule { from, to, .. } => from.y.max(to.y),
-                Primitive::Box { rect, .. } => rect.bottom(),
+                Primitive::Artwork { rect, .. } | Primitive::Box { rect, .. } => rect.bottom(),
             })
             .fold(0.0_f64, f64::max)
     }
