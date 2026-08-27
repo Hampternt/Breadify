@@ -70,11 +70,18 @@ crates and labels each crate; the driver delivers them in route order.
 
 ## In flight
 
-🚧 **Pack 7 — Ship** →
-`manifests/` — not yet written.
-One binary per platform, licences in order, proven on the printer that will
-run it.
+Nothing. Breadify v1 is built: seven packs, all merged.
 
-## Not built yet
+What is deliberately not built, and why, is in
+[`manifests/2026-08-27-pack-7-ship.md`](manifests/2026-08-27-pack-7-ship.md).
 
-The four-step app window, printing and shipping — packs 4 to 7. Only the active pack is planned in detail.
+## Left to a person
+
+Two things no test can settle:
+
+- **A day's sheets through the bakery's own printer.** The bottom margin is
+  5 mm and plenty of office printers cannot print that low; the fills on the
+  no-substitutes badge and the crate glyphs need `print-color-adjust` to
+  survive. Print one day and look at the paper.
+- **The size of each bread**, in the Configure step. Every bread is one slot
+  until someone who packs the crates says otherwise. Only the active pack is planned in detail.

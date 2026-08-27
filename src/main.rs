@@ -39,6 +39,7 @@ fn main() -> ExitCode {
                 Some(target) => open = Some(target),
                 None => return fail("--open needs a file to read"),
             },
+            "--help" | "-h" => return usage(),
             unknown if unknown.starts_with("--") => return usage(),
             value => positional.push(value),
         }
@@ -48,6 +49,8 @@ fn main() -> ExitCode {
         [] => window(screenshot.map(PathBuf::from), open.map(PathBuf::from), step),
         ["dump", nickname] => run(nickname, None, pdf),
         ["dump", nickname, path] => run(nickname, Some(Path::new(path)), pdf),
+        ["help"] => usage(),
+        ["licences"] | ["licenses"] => licences(),
         ["print"] => print_day(None, pdf),
         ["print", path] => print_day(Some(Path::new(path)), pdf),
         _ => usage(),
@@ -135,14 +138,55 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
 
 /// What the binary can do, for anyone who asks it wrongly.
 fn usage() -> ExitCode {
-    eprintln!("usage: breadify dump <route> [export.xlsx] [--pdf <file.pdf>]");
-    eprintln!("       breadify print [export.xlsx] --pdf <file.pdf>");
-    eprintln!("       breadify            opens the window");
+    eprintln!("breadify — bread order exports into printed A4 picking lists");
     eprintln!();
-    eprintln!("Prints one route's stops, crates and total. With no file given,");
-    eprintln!("looks for a single PSR-BREAD-*.xlsx in the current directory.");
-    eprintln!("With --pdf, also draws the route as an A4 sheet.");
+    eprintln!("  breadify                                    open the window");
+    eprintln!("  breadify dump <route> [export.xlsx]         print one route to the terminal");
+    eprintln!("  breadify print [export.xlsx] --pdf <file>   draw every route");
+    eprintln!(
+        "  breadify licences                           what is embedded, and under what terms"
+    );
+    eprintln!();
+    eprintln!("Flags:");
+    eprintln!("  --pdf <file.pdf>       also draw the route(s) as A4 sheets");
+    eprintln!("  --open <export.xlsx>   open the window with a file already loaded");
+    eprintln!("  --step <0-3>           open the window on a given step");
+    eprintln!("  --screenshot <f.ppm>   render one frame, write it, and close");
+    eprintln!();
+    eprintln!("With no file given, looks for a single PSR-BREAD-*.xlsx in this folder.");
+    eprintln!("The delivery date is read from the filename.");
     ExitCode::FAILURE
+}
+
+/// What ships inside the binary, and under what terms.
+fn licences() -> ExitCode {
+    println!("Breadify embeds three typefaces, all under the SIL Open Font License 1.1.");
+    println!("The licence texts ship in assets/fonts/ and are reproduced in full there.");
+    println!();
+    for (family, source, licence) in [
+        (
+            "Archivo (ExtraBold, Black)",
+            "github.com/Omnibus-Type/Archivo",
+            "assets/fonts/Archivo-OFL.txt",
+        ),
+        (
+            "Space Grotesk (Regular, Medium)",
+            "github.com/floriankarsten/space-grotesk",
+            "assets/fonts/SpaceGrotesk-OFL.txt",
+        ),
+        (
+            "IBM Plex Mono (Regular, Medium, SemiBold, Bold)",
+            "github.com/google/fonts",
+            "assets/fonts/IBMPlexMono-OFL.txt",
+        ),
+    ] {
+        println!("  {family}");
+        println!("    from {source}");
+        println!("    licence {licence}");
+    }
+    println!();
+    println!("The Matvare Expressen wordmark is the customer's own and is not licensed here.");
+    ExitCode::SUCCESS
 }
 
 fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
