@@ -73,7 +73,9 @@ crates and labels each crate; the driver delivers them in route order.
 
 ## In flight
 
-Nothing. Breadify v1 is built: seven packs, all merged.
+Nothing. Breadify **v1.0.0** is built and tagged: seven packs, then one pass
+of changes from using it — the heading reshaped, crate sizes said in fractions
+and kept between runs, the window icon, and a review pass over the lot.
 
 What is deliberately not built, and why, is in
 [`manifests/2026-08-27-pack-7-ship.md`](manifests/2026-08-27-pack-7-ship.md).
