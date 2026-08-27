@@ -14,9 +14,13 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 
 **Specifications** — complete and reconciled.
 
-- [`excel-format.md`](excel-format.md) — the input file, verified against a
-  real export, with the validation a loader must perform.
+- [`excel-format.md`](excel-format.md) — the bread input file, verified
+  against a real export, with the validation a loader must perform.
+- [`freezer-format.md`](freezer-format.md) — the freezer input file, as
+  deltas against the bread one.
 - [`print-layout.md`](print-layout.md) — the decision log, D1–D22.
+- [`freezer-list.md`](freezer-list.md) — the freezer version's decision log,
+  F1–F5, and its open questions.
 - [`print-spec.md`](print-spec.md) — what the printed page must say and do.
 - `Printer page formatting application/design_handoff_breadify/` — the design
   pass: high-fidelity geometry for the printed page and the four-step app
@@ -78,7 +82,16 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 
 ## In flight
 
-Nothing. Breadify **v1.1.0** is built and tagged: seven packs, then two passes
+**The freezer list.** A second export kind — `PSR-FREEZER-*.xlsx`, the list
+a packed freezer box is checked against rather than picked from. The loader
+side is done: both kinds are recognised by filename, `Position` (a warehouse
+pick slot there, absent for some products) reads as optional, and validation
+knows each list's own suppliers and route-name shapes. A freezer export
+currently prints through the bread layout; the checklist page it should get
+is the next pack. Decisions and open questions:
+[`freezer-list.md`](freezer-list.md).
+
+Before that, Breadify **v1.1.0** was built and tagged: seven packs, then two passes
 of changes from using it — the heading reshaped, crate sizes said in fractions
 and kept between runs, the window icon, and a review pass over the lot.
 

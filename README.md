@@ -49,10 +49,14 @@ file.
 <details>
 <summary>For developers</summary>
 
-- [`docs/excel-format.md`](docs/excel-format.md) — the export's structure and
-  the checks the loader performs.
+- [`docs/excel-format.md`](docs/excel-format.md) — the bread export's
+  structure and the checks the loader performs.
+- [`docs/freezer-format.md`](docs/freezer-format.md) — the freezer export,
+  as deltas against the bread one.
 - [`docs/print-spec.md`](docs/print-spec.md) — what the page must say and do.
 - [`docs/print-layout.md`](docs/print-layout.md) — the decision log, D1 to D22.
+- [`docs/freezer-list.md`](docs/freezer-list.md) — the freezer version's
+  decisions and open questions.
 - [`docs/INVENTORY.md`](docs/INVENTORY.md) — what exists, and what is left to a
   person.
 

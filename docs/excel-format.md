@@ -1,8 +1,10 @@
 # Input Excel format
 
-What the exported order file looks like, derived by unpacking the OOXML of the
-one sample in the repo. This describes **input only** — nothing about the app's
-own behaviour beyond what the data forces.
+What the exported **bread** order file looks like, derived by unpacking the
+OOXML of the one sample in the repo. This describes **input only** — nothing
+about the app's own behaviour beyond what the data forces. The freezer
+export shares this file's every structural fact; where its data differs is
+in [`freezer-format.md`](freezer-format.md).
 
 - **Sample:** `PSR-BREAD-2026-03-04-to-2026-03-04 (1).xlsx` (27 994 bytes)
 - **Derived:** 2026-08-26, by reading `xl/worksheets/sheet1.xml` directly

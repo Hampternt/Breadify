@@ -124,7 +124,8 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         Ok(rows) => rows,
         Err(error) => return fail(&error.to_string()),
     };
-    for finding in validate::run(&rows) {
+    let kind = date::export_kind(&path).unwrap_or(date::ExportKind::Bread);
+    for finding in validate::run(&rows, kind) {
         warn(&format!("{:?}: {}\n", finding.severity, finding.headline));
     }
 
@@ -198,8 +199,8 @@ Flags:
   --step <0-3>           open the window on a given step
   --screenshot <f.ppm>   render one frame, write it, and close
 
-With no file given, looks for a single PSR-BREAD-*.xlsx in this folder.
-The delivery date is read from the filename.
+With no file given, looks for a single PSR-BREAD-*.xlsx or PSR-FREEZER-*.xlsx
+in this folder. The delivery date is read from the filename.
 ",
     );
     ExitCode::FAILURE
@@ -259,7 +260,8 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         Err(error) => return fail(&error.to_string()),
     };
 
-    for finding in validate::run(&rows) {
+    let kind = date::export_kind(&path).unwrap_or(date::ExportKind::Bread);
+    for finding in validate::run(&rows, kind) {
         warn(&format!("{:?}: {}\n", finding.severity, finding.headline));
     }
 
@@ -298,8 +300,9 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     }
 }
 
-/// The single `PSR-BREAD-*.xlsx` in the working directory, if there is exactly
-/// one — the common case while working on a day's orders.
+/// The single `PSR-BREAD-*.xlsx` or `PSR-FREEZER-*.xlsx` in the working
+/// directory, if there is exactly one — the common case while working on a
+/// day's orders.
 fn export_here() -> Result<PathBuf, String> {
     let entries =
         std::fs::read_dir(".").map_err(|error| format!("cannot read this folder: {error}"))?;
@@ -312,7 +315,10 @@ fn export_here() -> Result<PathBuf, String> {
     exports.sort();
 
     match exports.len() {
-        0 => Err("no PSR-BREAD-*.xlsx here — give the file as the second argument".to_owned()),
+        0 => Err(
+            "no PSR-BREAD-*.xlsx or PSR-FREEZER-*.xlsx here — give the file as the second argument"
+                .to_owned(),
+        ),
         1 => Ok(exports.remove(0)),
         _ => Err(format!(
             "several exports here — say which: {}",
@@ -329,7 +335,7 @@ fn is_export(path: &Path) -> bool {
     let Some(name) = path.file_name().map(|name| name.to_string_lossy()) else {
         return false;
     };
-    name.starts_with("PSR-BREAD-") && name.ends_with(".xlsx")
+    name.ends_with(".xlsx") && date::export_kind(path).is_some()
 }
 
 fn nicknames(routes: &[Route]) -> String {

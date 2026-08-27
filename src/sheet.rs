@@ -2,9 +2,10 @@
 //!
 //! The file is an ordinary `.xlsx` with a single sheet named `Data`: 14
 //! headers in `A1:N1` and a fifteenth column that carries data in every row
-//! but has no header. Empty cells are *absent* rather than blank, so
-//! `Department` and `Comment` are read as `Option<String>` and everything
-//! else is required. See `docs/excel-format.md`.
+//! but has no header. Both lists — bread and freezer — share this shape.
+//! Empty cells are *absent* rather than blank, so `Position`, `Department`
+//! and `Comment` are read as `Option<String>` and everything else is
+//! required. See `docs/excel-format.md` and `docs/freezer-format.md`.
 
 use std::path::Path;
 
@@ -51,9 +52,12 @@ pub struct SheetRow {
     pub product_name: String,
     /// Text, never a number: `107_san`, `10022_bhb`, bare `115`, `21061bhb`.
     pub supplier_sku: String,
-    /// The supplier again, spelled `X-Sandnes Bakeri` / `X-Bakehuset`. Nothing
-    /// is grouped by it (decision D4).
-    pub position: String,
+    /// What this column holds depends on the list. A bread export spells the
+    /// supplier again (`X-Sandnes Bakeri`) and nothing is grouped by it
+    /// (decision D4). A freezer export carries the product's warehouse pick
+    /// slot (`W-04-02`) — one per product — and omits the cell entirely for
+    /// products that have none. Carried through; nothing prints it yet.
+    pub position: Option<String>,
     pub supplier: String,
     pub customer: String,
     /// The sub-location inside a customer, and the crate label. Absent on
@@ -212,7 +216,7 @@ fn read_row(excel_row: usize, cells: &[Data]) -> Result<SheetRow, ReadError> {
         product_id: at(2).count()?,
         product_name: at(3).text()?,
         supplier_sku: at(4).text()?,
-        position: at(5).text()?,
+        position: at(5).optional_text()?,
         supplier: at(6).text()?,
         customer: at(7).text()?,
         department: at(8).optional_text()?,
