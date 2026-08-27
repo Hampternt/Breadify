@@ -1,6 +1,6 @@
 # Pack 2 — First sheet
 
-**Status:** planned, starting.
+**Status:** in progress — items 1–4 of 9 done.
 **Container:** Breadify v1 (7 packs).
 **Branch:** `pack-2-first-sheet`.
 
@@ -56,15 +56,25 @@ a matter of discipline.
 
 ## Ledger
 
-- [ ] 1 — Vendor the fonts
-- [ ] 2 — Headless text measurement
-- [ ] 3 — The display list
-- [ ] 4 — Page geometry
+- [x] 1 — Vendor the fonts · 8 static faces, ~1.2 MB, OFL
+- [x] 2 — Headless text measurement · longest name 112.65 mm at 11 pt
+- [x] 3 — The display list · text, rules, boxes; no font handles
+- [x] 4 — Page geometry · A4, 9/8/8/5 mm, one mm↔pt conversion
 - [ ] 5 — Bread line and stop block
 - [ ] 6 — Masthead, page note, legend
 - [ ] 7 — Route total
 - [ ] 8 — The PDF backend
 - [ ] 9 — `--pdf` on the CLI
 
-**Deviations:** none yet.
+**Deviations:**
+
+- The fonts came from the projects' own upstream repositories rather than
+  Google Fonts for two of the three families: Google ships Archivo and Space
+  Grotesk only as variable files, which item 1 exists to keep out. Same
+  typefaces, same OFL 1.1, official sources (Omnibus-Type/Archivo,
+  floriankarsten/space-grotesk); IBM Plex Mono is Google's own static build.
+- Item 2 turned up a wrong figure in the design handoff: the longest product
+  name is 112.65 mm at 11 pt, not the ~148 mm the handoff calls the binding
+  constraint. `print-spec.md` §9 now records the measurement and what follows
+  from it.
 **Pack gate:** not run.
