@@ -239,7 +239,16 @@ fn write_middle(
 /// The design pass dropped this; `docs/print-spec.md` §6 puts it back, because
 /// without it a driver cannot tell "nobody sequenced this" from "this is the
 /// last delivery of the day".
-pub fn unsequenced_flag(page: &mut Page, cursor: &mut Cursor) {
+pub fn unsequenced_flag_block(column: &Cursor) -> (Page, Mm) {
+    let mut own = Page::new();
+    let mut cursor = Cursor {
+        y: 0.0,
+        left: column.left,
+        width: column.width,
+    };
+    let page = &mut own;
+    let cursor = &mut cursor;
+
     cursor.advance(2.4);
     rule(page, cursor, RULE_FOOTER, page::RULE_SUB);
     cursor.advance(1.2);
@@ -253,6 +262,8 @@ pub fn unsequenced_flag(page: &mut Page, cursor: &mut Cursor) {
         page::NOTE,
     );
     cursor.advance(height + 0.8);
+
+    (page.clone(), cursor.y)
 }
 
 /// Sits at the bottom of the sheet whatever else happened above it.

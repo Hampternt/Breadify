@@ -32,13 +32,67 @@ fn main() -> ExitCode {
     match positional.as_slice() {
         ["dump", nickname] => run(nickname, None, pdf),
         ["dump", nickname, path] => run(nickname, Some(Path::new(path)), pdf),
+        ["print"] => print_day(None, pdf),
+        ["print", path] => print_day(Some(Path::new(path)), pdf),
         _ => usage(),
+    }
+}
+
+/// Draws every route in an export, one route per sheet set.
+fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
+    let Some(target) = pdf else {
+        return fail("print needs --pdf <file.pdf> to write to");
+    };
+
+    let path = match path
+        .map(Path::to_path_buf)
+        .ok_or(())
+        .or_else(|()| export_here())
+    {
+        Ok(path) => path,
+        Err(message) => return fail(&message),
+    };
+
+    let rows = match sheet::read(&path) {
+        Ok(rows) => rows,
+        Err(error) => return fail(&error.to_string()),
+    };
+    for finding in validate::run(&rows) {
+        eprintln!("{:?}: {}", finding.severity, finding.headline);
+    }
+
+    let routes = route::group(order::fold(&rows));
+    let dates = date::from_filename(&path).ok();
+    let source = path
+        .file_stem()
+        .map(|stem| stem.to_string_lossy().into_owned())
+        .unwrap_or_default();
+
+    let sheets = layout::day(&routes, dates, &CrateRules::default(), &source);
+    let pages: Vec<_> = sheets.iter().map(|sheet| sheet.content.clone()).collect();
+
+    match pdf::write(Path::new(target), &pages, "Breadify pick lists") {
+        Ok(()) => {
+            println!(
+                "{} routes · {} sheets · wrote {target}",
+                routes.len(),
+                sheets.len()
+            );
+            for sheet in &sheets {
+                if sheet.of > 1 && sheet.number == 1 {
+                    println!("  route {} needs {} sheets", sheet.route, sheet.of);
+                }
+            }
+            ExitCode::SUCCESS
+        }
+        Err(error) => fail(&error.to_string()),
     }
 }
 
 /// What the binary can do, for anyone who asks it wrongly.
 fn usage() -> ExitCode {
     eprintln!("usage: breadify dump <route> [export.xlsx] [--pdf <file.pdf>]");
+    eprintln!("       breadify print [export.xlsx] --pdf <file.pdf>");
     eprintln!();
     eprintln!("Prints one route's stops, crates and total. With no file given,");
     eprintln!("looks for a single PSR-BREAD-*.xlsx in the current directory.");

@@ -10,8 +10,23 @@ use crate::page::{self, Page};
 use crate::supplier;
 use crate::text::{self, Style};
 
-/// Lays out one order — one stop, one crate label, one block.
-pub fn block(page: &mut Page, cursor: &mut Cursor, stop: &Order, rules: &CrateRules) {
+/// Lays out one order — one stop, one crate label, one block — on a page of
+/// its own, starting at its top edge.
+///
+/// The sheet then places it with [`Page::absorb`](crate::page::Page::absorb).
+/// Laying a block out before knowing where it goes is what lets the paginator
+/// ask how tall it is without a second formula that could disagree with the
+/// drawing.
+pub fn block(stop: &Order, rules: &CrateRules, column: &Cursor) -> (Page, Mm) {
+    let mut page = Page::new();
+    let mut own = Cursor {
+        y: 0.0,
+        left: column.left,
+        width: column.width,
+    };
+    let cursor = &mut own;
+    let page = &mut page;
+
     let top = cursor.y;
     page.horizontal_rule(
         Point::new(cursor.left, top),
@@ -45,6 +60,8 @@ pub fn block(page: &mut Page, cursor: &mut Cursor, stop: &Order, rules: &CrateRu
             page::BLACK,
         );
     }
+
+    (page.clone(), cursor.y)
 }
 
 /// Customer, department box, crate glyphs, then the marker and order id on the

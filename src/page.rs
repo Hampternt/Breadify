@@ -99,6 +99,50 @@ pub enum Primitive {
     },
 }
 
+impl Primitive {
+    /// The same primitive, moved `down` the sheet.
+    pub fn moved(&self, down: Mm) -> Self {
+        match self {
+            Self::Text {
+                baseline_start,
+                text,
+                style,
+                colour,
+            } => Self::Text {
+                baseline_start: baseline_start.offset(0.0, down),
+                text: text.clone(),
+                style: *style,
+                colour: *colour,
+            },
+            Self::Rule {
+                from,
+                to,
+                weight,
+                colour,
+            } => Self::Rule {
+                from: from.offset(0.0, down),
+                to: to.offset(0.0, down),
+                weight: *weight,
+                colour: *colour,
+            },
+            Self::Box {
+                rect,
+                fill,
+                stroke,
+                radius,
+            } => Self::Box {
+                rect: Rect {
+                    y: rect.y + down,
+                    ..*rect
+                },
+                fill: *fill,
+                stroke: *stroke,
+                radius: *radius,
+            },
+        }
+    }
+}
+
 /// One sheet of paper.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Page {
@@ -185,6 +229,20 @@ impl Page {
             }),
             radius,
         });
+    }
+
+    /// Places everything from `other` on this page, moved `down` the sheet.
+    ///
+    /// This is how a block that was laid out on its own — at `y = 0`, so its
+    /// height could be measured by laying it out rather than by a second
+    /// formula that might disagree — reaches the sheet it belongs on.
+    pub fn absorb(&mut self, other: &Page, down: Mm) {
+        self.primitives.extend(
+            other
+                .primitives
+                .iter()
+                .map(|primitive| primitive.moved(down)),
+        );
     }
 
     /// How far down the page the lowest thing drawn reaches. The pagination
