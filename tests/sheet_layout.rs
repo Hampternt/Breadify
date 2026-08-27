@@ -2,8 +2,8 @@
 
 mod support;
 
-use breadify::crates::CrateRules;
 use breadify::geometry::{MARGIN_SIDE, PAGE_HEIGHT, PAGE_WIDTH};
+use breadify::layout::Settings;
 use breadify::layout::{self, SheetContext};
 use breadify::page::{BRAND_RED, Page, Primitive};
 use breadify::route::{self, Route};
@@ -24,12 +24,12 @@ fn named(routes: &[Route], nickname: &str) -> Route {
 
 fn sheet_of(route: &Route) -> Page {
     let context = SheetContext::single(route, None, "PSR-BREAD-2026-03-04");
-    layout::sheet(route, &context, &CrateRules::default())
+    layout::sheet(route, &context, &Settings::default())
 }
 
 /// Every sheet a route needs — most fit on one, some do not.
 fn sheets_of(route: &Route) -> Vec<Page> {
-    layout::paginate(route, None, &CrateRules::default(), "PSR-BREAD-2026-03-04")
+    layout::paginate(route, None, &Settings::default(), "PSR-BREAD-2026-03-04")
         .into_iter()
         .map(|sheet| sheet.content)
         .collect()

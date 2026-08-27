@@ -3,7 +3,9 @@
 
 pub mod check;
 pub mod chrome;
+pub mod configure;
 pub mod open;
+pub mod preview;
 pub mod theme;
 
 use std::path::PathBuf;
@@ -11,8 +13,8 @@ use std::sync::mpsc::{Receiver, TryRecvError, channel};
 
 use eframe::egui;
 
-use crate::crates::CrateRules;
 use crate::date::DeliveryDates;
+use crate::layout::Settings;
 use crate::order::Order;
 use crate::route::Route;
 use crate::sheet::SheetRow;
@@ -107,12 +109,14 @@ pub struct Breadify {
     pub loaded: Option<Loaded>,
     pub error: Option<String>,
     pub recent: Vec<PathBuf>,
-    pub rules: CrateRules,
+    pub settings: Settings,
     /// Set while a file is being read on another thread.
     loading: Option<Receiver<LoadResult>>,
     /// Renders one frame and asks for a screenshot, for looking at the window
     /// without a person at the keyboard.
     screenshot: Option<PathBuf>,
+    start_on: Option<Step>,
+    stale: bool,
     frames: u32,
 }
 
@@ -128,15 +132,23 @@ impl Breadify {
             loaded: None,
             error: None,
             recent: Vec::new(),
-            rules: CrateRules::default(),
+            settings: Settings::default(),
             loading: None,
             screenshot,
+            start_on: None,
+            stale: false,
             frames: 0,
         };
         if let Some(path) = open {
             app.load(path);
         }
         app
+    }
+
+    /// Opens on a given step once a file has loaded — for looking at a step
+    /// without clicking to it.
+    pub fn start_on(&mut self, index: usize) {
+        self.start_on = Step::ALL.get(index).copied();
     }
 
     /// Whether a file is being read right now.
@@ -174,7 +186,7 @@ impl Breadify {
                 self.loading = None;
                 self.remember(&loaded.path);
                 self.loaded = Some(*loaded);
-                self.step = Step::Check;
+                self.step = self.start_on.unwrap_or(Step::Check);
             }
         }
     }
@@ -210,6 +222,35 @@ impl Breadify {
         }
     }
 
+    /// Marks what a changed setting invalidates.
+    ///
+    /// Paginating the day takes long enough to be felt at sixty frames a
+    /// second, and a setting dragged through a range changes on every frame,
+    /// so the work waits until the hand comes off the control.
+    pub fn resettle(&mut self) {
+        self.stale = true;
+    }
+
+    /// Redoes the invalidated work, once the user has stopped dragging.
+    fn settle(&mut self, context: &egui::Context) {
+        if !self.stale || context.input(|input| input.pointer.any_down()) {
+            return;
+        }
+        self.stale = false;
+
+        let settings = self.settings.clone();
+        let Some(loaded) = &mut self.loaded else {
+            return;
+        };
+        loaded.sheets = crate::layout::day(
+            &loaded.routes,
+            loaded.dates,
+            &settings,
+            &loaded.path.to_string_lossy(),
+        )
+        .len();
+    }
+
     pub fn blocking_count(&self) -> usize {
         self.loaded.as_ref().map_or(0, |loaded| {
             loaded
@@ -232,7 +273,7 @@ fn read(path: PathBuf) -> LoadResult {
         .file_stem()
         .map(|stem| stem.to_string_lossy().into_owned())
         .unwrap_or_default();
-    let sheets = crate::layout::day(&routes, dates, &CrateRules::default(), &source).len();
+    let sheets = crate::layout::day(&routes, dates, &Settings::default(), &source).len();
 
     Ok(Box::new(Loaded {
         path,
@@ -249,6 +290,7 @@ impl eframe::App for Breadify {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let context = ui.ctx().clone();
         self.collect();
+        self.settle(&context);
         if self.is_loading() {
             context.request_repaint();
         }
@@ -262,8 +304,9 @@ impl eframe::App for Breadify {
             .show(ui, |ui| match self.step {
                 Step::Open => open::show(self, ui),
                 Step::Check => check::show(self, ui),
-                Step::Configure | Step::Print => {
-                    ui.label("Not built yet — packs 5 and 6.");
+                Step::Configure => configure::show(self, ui),
+                Step::Print => {
+                    ui.label("Not built yet — pack 6.");
                 }
             });
 

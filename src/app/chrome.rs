@@ -155,9 +155,13 @@ fn note(app: &Breadify, step: Step) -> String {
         }
         Step::Configure => format!("{} routes", loaded.routes.len()),
         Step::Print => {
-            let sheets =
-                crate::layout::day(&loaded.routes, loaded.dates, &app.rules, &loaded.filename())
-                    .len();
+            let sheets = crate::layout::day(
+                &loaded.routes,
+                loaded.dates,
+                &app.settings,
+                &loaded.filename(),
+            )
+            .len();
             format!("{sheets} sheets")
         }
     }

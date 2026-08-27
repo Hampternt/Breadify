@@ -7,10 +7,10 @@
 
 pub mod furniture;
 pub mod metrics;
+pub mod settings;
 pub mod stop;
 pub mod total;
 
-use crate::crates::CrateRules;
 use crate::date::DeliveryDates;
 use crate::font::Face;
 use crate::geometry::{
@@ -19,6 +19,7 @@ use crate::geometry::{
 use crate::page::{self, Colour, Page};
 use crate::route::Route;
 use crate::text::{self, Style};
+pub use settings::{MarkerTreatment, Settings};
 
 /// Where the next thing goes, as a sheet fills from the top.
 pub struct Cursor {
@@ -113,12 +114,12 @@ struct Piece {
 pub fn day(
     routes: &[Route],
     dates: Option<DeliveryDates>,
-    rules: &CrateRules,
+    settings: &Settings,
     source: &str,
 ) -> Vec<Sheet> {
     routes
         .iter()
-        .flat_map(|route| paginate(route, dates, rules, source))
+        .flat_map(|route| paginate(route, dates, settings, source))
         .collect()
 }
 
@@ -126,11 +127,11 @@ pub fn day(
 pub fn paginate(
     route: &Route,
     dates: Option<DeliveryDates>,
-    rules: &CrateRules,
+    settings: &Settings,
     source: &str,
 ) -> Vec<Sheet> {
     let column = Cursor::new(0.0);
-    let pieces = pieces(route, rules, &column);
+    let pieces = pieces(route, settings, &column);
     let breaks = share_out(&pieces, content_top(route), content_limit());
 
     let count = breaks.len().max(1);
@@ -158,7 +159,7 @@ pub fn paginate(
 
 /// Everything a route puts on paper, in order: its stops, the flag above the
 /// unsequenced ones, and the total that closes it.
-fn pieces(route: &Route, rules: &CrateRules, column: &Cursor) -> Vec<Piece> {
+fn pieces(route: &Route, settings: &Settings, column: &Cursor) -> Vec<Piece> {
     let mut pieces = Vec::new();
     let mut flagged = false;
 
@@ -172,7 +173,7 @@ fn pieces(route: &Route, rules: &CrateRules, column: &Cursor) -> Vec<Piece> {
                 keep_with_next: true,
             });
         }
-        let (content, height) = stop::block(entry, rules, column);
+        let (content, height) = stop::block(entry, settings, column);
         pieces.push(Piece {
             content,
             height,
@@ -308,8 +309,8 @@ fn compose(route: &Route, context: &SheetContext, pieces: &[Piece], on_page: &[u
 /// # Panics
 ///
 /// If the route needs more than one sheet — use [`paginate`] for those.
-pub fn sheet(route: &Route, context: &SheetContext, rules: &CrateRules) -> Page {
-    let sheets = paginate(route, context.dates, rules, &context.source);
+pub fn sheet(route: &Route, context: &SheetContext, settings: &Settings) -> Page {
+    let sheets = paginate(route, context.dates, settings, &context.source);
     assert_eq!(
         sheets.len(),
         1,
