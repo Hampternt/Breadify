@@ -252,11 +252,25 @@ fn supplier_column(page: &mut Page, at: Point, width: Mm, column: &SupplierColum
 }
 
 /// A row of the total: how many, of what, and its full trays.
+///
+/// The name gets the room between the quantity and the tray dots, and wraps
+/// inside it. It used to be written from its left edge with nothing bounding
+/// its right, which put `Holdbart Havrebrød Skåret 750g Bakehuset (har Vært
+/// Fryst)` 4 mm past the edge of the paper on bread route 4.
 fn total_row(page: &mut Page, at: Point, width: Mm, line: &crate::total::TotalLine) -> Mm {
     let quantity = Style::new(Face::MonoSemiBold, SIZE_TOTAL_QUANTITY);
     let name = Style::new(Face::SpaceGrotesk, SIZE_TOTAL_NAME);
-    let height = text::line_height(quantity) + 0.7;
-    let middle = at.y + height / 2.0;
+
+    let left = at.x + TOTAL_QUANTITY_COLUMN + TOTAL_NAME_INDENT;
+    let room = (at.x + width - TOTAL_DOT_COLUMN - left).max(1.0);
+    let names = text::wrap(&line.product.name, name, room);
+
+    let single = text::line_height(quantity) + 0.7;
+    let stacked = text::line_height(name) * names.len() as f64 + 0.7;
+    let height = single.max(stacked);
+    // The first line sits where a one-line row would have put it, so a wrapped
+    // row and an unwrapped one start level with each other.
+    let middle = at.y + single / 2.0;
 
     let units = line.units.to_string();
     let units_width = text::width(&units, quantity);
@@ -270,15 +284,11 @@ fn total_row(page: &mut Page, at: Point, width: Mm, line: &crate::total::TotalLi
         page::BLACK,
     );
 
-    page.text(
-        Point::new(
-            at.x + TOTAL_QUANTITY_COLUMN + 2.4,
-            middle + text::ascent(name) / 2.0 - 0.4,
-        ),
-        &line.product.name,
-        name,
-        page::INK_SOFT,
-    );
+    let mut baseline = middle + text::ascent(name) / 2.0 - 0.4;
+    for run in &names {
+        page.text(Point::new(left, baseline), run, name, page::INK_SOFT);
+        baseline += text::line_height(name);
+    }
 
     dots(page, at.x + width, middle, line.full_tens);
 

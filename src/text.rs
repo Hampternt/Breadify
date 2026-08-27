@@ -87,3 +87,66 @@ pub fn ascent(style: Style) -> Mm {
     let units_per_em = f64::from(face.units_per_em());
     pt_to_mm(f64::from(face.ascender()) / units_per_em * style.size)
 }
+
+/// Breaks `text` into lines that each fit `width`, at its spaces.
+///
+/// A word too long to fit on a line of its own is broken between characters
+/// rather than left to run off the page — a product name is one long word more
+/// often than it looks (`Fiskegrateng`), and the alternative is ink the
+/// printer silently loses.
+///
+/// An empty `text`, or a `width` no character fits in, gives one line back, so
+/// a caller can always count on at least one.
+pub fn wrap(text: &str, style: Style, width: Mm) -> Vec<String> {
+    let mut lines: Vec<String> = Vec::new();
+    let mut line = String::new();
+
+    for word in text.split_whitespace() {
+        let candidate = if line.is_empty() {
+            word.to_owned()
+        } else {
+            format!("{line} {word}")
+        };
+        if self::width(&candidate, style) <= width {
+            line = candidate;
+            continue;
+        }
+
+        if !line.is_empty() {
+            lines.push(std::mem::take(&mut line));
+        }
+        for piece in break_word(word, style, width) {
+            if !line.is_empty() {
+                lines.push(std::mem::take(&mut line));
+            }
+            line = piece;
+        }
+    }
+
+    if !line.is_empty() || lines.is_empty() {
+        lines.push(line);
+    }
+    lines
+}
+
+/// Splits one over-long word between characters, into pieces that each fit.
+fn break_word(word: &str, style: Style, width: Mm) -> Vec<String> {
+    if self::width(word, style) <= width {
+        return vec![word.to_owned()];
+    }
+
+    let mut pieces: Vec<String> = Vec::new();
+    let mut piece = String::new();
+    for character in word.chars() {
+        let mut candidate = piece.clone();
+        candidate.push(character);
+        if !piece.is_empty() && self::width(&candidate, style) > width {
+            pieces.push(std::mem::take(&mut piece));
+        }
+        piece.push(character);
+    }
+    if !piece.is_empty() {
+        pieces.push(piece);
+    }
+    pieces
+}

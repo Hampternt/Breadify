@@ -438,3 +438,37 @@ fn synthetic(customer: &str, department: Option<&str>, quantity: u32) -> Order {
         }],
     }
 }
+
+/// Nothing the route total writes may leave the content column.
+///
+/// The bread total draws one column per bakery and writes each product name
+/// from its left edge with nothing bounding its right. `Holdbart Havrebrød
+/// Skåret 750g Bakehuset (har Vært Fryst)` is 94 mm at 9.2 pt in a 92.8 mm
+/// column, which put it off the right edge of the paper on route 4 — in every
+/// release up to v1.1.1.
+#[test]
+fn no_route_total_writes_off_the_page() {
+    let right = MARGIN_SIDE + CONTENT_WIDTH;
+
+    for route in routes() {
+        let (page, _) = layout::total::block(&route, &Cursor::new(0.0));
+        for primitive in &page.primitives {
+            let Primitive::Text {
+                baseline_start,
+                text: run,
+                style,
+                ..
+            } = primitive
+            else {
+                continue;
+            };
+            let ends = baseline_start.x + text::width(run, *style);
+            assert!(
+                ends <= right + 0.01,
+                "route {} total: {run:?} runs {:.2}..{ends:.2}, past the {right:.2} mm edge",
+                route.nickname,
+                baseline_start.x
+            );
+        }
+    }
+}

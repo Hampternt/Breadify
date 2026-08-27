@@ -111,6 +111,8 @@ pub const TOTAL_MARGIN_TOP: Mm = 5.0;
 pub const TOTAL_PADDING_TOP: Mm = 2.1;
 pub const TOTAL_COLUMN_GAP: Mm = 8.4;
 pub const TOTAL_QUANTITY_COLUMN: Mm = 8.4;
+/// The gap between a total row's quantity and its product name.
+pub const TOTAL_NAME_INDENT: Mm = 2.4;
 pub const TOTAL_DOT_COLUMN: Mm = 18.0;
 pub const TOTAL_DOT: Mm = 2.7;
 pub const NOTE_DOT: Mm = 2.5;
