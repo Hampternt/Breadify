@@ -15,7 +15,7 @@ crates and labels each crate; the driver delivers them in route order.
 
 - [`excel-format.md`](excel-format.md) — the input file, verified against a
   real export, with the validation a loader must perform.
-- [`print-layout.md`](print-layout.md) — the decision log, D1–D18.
+- [`print-layout.md`](print-layout.md) — the decision log, D1–D22.
 - [`print-spec.md`](print-spec.md) — what the printed page must say and do.
 - `Printer page formatting application/design_handoff_breadify/` — the design
   pass: high-fidelity geometry for the printed page and the four-step app

@@ -191,11 +191,19 @@ pub fn action_bar(app: &mut Breadify, host: &mut egui::Ui) {
                 }
 
                 ui.add_space(14.0);
+                // Whatever went wrong is said here, on whichever step it went
+                // wrong on. The drop zone shows it too, but a settings file
+                // that will not save or a PDF that will not open happens three
+                // steps away from there.
+                let (message, colour) = match &app.error {
+                    Some(error) => (error.clone(), theme::DANGER),
+                    None => (app.hint(), theme::MUTED),
+                };
                 ui.label(
-                    RichText::new(app.hint())
+                    RichText::new(message)
                         .family(theme::mono())
                         .size(11.5)
-                        .color(theme::MUTED),
+                        .color(colour),
                 );
 
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {

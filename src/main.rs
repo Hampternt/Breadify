@@ -40,6 +40,7 @@ fn main() -> ExitCode {
                 None => return fail("--open needs a file to read"),
             },
             "--help" | "-h" => return usage(),
+            "--version" | "-V" => return version(),
             unknown if unknown.starts_with("--") => return usage(),
             value => positional.push(value),
         }
@@ -50,6 +51,7 @@ fn main() -> ExitCode {
         ["dump", nickname] => run(nickname, None, pdf),
         ["dump", nickname, path] => run(nickname, Some(Path::new(path)), pdf),
         ["help"] => usage(),
+        ["version"] => version(),
         ["licences"] | ["licenses"] => licences(),
         ["print"] => print_day(None, pdf),
         ["print", path] => print_day(Some(Path::new(path)), pdf),
@@ -91,6 +93,17 @@ fn window(screenshot: Option<PathBuf>, open: Option<PathBuf>, step: Option<usize
     }
 }
 
+/// The same rules the window uses: the bakery's crate sizes as last saved,
+/// and the printed form's defaults for everything else. A route dumped from
+/// the terminal has to come to the same crates as the same route printed from
+/// the window, or one of them is lying.
+fn settings() -> Settings {
+    Settings {
+        crates: breadify::store::load().unwrap_or_default(),
+        ..Settings::default()
+    }
+}
+
 /// Draws every route in an export, one route per sheet set.
 fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     let Some(target) = pdf else {
@@ -121,7 +134,7 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         .map(|stem| stem.to_string_lossy().into_owned())
         .unwrap_or_default();
 
-    let sheets = layout::day(&routes, dates, &Settings::default(), &source);
+    let sheets = layout::day(&routes, dates, &settings(), &source);
     let pages: Vec<_> = sheets.iter().map(|sheet| sheet.content.clone()).collect();
 
     match pdf::write(Path::new(target), &pages, "Breadify pick lists") {
@@ -142,6 +155,12 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     }
 }
 
+/// Which build this is, so a report from the bakery can be pinned to one.
+fn version() -> ExitCode {
+    println!("breadify {}", env!("CARGO_PKG_VERSION"));
+    ExitCode::SUCCESS
+}
+
 /// What the binary can do, for anyone who asks it wrongly.
 fn usage() -> ExitCode {
     eprintln!("breadify — bread order exports into printed A4 picking lists");
@@ -152,6 +171,7 @@ fn usage() -> ExitCode {
     eprintln!(
         "  breadify licences                           what is embedded, and under what terms"
     );
+    eprintln!("  breadify --version                          which build this is");
     eprintln!();
     eprintln!("Flags:");
     eprintln!("  --pdf <file.pdf>       also draw the route(s) as A4 sheets");
@@ -223,7 +243,7 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     };
 
     let dates = date::from_filename(&path).ok();
-    let settings = Settings::default();
+    let settings = settings();
     print!("{}", dump::route(wanted, dates, &settings.crates));
 
     let Some(target) = pdf else {

@@ -12,7 +12,7 @@ the handoff wins on appearance and this file wins on behaviour; §6 is the one
 place where this file deliberately overrides it.
 
 Decision history and the reasoning behind each rule:
-[`print-layout.md`](print-layout.md) (**D1**–**D15**). Input data:
+[`print-layout.md`](print-layout.md) (**D1**–**D22**). Input data:
 [`excel-format.md`](excel-format.md).
 
 ---
@@ -41,9 +41,11 @@ a pen. Not a screen, not an archive.
 3. **The sequence number is never printed.** The order of the blocks carries
    it. `Route ordering` is the one column marked never-printed. (**D6**)
 4. **Unsequenced stops print last, under a flag.** See §6. (**D3**)
-5. **A stop block never splits across a page break.** Grouped stops may split
-   *between* sub-blocks, repeating the address heading with a `same stop` note.
-   The route total never splits either. (**D9**)
+5. **A stop block never splits across a page break**, and neither does the
+   route total. Since **D16** there is no larger unit that could: a stop is one
+   order, so a site with several departments is several blocks and a break may
+   fall between any two of them. The handoff's grouped stops, with an address
+   heading over a run of sub-blocks, are not built. (**D9**, **D16**)
 6. **Every block states whether substitutes are accepted**, in a way that
    survives a black-and-white printer. See §5. (**D8**, **D13**)
 7. **A department is a crate label and is rendered as one** — an outlined box
