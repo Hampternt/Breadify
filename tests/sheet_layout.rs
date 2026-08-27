@@ -27,6 +27,14 @@ fn sheet_of(route: &Route) -> Page {
     layout::sheet(route, &context, &CrateRules::default())
 }
 
+/// Every sheet a route needs — most fit on one, some do not.
+fn sheets_of(route: &Route) -> Vec<Page> {
+    layout::paginate(route, None, &CrateRules::default(), "PSR-BREAD-2026-03-04")
+        .into_iter()
+        .map(|sheet| sheet.content)
+        .collect()
+}
+
 fn runs(page: &Page) -> Vec<&str> {
     page.primitives
         .iter()
@@ -70,19 +78,24 @@ fn product_names_are_set_verbatim() {
 #[test]
 fn nothing_is_drawn_outside_the_sheet() {
     for route in routes() {
-        let page = sheet_of(&route);
-        for primitive in &page.primitives {
-            let (x, y) = match primitive {
-                Primitive::Text { baseline_start, .. } => (baseline_start.x, baseline_start.y),
-                Primitive::Rule { from, to, .. } => (from.x.min(to.x), from.y.min(to.y)),
-                Primitive::Box { rect, .. } => (rect.x, rect.y),
-            };
-            assert!(
-                (MARGIN_SIDE - 0.001..=PAGE_WIDTH - MARGIN_SIDE).contains(&x),
-                "route {} draws at x={x:.2}",
-                route.nickname
-            );
-            assert!(y >= 0.0, "route {} draws above the sheet", route.nickname);
+        for page in sheets_of(&route) {
+            for primitive in &page.primitives {
+                let (x, y) = match primitive {
+                    Primitive::Text { baseline_start, .. } => (baseline_start.x, baseline_start.y),
+                    Primitive::Rule { from, to, .. } => (from.x.min(to.x), from.y.min(to.y)),
+                    Primitive::Box { rect, .. } => (rect.x, rect.y),
+                };
+                assert!(
+                    (MARGIN_SIDE - 0.001..=PAGE_WIDTH - MARGIN_SIDE).contains(&x),
+                    "route {} draws at x={x:.2}",
+                    route.nickname
+                );
+                assert!(
+                    (0.0..=PAGE_HEIGHT).contains(&y),
+                    "route {} draws at y={y:.2}",
+                    route.nickname
+                );
+            }
         }
     }
 }
@@ -105,11 +118,15 @@ fn the_masthead_carries_one_brand_rule() {
 #[test]
 fn the_unsequenced_flag_appears_once_and_only_where_it_is_needed() {
     for route in routes() {
-        let page = sheet_of(&route);
-        let flags = runs(&page)
+        let flags: usize = sheets_of(&route)
             .iter()
-            .filter(|run| run.starts_with("NO POSITION ASSIGNED"))
-            .count();
+            .map(|page| {
+                runs(page)
+                    .iter()
+                    .filter(|run| run.starts_with("NO POSITION ASSIGNED"))
+                    .count()
+            })
+            .sum();
         let expected = usize::from(route.unsequenced().count() > 0);
 
         assert_eq!(flags, expected, "route {}", route.nickname);
@@ -143,9 +160,8 @@ fn a_short_route_leaves_the_footer_alone() {
 #[test]
 fn every_route_draws_to_an_a4_pdf() {
     for route in routes() {
-        let page = sheet_of(&route);
-        let bytes = pdf::render(&[page], &format!("Route {}", route.nickname))
-            .expect("the sheet should render");
+        let bytes = pdf::render(&sheets_of(&route), &format!("Route {}", route.nickname))
+            .expect("the sheets should render");
 
         assert!(bytes.starts_with(b"%PDF"), "route {}", route.nickname);
         let text = String::from_utf8_lossy(&bytes);

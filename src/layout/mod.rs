@@ -14,7 +14,7 @@ use crate::crates::CrateRules;
 use crate::date::DeliveryDates;
 use crate::font::Face;
 use crate::geometry::{
-    CONTENT_WIDTH, MARGIN_BOTTOM, MARGIN_SIDE, Mm, PAGE_HEIGHT, Point, Pt, Rect,
+    CONTENT_WIDTH, FOOTER_CLEARANCE, MARGIN_BOTTOM, MARGIN_SIDE, Mm, PAGE_HEIGHT, Point, Pt, Rect,
 };
 use crate::page::{self, Colour, Page};
 use crate::route::Route;
@@ -85,11 +85,208 @@ impl SheetContext {
     }
 }
 
-/// Lays out a whole route on one sheet.
+/// One printed sheet: which route it belongs to, where it falls in that
+/// route's set, and everything on it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Sheet {
+    pub route: String,
+    /// 1-based within the route.
+    pub number: usize,
+    pub of: usize,
+    pub content: Page,
+}
+
+/// A block waiting for a page, already laid out and therefore already
+/// measured.
+struct Piece {
+    content: Page,
+    height: Mm,
+    /// A separator that must never be the last thing on a page: the
+    /// unsequenced flag belongs above the stops it covers.
+    keep_with_next: bool,
+}
+
+/// Every sheet a day's routes need, in printing order.
 ///
-/// Pack 2 draws routes that fit; the paginator that splits the ones that do
-/// not is pack 3, and it will reuse every piece of this.
-pub fn sheet(route: &Route, context: &SheetContext, rules: &CrateRules) -> Page {
+/// Routes come in the order they are given, each starting on a fresh page. No
+/// page ever carries two routes (decision D1).
+pub fn day(
+    routes: &[Route],
+    dates: Option<DeliveryDates>,
+    rules: &CrateRules,
+    source: &str,
+) -> Vec<Sheet> {
+    routes
+        .iter()
+        .flat_map(|route| paginate(route, dates, rules, source))
+        .collect()
+}
+
+/// Lays one route out over as many sheets as it needs.
+pub fn paginate(
+    route: &Route,
+    dates: Option<DeliveryDates>,
+    rules: &CrateRules,
+    source: &str,
+) -> Vec<Sheet> {
+    let column = Cursor::new(0.0);
+    let pieces = pieces(route, rules, &column);
+    let breaks = share_out(&pieces, content_top(route), content_limit());
+
+    let count = breaks.len().max(1);
+    breaks
+        .into_iter()
+        .enumerate()
+        .map(|(index, page_pieces)| {
+            let context = SheetContext {
+                dates,
+                page: index + 1,
+                pages: count,
+                route_stops: route.stops.len(),
+                route_lines: route.line_count(),
+                source: source.to_owned(),
+            };
+            Sheet {
+                route: route.nickname.clone(),
+                number: index + 1,
+                of: count,
+                content: compose(route, &context, &pieces, &page_pieces),
+            }
+        })
+        .collect()
+}
+
+/// Everything a route puts on paper, in order: its stops, the flag above the
+/// unsequenced ones, and the total that closes it.
+fn pieces(route: &Route, rules: &CrateRules, column: &Cursor) -> Vec<Piece> {
+    let mut pieces = Vec::new();
+    let mut flagged = false;
+
+    for entry in &route.stops {
+        if !entry.is_sequenced() && !flagged {
+            flagged = true;
+            let (content, height) = furniture::unsequenced_flag_block(column);
+            pieces.push(Piece {
+                content,
+                height,
+                keep_with_next: true,
+            });
+        }
+        let (content, height) = stop::block(entry, rules, column);
+        pieces.push(Piece {
+            content,
+            height,
+            keep_with_next: false,
+        });
+    }
+
+    let (content, height) = total::block(route, column);
+    pieces.push(Piece {
+        content,
+        height,
+        keep_with_next: false,
+    });
+    pieces
+}
+
+/// Decides which pieces go on which page.
+///
+/// A piece never splits, and a piece marked `keep_with_next` never ends a
+/// page. When the last page would carry nothing but the route total, the stop
+/// above it comes down too rather than leave a sheet nearly empty.
+fn share_out(pieces: &[Piece], top: Mm, limit: Mm) -> Vec<Vec<usize>> {
+    let mut pages: Vec<Vec<usize>> = vec![Vec::new()];
+    let mut y = top;
+
+    for (index, piece) in pieces.iter().enumerate() {
+        let needed = piece.height + follower(pieces, index);
+        let fits = y + needed <= limit;
+
+        if !fits && !pages.last().is_some_and(Vec::is_empty) {
+            pages.push(Vec::new());
+            y = top;
+        }
+
+        pages.last_mut().expect("a page to place onto").push(index);
+        y += piece.height;
+    }
+
+    rebalance(pieces, &mut pages, top, limit);
+    pages
+}
+
+/// How much room the piece after this one needs, when the two must stay
+/// together.
+fn follower(pieces: &[Piece], index: usize) -> Mm {
+    if !pieces[index].keep_with_next {
+        return 0.0;
+    }
+    pieces.get(index + 1).map_or(0.0, |piece| piece.height)
+}
+
+/// Pulls the previous stop down onto a final page that carries only the total.
+fn rebalance(pieces: &[Piece], pages: &mut [Vec<usize>], top: Mm, limit: Mm) {
+    if pages.len() < 2 {
+        return;
+    }
+    let Some(last) = pages.last() else {
+        return;
+    };
+    if last.len() != 1 {
+        return;
+    }
+
+    let total = last[0];
+    let previous = pages.len() - 2;
+    let Some(&moved) = pages[previous].last() else {
+        return;
+    };
+    if pieces[moved].keep_with_next || pages[previous].len() < 2 {
+        return;
+    }
+
+    // Moving this one down must not leave a separator as the last thing on the
+    // page it came from — the flag belongs above the stops it covers.
+    let left_behind = pages[previous][pages[previous].len() - 2];
+    if pieces[left_behind].keep_with_next {
+        return;
+    }
+
+    let height = pieces[moved].height + pieces[total].height;
+    if top + height > limit {
+        return;
+    }
+
+    pages[previous].pop();
+    pages.last_mut().expect("the final page").insert(0, moved);
+}
+
+/// Where a page's own content starts, below the furniture every page repeats.
+fn content_top(route: &Route) -> Mm {
+    let mut scratch = Page::new();
+    let mut cursor = Cursor::new(0.0);
+    let context = SheetContext {
+        dates: None,
+        page: 1,
+        pages: 1,
+        route_stops: route.stops.len(),
+        route_lines: route.line_count(),
+        source: String::new(),
+    };
+    furniture::masthead(&mut scratch, &mut cursor, route, &context);
+    furniture::page_note(&mut scratch, &mut cursor, route);
+    furniture::legend(&mut scratch, &mut cursor);
+    cursor.y
+}
+
+/// How far down a page content may reach: the footer's rule, less the
+/// clearance every page keeps above it.
+fn content_limit() -> Mm {
+    footer_rule_y() - FOOTER_CLEARANCE
+}
+
+/// Draws one page: the furniture it repeats, then its share of the pieces.
+fn compose(route: &Route, context: &SheetContext, pieces: &[Piece], on_page: &[usize]) -> Page {
     let mut page = Page::new();
     let mut cursor = Cursor::new(0.0);
 
@@ -97,18 +294,30 @@ pub fn sheet(route: &Route, context: &SheetContext, rules: &CrateRules) -> Page 
     furniture::page_note(&mut page, &mut cursor, route);
     furniture::legend(&mut page, &mut cursor);
 
-    let mut flagged = false;
-    for entry in &route.stops {
-        if !entry.is_sequenced() && !flagged {
-            flagged = true;
-            furniture::unsequenced_flag(&mut page, &mut cursor);
-        }
-        stop::block(&mut page, &mut cursor, entry, rules);
+    for &index in on_page {
+        page.absorb(&pieces[index].content, cursor.y);
+        cursor.advance(pieces[index].height);
     }
 
-    total::block(&mut page, &mut cursor, route);
     furniture::footer(&mut page, route, context);
     page
+}
+
+/// Lays a whole route out on one sheet, for a route that fits.
+///
+/// # Panics
+///
+/// If the route needs more than one sheet — use [`paginate`] for those.
+pub fn sheet(route: &Route, context: &SheetContext, rules: &CrateRules) -> Page {
+    let sheets = paginate(route, context.dates, rules, &context.source);
+    assert_eq!(
+        sheets.len(),
+        1,
+        "route {} needs {} sheets — use paginate",
+        route.nickname,
+        sheets.len()
+    );
+    sheets.into_iter().next().expect("one sheet").content
 }
 
 /// Sets a run of text so its left edge sits at `at`, with `at.y` the top of

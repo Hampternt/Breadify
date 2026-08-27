@@ -198,10 +198,16 @@ do not treat width as the constraint that settles layout arguments. Sheet
 count is decided by height, and adding a column is a real option if one is
 ever wanted.
 
-Verified budgets from the design pass: **24 sheets** for the whole sample day
-at the default density; 19 without route totals; route 5 needs two pages at any
-density that respects 11 pt. Every page keeps ≥ 10 mm of clearance above the
-footer.
+**Measured budget.** The app paginates the sample day into **26 sheets** —
+10 of the 16 routes take two, the other six take one — with every page holding
+its ≥ 10 mm clearance above the footer, asserted by test rather than by eye.
+
+That is two sheets more than the design pass's 24, and the difference is
+accounted for: the handoff measured without the unsequenced flag §6 reinstates
+(nine routes gain a line) and with address-level grouping, which **D16**
+replaced — a stop is one order, so a site with several departments no longer
+shares one heading. Both are deliberate. Treat 26 as the number, and re-measure
+rather than quote it if the layout changes.
 
 ## 10. Worked example — route 8
 

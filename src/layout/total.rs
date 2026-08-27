@@ -10,10 +10,18 @@ use crate::supplier;
 use crate::text::{self, Style};
 use crate::total::{self, SupplierColumn};
 
-/// Lays out the whole total: title, the two meta lines, then one column per
-/// bakery.
-pub fn block(page: &mut Page, cursor: &mut Cursor, route: &Route) {
+/// Lays out the whole total — title, the two meta lines, then one column per
+/// bakery — on a page of its own, the way a stop block is laid out.
+pub fn block(route: &Route, column: &Cursor) -> (Page, Mm) {
     let total = total::of(route);
+    let mut own = Page::new();
+    let mut cursor = Cursor {
+        y: 0.0,
+        left: column.left,
+        width: column.width,
+    };
+    let page = &mut own;
+    let cursor = &mut cursor;
 
     cursor.advance(TOTAL_MARGIN_TOP);
     rule(page, cursor, RULE_TOTAL, page::BLACK);
@@ -48,6 +56,8 @@ pub fn block(page: &mut Page, cursor: &mut Cursor, route: &Route) {
 
     dot_note(page, cursor, total.full_tens());
     columns(page, cursor, &total.columns);
+
+    (page.clone(), cursor.y)
 }
 
 /// What a ten-dot means, and how many the route has.

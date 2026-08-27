@@ -1,6 +1,6 @@
 # Pack 3 — The whole day
 
-**Status:** in progress.
+**Status:** all 7 items done, reviewed, pack gate green. Merged.
 **Container:** Breadify v1 (7 packs).
 **Branch:** `pack-3-whole-day`.
 
@@ -28,13 +28,32 @@ it — and a test proves every emitted page keeps ≥ 10 mm above its footer.
 
 ## Ledger
 
-- [ ] 1 — Blocks laid out in isolation
-- [ ] 2 — The paginator
-- [ ] 3 — The route total lands whole
-- [ ] 4 — Per-page furniture
-- [ ] 5 — The clearance invariant
-- [ ] 6 — Print the day
-- [ ] 7 — The real budget
+- [x] 1 — Blocks laid out in isolation · stops, the flag and the total lay out at y=0
+- [x] 2 — The paginator · 16 routes → 26 sheets, no page carries two
+- [x] 3 — The route total lands whole · moves to its own page, pulling a stop down with it
+- [x] 4 — Per-page furniture · `continued`, truthful counters, continuation footer
+- [x] 5 — The clearance invariant · asserted for all 26 sheets
+- [x] 6 — Print the day · `breadify print --pdf day.pdf`
+- [x] 7 — The real budget · 26 sheets, recorded in print-spec §9
 
-**Deviations:** none yet.
-**Pack gate:** not run.
+**Deviations:**
+
+- The design's rule 2 lets a *grouped* stop split between its sub-blocks. D16
+  removed grouped stops, so there is nothing to split between: a stop is one
+  order and never breaks.
+- The day comes to 26 sheets rather than the handoff's 24. The two extra are
+  the unsequenced flag on nine routes and the loss of address-level grouping
+  under D16. `print-spec.md` §9 records the measurement.
+**Code review:** one pass at high effort. Two findings, both fixed:
+
+1. `dump <route> --pdf` still called the single-sheet convenience and panicked
+   on the ten routes that need two sheets. Reproduced, then pointed at the
+   paginator.
+2. Rebalancing refused to move a separator, but not the piece directly after
+   one, so it could have left the unsequenced flag orphaned at the foot of a
+   page. No sample route reaches that arrangement; a different day would.
+
+**Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, 77
+tests across 11 files, all green. Route 5's two sheets were rendered and looked
+at: `CONTINUED` in the masthead, a truthful counter, the flag above its stops
+on page 1, the total closing page 2, footers saying which is which.
