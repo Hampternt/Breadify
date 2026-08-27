@@ -42,9 +42,10 @@ crates and labels each crate; the driver delivers them in route order.
 - A display list of positioned primitives is the only interface between
   deciding where things go and drawing them, so the paper and the app's
   preview cannot disagree.
-- `breadify dump <route> --pdf <file>` draws a route as an A4 sheet: masthead,
-  legend, stop blocks with tick boxes and crate glyphs, the unsequenced flag,
-  and the route total.
+- `breadify dump <route> --pdf <file>` draws one route; `breadify print --pdf
+  <file>` draws the whole day. Every route starts a fresh page, no block or
+  total is ever cut, and every page keeps 10 mm clear above its footer. The
+  sample day is 26 sheets.
 
 **Tools**
 
@@ -53,9 +54,9 @@ crates and labels each crate; the driver delivers them in route order.
 
 ## In flight
 
-🚧 **Pack 3 — The whole day** →
-[`manifests/2026-08-27-pack-3-whole-day.md`](manifests/2026-08-27-pack-3-whole-day.md)
-Every route paginated onto sheets.
+🚧 **Pack 4 — Window shell: Open and Check** →
+`manifests/` — not yet written.
+The app window, its first two steps working on real files.
 
 ## Not built yet
 
