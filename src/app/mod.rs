@@ -81,9 +81,6 @@ pub struct Loaded {
     pub routes: Vec<Route>,
     pub findings: Vec<Finding>,
     pub dates: Option<DeliveryDates>,
-    /// How many sheets the day comes to, worked out once when the file is
-    /// read. Paginating is far too much work to redo on every frame.
-    pub sheets: usize,
 }
 
 impl Loaded {
@@ -262,23 +259,15 @@ impl Breadify {
         }
         self.stale = false;
         self.day = print::selected_day(self);
-
-        let settings = self.settings.clone();
-        let Some(loaded) = &mut self.loaded else {
-            return;
-        };
-        loaded.sheets = crate::layout::day(
-            &loaded.routes,
-            loaded.dates,
-            &settings,
-            &loaded.path.to_string_lossy(),
-        )
-        .len();
     }
 
     /// The sheets the current selection comes to. Worked out when something
     /// changes, and lent out rather than copied — a day is a few thousand
     /// positioned primitives, and this is read on every frame.
+    ///
+    /// There is one sheet count in the app and this is it: the rail, the route
+    /// table and the print button all read it, so they cannot disagree about
+    /// how much paper a print will take.
     pub fn day(&self) -> &[crate::layout::Sheet] {
         &self.day
     }
@@ -286,6 +275,14 @@ impl Breadify {
     /// How many sheets the selection comes to.
     pub fn selected_sheets(&self) -> usize {
         self.day.len()
+    }
+
+    /// The same count for the rail, or `None` while a change is settling.
+    pub fn sheets_for_all(&self) -> Option<usize> {
+        if self.stale {
+            return None;
+        }
+        Some(self.day.len())
     }
 
     /// How many sheets one route needs on its own, or `None` while a changed
@@ -320,12 +317,6 @@ fn read(path: PathBuf) -> LoadResult {
     let orders = crate::order::fold(&rows);
     let routes = crate::route::group(orders.clone());
     let dates = crate::date::from_filename(&path).ok();
-    let source = path
-        .file_stem()
-        .map(|stem| stem.to_string_lossy().into_owned())
-        .unwrap_or_default();
-    let sheets = crate::layout::day(&routes, dates, &Settings::default(), &source).len();
-
     Ok(Box::new(Loaded {
         path,
         rows,
@@ -333,7 +324,6 @@ fn read(path: PathBuf) -> LoadResult {
         routes,
         findings,
         dates,
-        sheets,
     }))
 }
 
@@ -412,7 +402,8 @@ fn write_ppm(path: &std::path::Path, image: &egui::ColorImage) -> std::io::Resul
     let [width, height] = image.size;
     let mut out = Vec::with_capacity(width * height * 3 + 32);
     write!(out, "P6\n{width} {height}\n255\n")?;
-    for pixel in image.as_raw().chunks_exact(4) {
+    let (pixels, _) = image.as_raw().as_chunks::<4>();
+    for pixel in pixels {
         out.extend_from_slice(&pixel[..3]);
     }
     std::fs::write(path, out)

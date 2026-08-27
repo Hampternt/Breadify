@@ -61,6 +61,6 @@ file — not the four the design hardcodes.
 2. `--screenshot` had no timeout: if the capture never arrived it spun at full
    frame rate forever. It gives up after 240 frames now.
 
-**Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, 85
-tests across 13 files, all green. Both steps were opened and looked at:
+**Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, and the
+test suite, all green. Both steps were opened and looked at:
 `--screenshot` of the empty Open step and of Check with the sample loaded.

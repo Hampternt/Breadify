@@ -55,6 +55,6 @@ one list that only the layout decides.
    clipping the tick boxes and the order id off the right of the window. Found
    by looking at a screenshot, which is the only way that one shows up.
 
-**Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, 89
-tests across 14 files, all green. The step was opened and looked at, and the
+**Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, and the
+test suite, all green. The step was opened and looked at, and the
 sample block cropped from the screenshot to check it against the sheet.
