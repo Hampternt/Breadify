@@ -1,8 +1,14 @@
 //! Every measurement the printed page is built from.
 //!
-//! Straight out of the design handoff's geometry and token tables, in one
-//! place so a number is never typed twice. Lengths are millimetres, type sizes
-//! and rule weights are points.
+//! Out of the design handoff's geometry and token tables, in one place so a
+//! number is never typed twice. Where the decision log has since moved one,
+//! the log is the authority and says why: `SIZE_DEPARTMENT` and
+//! `SIZE_DPT_TAG` came down from the handoff's 11.9 and 8.6 pt when the
+//! department moved under the customer name (**D19**), and
+//! `DEPARTMENT_LINE_GAP` and `CRATE_ROW_GAP` are new with **D19** and **D20**
+//! — the handoff has no second heading line and no wrapped crate run.
+//!
+//! Lengths are millimetres, type sizes and rule weights are points.
 
 use crate::geometry::{Mm, Pt};
 

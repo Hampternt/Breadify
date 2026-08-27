@@ -154,7 +154,7 @@ takes the 11 pt body below its floor.
 (2026-08-27)
 A heading is one crate label in two parts, so it is set as two lines: the
 customer at 14 pt, and beneath it the `DPT` box at 10.4 pt against the
-handoff's 11.9. Side by side the two read as equals and the eye has to work
+handoff's 11.9, its `DPT` tag coming down from 8.6 to 7.7 with it. Side by side the two read as equals and the eye has to work
 out which is the site and which is the kitchen. This also frees the whole
 right-hand end of the heading line for **D20**. It costs about 5.5 mm on each
 of the blocks that carry a department; the sample day is 26 sheets either way.

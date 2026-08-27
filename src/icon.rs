@@ -6,7 +6,7 @@
 //! turn into a stripe.
 //!
 //! Rendering here rather than shipping a PNG keeps one source of truth for the
-//! mark, and costs a scanline fill over about two hundred edges at startup.
+//! mark, and costs one scanline fill at startup.
 
 use crate::artwork::{self, Artwork, Vertex};
 
@@ -18,9 +18,13 @@ const SIZE: u32 = 256;
 /// antialiasing is the box filter on the way down.
 const SUPERSAMPLE: u32 = 4;
 
-/// Segments a cubic is flattened into. At 1024 px across the whole mark, a
-/// curve spans well under sixteen pixels.
-const CURVE_STEPS: usize = 12;
+/// Segments a cubic is flattened into.
+///
+/// The symbol is thirteen curves, and at the working scale — 40.1 units fitted
+/// to 1024 px, so 22.5 px a unit — the longest of them runs about 293 px.
+/// Thirty-two segments keeps every chord under 10 px there, which is under 3
+/// in the finished 256 px tile. Twelve left a 6 px flat on that curve.
+const CURVE_STEPS: usize = 32;
 
 /// Everything left of this in the artwork's own coordinates is the symbol;
 /// everything right of it is the wordmark's lettering.

@@ -2,8 +2,9 @@
 //!
 //! He is a joke and nothing else — no state, no interaction, nothing under
 //! him that a person needs to read through him. He decodes on first use and is
-//! uploaded once; if the decode ever fails, the step draws exactly as it did
-//! before him.
+//! uploaded once; if the decode ever fails he simply is not drawn, and the
+//! step still reads, though its finding cards keep the translucent fill they
+//! were given for his sake (`theme::CARD_VEIL`).
 
 use std::sync::LazyLock;
 

@@ -120,9 +120,9 @@ fn choices(app: &mut Breadify, ui: &mut egui::Ui) {
 
 /// Every product in the open file, with the room it takes.
 ///
-/// A day's export runs to fifty-odd breads and nearly all of them are a whole
-/// slot, so the list is one dense row each and says nothing about the ones
-/// nobody has had to think about. The few that are not standard are lifted to
+/// A day's export runs to thirty-odd breads — 35 in the sample — and nearly
+/// all of them are a whole slot, so the list is one dense row each and says
+/// nothing about the ones nobody has had to think about. The few that are not standard are lifted to
 /// the top and carry their fraction; clicking any row opens the buttons.
 fn sizes(app: &mut Breadify, ui: &mut egui::Ui) {
     let Some(loaded) = &app.loaded else {
