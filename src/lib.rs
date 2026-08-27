@@ -11,4 +11,5 @@ pub mod date;
 pub mod order;
 pub mod route;
 pub mod sheet;
+pub mod total;
 pub mod validate;
