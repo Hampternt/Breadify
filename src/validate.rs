@@ -117,7 +117,7 @@ fn blank_required_fields(rows: &[SheetRow]) -> Vec<Finding> {
 /// repeated onto each of its lines. If two lines disagree, folding them into
 /// one order would silently pick a winner.
 fn orders_that_disagree(rows: &[SheetRow]) -> Vec<Finding> {
-    let attributes: [TextColumn; 7] = [
+    let attributes: [TextColumn; 6] = [
         ("customer", |row| row.customer.clone()),
         ("department", |row| {
             row.department.clone().unwrap_or_default()
@@ -128,15 +128,14 @@ fn orders_that_disagree(rows: &[SheetRow]) -> Vec<Finding> {
         ("accept alternatives", |row| {
             row.accept_alternatives.to_string()
         }),
-        ("comment", |row| row.comment.clone().unwrap_or_default()),
     ];
 
     group_by(rows, |row| row.order_id)
         .into_iter()
         .flat_map(|(order_id, lines)| {
-            attributes
+            let mut findings: Vec<Finding> = attributes
                 .iter()
-                .filter_map(move |(name, read)| {
+                .filter_map(|(name, read)| {
                     let values: BTreeSet<String> = lines.iter().map(|row| read(row)).collect();
                     if values.len() < 2 {
                         return None;
@@ -153,9 +152,38 @@ fn orders_that_disagree(rows: &[SheetRow]) -> Vec<Finding> {
                         rows: lines.iter().map(|row| row.excel_row).collect(),
                     })
                 })
-                .collect::<Vec<_>>()
+                .collect();
+
+            findings.extend(two_notes_on_one_order(order_id, &lines));
+            findings
         })
         .collect()
+}
+
+/// The comment is the one order-level value a line may simply not carry: this
+/// export repeats it onto every line, but writing it once would be just as
+/// valid, and [`crate::order::fold`] takes whichever line has it. Only two
+/// *different* notes on one order are a problem, because then there is no
+/// saying which one the customer meant.
+fn two_notes_on_one_order(order_id: i64, lines: &[&SheetRow]) -> Option<Finding> {
+    let notes: BTreeSet<&str> = lines
+        .iter()
+        .filter_map(|row| row.comment.as_deref())
+        .collect();
+    if notes.len() < 2 {
+        return None;
+    }
+
+    Some(Finding {
+        severity: Severity::Blocking,
+        kind: FindingKind::OrderLinesDisagree,
+        headline: format!("Order {order_id} carries two different notes"),
+        detail: format!(
+            "The lines of order {order_id} carry {}. Only one can be printed.",
+            quoted(&notes.iter().map(|note| (*note).to_owned()).collect())
+        ),
+        rows: lines.iter().map(|row| row.excel_row).collect(),
+    })
 }
 
 /// The address is the most reliable identity a stop has, and the printed order
@@ -203,11 +231,19 @@ fn repeated_stop_sequences(rows: &[SheetRow]) -> Vec<Finding> {
             Some(Finding {
                 severity: Severity::Warning,
                 kind: FindingKind::RepeatedStopSequence,
-                headline: format!("Route {route} has {} stops at {ordering}", addresses.len()),
+                headline: format!(
+                    "Route {route} has {} addresses at {ordering}",
+                    addresses.len()
+                ),
                 detail: format!(
-                    "Position {ordering} on route {route} is shared by {}. \
-                 They print in address order.",
-                    quoted(&addresses.iter().map(|a| (*a).to_owned()).collect())
+                    "Position {ordering} on route {route} is shared by {}, \
+                 across {} stops. They print in address order.",
+                    quoted(&addresses.iter().map(|a| (*a).to_owned()).collect()),
+                    lines
+                        .iter()
+                        .map(|row| row.order_id)
+                        .collect::<BTreeSet<i64>>()
+                        .len()
                 ),
                 rows: lines.iter().map(|row| row.excel_row).collect(),
             })

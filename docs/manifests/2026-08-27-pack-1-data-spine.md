@@ -1,6 +1,6 @@
 # Pack 1 — Data spine
 
-**Status:** all 9 items done — pack gate green, awaiting review.
+**Status:** all 9 items done, reviewed, pack gate green. Ready to merge.
 **Container:** Breadify v1 (7 packs — see [`../print-layout.md`](../print-layout.md) §Next).
 **Branch:** `pack-1-data-spine`.
 
@@ -73,4 +73,23 @@ assert numbers this repo has already re-derived.
   implemented rather than stubbed: sizes are a percentage of a slot, default
   100 %, and the arithmetic runs on slots. At all-100 % it reproduces the
   verified figures exactly, which a test asserts.
-**Pack gate:** not run.
+**Code review:** one pass at high effort over the whole branch. Two confirmed
+findings, both fixed on the branch:
+
+1. `comment` was treated as an order-level value every line must repeat, so an
+   export writing a note once instead of onto every line produced a *blocking*
+   finding telling the user not to print a file that folds perfectly well.
+   Reproduced before fixing. Only two genuinely *different* notes on one order
+   block now.
+2. The shared-sequence finding counted addresses and called them "stops",
+   contradicting D16. Route 11 at 1400 now reads "3 addresses at 1400 … across
+   8 stops".
+
+**Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, then
+51 tests across 8 files, all green:
+
+```
+crates 6 · date 4 · dump 2 · golden 4 · order 7 · route 7 · sheet 7
+· total 5 · validate 9
+verify.sh: OK
+```
