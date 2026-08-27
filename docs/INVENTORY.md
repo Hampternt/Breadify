@@ -77,7 +77,11 @@ What is deliberately not built, and why, is in
 
 ## Left to a person
 
-Two things no test can settle:
+Three things no test can settle:
+
+- **The Windows build has never been run.** CI compiles it and attaches the
+  `.exe`; the window, the file dialog and handing a PDF to the system's
+  handler are unexercised there.
 
 - **A day's sheets through the bakery's own printer.** The bottom margin is
   5 mm and plenty of office printers cannot print that low; the fills on the
