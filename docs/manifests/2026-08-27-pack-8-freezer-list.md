@@ -1,6 +1,6 @@
 # Pack 8 — The freezer list
 
-**Status:** in progress. Both design calls answered.
+**Status:** all 7 items done, pack gate green. Ready to merge.
 **Branch:** `pack-8-freezer-list` (not yet cut).
 
 ## Goal
@@ -66,15 +66,32 @@ the bread line.
 
 ## Ledger
 
-- [ ] 1 — The filename carries the list kind
-- [ ] 2 — Position may be empty
-- [ ] 3 — A total wider than two suppliers
-- [ ] 4 — The Check step knows which list it is
-- [ ] 5 — Crates on a freezer sheet
-- [ ] 6 — The sheet says which list it is
-- [ ] 7 — Docs, inventory, and the freezer sample under test
+- [x] 2 — Position may be empty · `80fccba`
+- [x] 1 — The filename carries the list kind · `fa279e9`, D23
+- [x] 3 — A total wider than two suppliers · `0ae71c3`, D25
+- [x] 5, 6 (print side) — no crates, and the sheet says so · `c6efb1f`, D24
+- [x] 4 — The Check step knows which list it is · `34a58ea`
+- [x] 6 (app side) — the window says which list it read · `c469f85`
+- [x] 7 — Docs, inventory, and the freezer sample under test
 
-**Evidence so far:** `cargo run -- dump 11 "PSR-FREEZER-…xlsx"` answers
-`breadify: cell F2 should hold text but reads ""` — the loader refuses the file
-before anything else can be judged. That is item 2, and it is the whole of what
-stands between here and a first look.
+Item 2 ran first: the loader refused the file outright
+(`cell F2 should hold text but reads ""`), so nothing else could be judged
+until it read.
+
+**Deviations — one, and it is the important one.**
+
+Item 3 was scoped as "seven supplier columns do not fit". The test written for
+it failed on **bread** as well: the route total wrote product names from their
+left edge with nothing bounding the right, and `Holdbart Havrebrød Skåret 750g
+Bakehuset (har Vært Fryst)` ran to **214.22 mm on a 210 mm page** — bread route
+4, off the edge of the paper, in the shipped v1.1.1. Fixed in the same commit,
+because it is the same function. The bread day costs a sheet for it: 27, not
+26, re-measured in `print-spec.md` §5.
+
+**Not done, deliberately:** the freezer sheets have never been through a
+printer, same as the bread ones (`INVENTORY.md`, *Left to a person*).
+
+**Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, and
+the whole suite. Freezer route 8 and bread route 4 were drawn to PDF and read
+at 110 dpi; the Check and Configure steps were opened against the freezer
+export and looked at.

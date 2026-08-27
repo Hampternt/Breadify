@@ -5,10 +5,11 @@ mod support;
 use breadify::geometry::FOOTER_CLEARANCE;
 use breadify::layout::Settings;
 use breadify::layout::{self, Sheet};
+use breadify::list::Kind;
 use breadify::page::Primitive;
 use breadify::route::{self, Route};
 use breadify::{order, pdf};
-use support::sample_rows;
+use support::{freezer_rows, sample_rows};
 
 fn routes() -> Vec<Route> {
     route::group(order::fold(&sample_rows()))
@@ -194,4 +195,59 @@ fn the_sample_day_is_twenty_seven_sheets() {
     // route total began wrapping product names inside their column rather than
     // writing them off the edge of the paper, which cost one sheet in a day.
     assert_eq!(day().len(), 27);
+}
+
+/// The freezer day, paginated end to end: fifteen routes, none of them
+/// bleeding past a margin and none of them sharing a sheet.
+#[test]
+fn the_freezer_day_paginates_whole() {
+    let routes = route::group(order::fold(&freezer_rows()));
+    assert_eq!(routes.len(), 15);
+
+    let settings = Settings::default().for_list(Kind::Freezer);
+    let sheets = layout::day(&routes, None, &settings, "PSR-FREEZER-2026-01-23");
+    assert_eq!(sheets.len(), 26);
+
+    for sheet in &sheets {
+        let mastheads = sheet
+            .content
+            .primitives
+            .iter()
+            .filter(|primitive| {
+                matches!(primitive, Primitive::Text { text, .. } if text == "FREEZER ROUTE")
+            })
+            .count();
+        assert_eq!(
+            mastheads, 1,
+            "sheet {} of route {}",
+            sheet.number, sheet.route
+        );
+    }
+}
+
+/// The freezer day keeps the same clearance above its footer that the bread
+/// day does — the taller route total is the thing that could have eaten it.
+#[test]
+fn every_freezer_page_keeps_its_clearance_above_the_footer() {
+    let limit = layout::footer_rule_y() - FOOTER_CLEARANCE;
+    let routes = route::group(order::fold(&freezer_rows()));
+    let settings = Settings::default().for_list(Kind::Freezer);
+
+    for sheet in layout::day(&routes, None, &settings, "PSR-FREEZER-2026-01-23") {
+        let lowest = sheet
+            .content
+            .primitives
+            .iter()
+            .filter(|primitive| !is_footer(primitive))
+            .map(bottom_of)
+            .fold(0.0_f64, f64::max);
+
+        assert!(
+            lowest <= limit,
+            "route {} sheet {} of {} reaches {lowest:.1} mm, past the {limit:.1} mm limit",
+            sheet.route,
+            sheet.number,
+            sheet.of
+        );
+    }
 }

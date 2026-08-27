@@ -1,7 +1,8 @@
 # Breadify
 
-Takes the daily bread-order export and turns it into picking lists you can
-print. One route per sheet, in the order the van gets emptied.
+Takes a daily order export — the bread list or the freezer one — and turns it
+into picking lists you can print. One route per sheet, in the order the van
+gets emptied.
 
 The bakeries drop the morning's bread at the warehouse in one heap. Each driver
 picks their own route out of it, packs and labels the crates, and drives it.
@@ -18,8 +19,9 @@ the publisher is unknown the first time: **More info → Run anyway**.
 
 ## Use it
 
-1. **Drag today's export onto the window.** Keep the filename as it came — the
-   delivery date is read from it, not from inside the sheet.
+1. **Drag today's export onto the window.** Keep the filename as it came —
+   which list it is and which day it covers are both read from it, not from
+   inside the sheet. One list at a time; do the freezer one after the bread.
 2. **Glance at what it found.** Notes and warnings are just information. If
    something says *blocking*, read it before you print.
 3. **Print.** All routes are ticked; untick any you don't want.
@@ -33,6 +35,8 @@ PDF** to just save the file.
 
 **Crate sizes.** On the Configure step you can say a bread takes half a slot,
 or two. Click it and pick a fraction. Set once — it's remembered from then on.
+Freezer sheets don't count crates: a box of lasagne isn't half a bread, so the
+sheet says nothing rather than something wrong.
 
 **Getting back.** Click **01 Open** at the top whenever you want a different
 file.

@@ -177,7 +177,8 @@ customer at 14 pt, and beneath it the `DPT` box at 10.4 pt against the
 handoff's 11.9, its `DPT` tag coming down from 8.6 to 7.7 with it. Side by side the two read as equals and the eye has to work
 out which is the site and which is the kitchen. This also frees the whole
 right-hand end of the heading line for **D20**. It costs about 5.5 mm on each
-of the blocks that carry a department; the sample day is 26 sheets either way.
+of the blocks that carry a department; the sample day was 26 sheets either way
+(27 since **D25**).
 
 **D20 — The crate glyphs belong to the right-hand group.** (2026-08-27)
 They sit immediately left of the substitute marker rather than trailing the
@@ -208,6 +209,68 @@ The file is a few lines of text, not JSON, so the person who set the numbers
 can open it and fix a typo without the app; each size carries its bread's name
 as a label the app ignores. Anything unparseable is skipped rather than
 refused — a settings file is never worth failing a print over.
+
+## D23 — one export at a time; the filename says which list
+
+*2026-08-27.*
+
+The exporter writes two lists in the same shape: `PSR-BREAD-<from>-to-<to>.xlsx`
+and `PSR-FREEZER-…`. Same sheet, same fourteen headers, same unlabelled region
+column. Nothing *inside* either file says which it is.
+
+**One list per print, not both merged onto a route's sheet.** They are picked
+from the same warehouse against the same route numbers, and the predecessor
+tool keeps them as two pages that link to each other. Nothing in the files
+lines the two up either: the samples are different days, share no order ID,
+and their route nicknames disagree (`hau` against `hau 1` and `hau 2`).
+Merging per route needs a route-name reconciliation nobody has asked for.
+
+The word is **read** rather than matched against known ones, so a kind nobody
+has invented yet opens and names itself; the date's fixed ten characters are
+what let the split find it. A file whose name carries no word is read as
+bread, which is what every export before this one was — and the Check step
+leads with **LIST**, so a renamed file is a thing the user can see rather than
+a thing the app gets quietly wrong.
+
+## D24 — no crate count on a list that is not bread
+
+*2026-08-27.*
+
+**D17**'s arithmetic is bread-shaped: fifty units to a large crate, each
+product a fraction of a slot. `Lasagne 2,5 Kg` and `Hamburgerbrød 48stk Eske`
+are not slot-shaped, and 113 freezer products is not a list anyone sizes by
+hand. A wrong crate count on a sheet the driver trusts is worse than none, so
+a freezer sheet carries no glyphs, no CRATES key in the legend, and no size
+list on the Configure step — which says why rather than showing an empty
+section. A second set of rules for frozen goods is a pack of its own.
+
+The warehouse shelf position the freezer export carries (`W-05-02`,
+`U-Frysevare`, empty on 26 of 231 rows) stays off the printed line for the
+same reason the predecessor tool read it and ignored it: it would be a new
+element on every row, and nobody has said the walk is ordered by it.
+
+## D25 — the total's columns are sized by the row, not by the count
+
+*2026-08-27.*
+
+The route total divided the content column by however many suppliers a route
+had. Bread has two bakeries and it was drawn for two; freezer route 8 has
+**seven**, which left each 20 mm — narrower than a product name is long.
+
+At most **two** stand side by side now, the rest on a further row, so a column
+is the same width whoever fills it. Bread, which never has more than two, is
+unchanged to the millimetre.
+
+The same pass found a fault that had shipped: the product name was written
+from its left edge with nothing bounding its right, and `Holdbart Havrebrød
+Skåret 750g Bakehuset (har Vært Fryst)` ran to **214.22 mm on a 210 mm page** —
+bread route 4, off the edge of the paper, in v1.1.1. Names wrap inside the
+room between the quantity and the tray dots now. The bread day costs one sheet
+for it: **27**, not 26.
+
+The §5 finding that "height binds, not width" was measured against the *stop
+block's* full 194 mm column and holds there. It never applied to the total,
+whose columns are half that or less.
 
 ## Open
 
