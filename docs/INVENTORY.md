@@ -78,7 +78,7 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 
 ## In flight
 
-Nothing. Breadify **v1.0.0** is built and tagged: seven packs, then one pass
+Nothing. Breadify **v1.1.0** is built and tagged: seven packs, then two passes
 of changes from using it — the heading reshaped, crate sizes said in fractions
 and kept between runs, the window icon, and a review pass over the lot.
 
