@@ -177,7 +177,8 @@ customer at 14 pt, and beneath it the `DPT` box at 10.4 pt against the
 handoff's 11.9, its `DPT` tag coming down from 8.6 to 7.7 with it. Side by side the two read as equals and the eye has to work
 out which is the site and which is the kitchen. This also frees the whole
 right-hand end of the heading line for **D20**. It costs about 5.5 mm on each
-of the blocks that carry a department; the sample day is 26 sheets either way.
+of the blocks that carry a department; the sample day was 26 sheets either way
+(27 since **D23**).
 
 **D20 — The crate glyphs belong to the right-hand group.** (2026-08-27)
 They sit immediately left of the substitute marker rather than trailing the
@@ -208,6 +209,21 @@ The file is a few lines of text, not JSON, so the person who set the numbers
 can open it and fix a typo without the app; each size carries its bread's name
 as a label the app ignores. Anything unparseable is skipped rather than
 refused — a settings file is never worth failing a print over.
+
+**D23 — The route total's names wrap inside their column.** (2026-08-27)
+The bread total draws one column per bakery and set each product name from its
+left edge with nothing bounding its right. At 9.2 pt in a 92.8 mm column,
+`Holdbart Havrebrød Skåret 750g Bakehuset (har Vært Fryst)` measures 94 mm and
+ran to **214.22 mm on a 210 mm page** — bread route 4, off the edge of the
+paper, in every release from v1.0.0 to v1.1.1.
+
+Names wrap into the room between the quantity and the tray dots. The day costs
+one sheet: **27**, not 26.
+
+§5's finding that "height binds, not width" was measured against the *stop
+block's* full 194 mm column and holds there. It never applied to the total,
+whose columns are half that. The freezer list's flat total is untouched — F9
+already proved by measurement that its longest name fits its half-column.
 
 ## Open
 

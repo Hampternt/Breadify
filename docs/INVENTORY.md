@@ -50,7 +50,7 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 - `breadify dump <route> --pdf <file>` draws one route; `breadify print --pdf
   <file>` draws the whole day. Every route starts a fresh page, no block or
   total is ever cut, and every page keeps 10 mm clear above its footer. The
-  sample day is 26 sheets.
+  bread sample day is 27 sheets; the freezer one is 21.
 
 **The app window** — `src/app/`.
 
