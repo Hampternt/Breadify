@@ -11,6 +11,11 @@ pub const VOID: Color32 = Color32::from_rgb(0x07, 0x06, 0x0B);
 pub const RAISED: Color32 = Color32::from_rgb(0x0E, 0x0C, 0x14);
 pub const CARD: Color32 = Color32::from_rgb(0x17, 0x14, 0x1F);
 pub const CHIP: Color32 = Color32::from_rgb(0x26, 0x22, 0x32);
+/// A card with the page showing through it, for the Check step's findings —
+/// they sit over the mascot and he is meant to be visible behind them. CARD at
+/// 55 %, premultiplied. Only the box is veiled; the text on it is drawn after
+/// and at full strength.
+pub const CARD_VEIL: Color32 = Color32::from_rgba_premultiplied(0x0D, 0x0B, 0x11, 0x8C);
 
 /// Text, from loudest to faintest.
 pub const STRONG: Color32 = Color32::from_rgb(0xF2, 0xEE, 0xF8);

@@ -141,7 +141,7 @@ fn card(ui: &mut egui::Ui, finding: &Finding) {
     };
 
     egui::Frame::NONE
-        .fill(theme::CARD)
+        .fill(theme::CARD_VEIL)
         .corner_radius(CornerRadius::same(theme::RADIUS_CARD))
         .stroke(Stroke::new(1.0, theme::BORDER))
         .inner_margin(14)
