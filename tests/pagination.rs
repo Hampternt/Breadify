@@ -188,8 +188,10 @@ fn a_route_that_needs_two_sheets_gets_two() {
 }
 
 #[test]
-fn the_sample_day_is_twenty_six_sheets() {
+fn the_sample_day_is_twenty_seven_sheets() {
     // Measured, not quoted: the design handoff's 24 predates the unsequenced
-    // flag and D16's removal of address-level grouping.
-    assert_eq!(day().len(), 26);
+    // flag and D16's removal of address-level grouping. It was 26 until the
+    // route total began wrapping product names inside their column rather than
+    // writing them off the edge of the paper, which cost one sheet in a day.
+    assert_eq!(day().len(), 27);
 }
