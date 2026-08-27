@@ -1,8 +1,7 @@
 //! The validation pass against the real export.
 //!
-//! The sample file is clean apart from two legitimate shared stop sequences,
-//! which is the point: the checks exist to catch the day the next export is
-//! not.
+//! The sample file passes every check, which is the point: they exist to catch
+//! the day the next export does not.
 
 mod support;
 
@@ -21,32 +20,6 @@ fn the_sample_export_has_no_blocking_findings() {
     assert!(
         blocking.is_empty(),
         "unexpected blocking findings: {blocking:?}"
-    );
-}
-
-#[test]
-fn shared_stop_sequences_are_reported_as_warnings() {
-    let findings = validate::run(&sample_rows());
-    let shared: Vec<&str> = findings
-        .iter()
-        .filter(|finding| finding.kind == FindingKind::RepeatedStopSequence)
-        .map(|finding| finding.headline.as_str())
-        .collect();
-
-    // Route 9 at 1400 is Customer 064's two buildings; route 11 at 1400
-    // is Street 17 under three spellings.
-    assert_eq!(
-        shared,
-        [
-            "Route 11 has 3 addresses at 1400",
-            "Route 9 has 2 addresses at 1400"
-        ]
-    );
-    assert!(
-        findings
-            .iter()
-            .filter(|finding| finding.kind == FindingKind::RepeatedStopSequence)
-            .all(|finding| finding.severity == Severity::Warning)
     );
 }
 
@@ -85,8 +58,8 @@ fn the_sample_produces_exactly_the_expected_findings() {
     let findings = validate::run(&sample_rows());
     assert_eq!(
         findings.len(),
-        4,
-        "two warnings and two notes: {findings:#?}"
+        2,
+        "two notes and nothing else: {findings:#?}"
     );
 }
 

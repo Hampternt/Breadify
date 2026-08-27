@@ -108,7 +108,7 @@ fn stats(ui: &mut egui::Ui, loaded: &Loaded) {
     });
 }
 
-/// `6 passed · 2 warnings · 0 notes`, from the findings themselves.
+/// `0 blocking · 0 warnings · 2 notes`, from the findings themselves.
 fn tally(findings: &[Finding]) -> String {
     let count = |severity: Severity| {
         findings

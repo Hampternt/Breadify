@@ -38,8 +38,6 @@ pub enum FindingKind {
     OrderLinesDisagree,
     /// One delivery address appears on more than one route.
     AddressOnTwoRoutes,
-    /// A stop sequence other than `0` is used twice within one route.
-    RepeatedStopSequence,
     /// One product identifier carries more than one name, SKU or supplier.
     ProductDetailsDisagree,
     /// A value this app has never seen in that column before.
@@ -72,7 +70,6 @@ pub fn run(rows: &[SheetRow]) -> Vec<Finding> {
     findings.extend(blank_required_fields(rows));
     findings.extend(orders_that_disagree(rows));
     findings.extend(addresses_on_two_routes(rows));
-    findings.extend(repeated_stop_sequences(rows));
     findings.extend(products_that_disagree(rows));
     findings.extend(unfamiliar_values(rows));
     findings.extend(unsequenced_stops(rows));
@@ -265,44 +262,6 @@ fn addresses_on_two_routes(rows: &[SheetRow]) -> Vec<Finding> {
                 detail: format!(
                     "{address} appears on routes {}. One address belongs to one route.",
                     routes.iter().copied().collect::<Vec<_>>().join(", ")
-                ),
-                rows: lines.iter().map(|row| row.excel_row).collect(),
-            })
-        })
-        .collect()
-}
-
-/// Two stops sharing a sequence number is legitimate — it means one site with
-/// several delivery points — but it is worth seeing, because the printed order
-/// between them then rests entirely on the tiebreak.
-fn repeated_stop_sequences(rows: &[SheetRow]) -> Vec<Finding> {
-    group_by(rows, |row| (row.route_nickname.clone(), row.route_ordering))
-        .into_iter()
-        .filter(|((_, ordering), _)| *ordering != 0)
-        .filter_map(|((route, ordering), lines)| {
-            let addresses: BTreeSet<&str> = lines
-                .iter()
-                .map(|row| row.delivery_street.as_str())
-                .collect();
-            if addresses.len() < 2 {
-                return None;
-            }
-            Some(Finding {
-                severity: Severity::Warning,
-                kind: FindingKind::RepeatedStopSequence,
-                headline: format!(
-                    "Route {route} has {} addresses at {ordering}",
-                    addresses.len()
-                ),
-                detail: format!(
-                    "Position {ordering} on route {route} is shared by {}, \
-                 across {} stops. They print in address order.",
-                    quoted(&addresses.iter().map(|a| (*a).to_owned()).collect()),
-                    lines
-                        .iter()
-                        .map(|row| row.order_id)
-                        .collect::<BTreeSet<i64>>()
-                        .len()
                 ),
                 rows: lines.iter().map(|row| row.excel_row).collect(),
             })
