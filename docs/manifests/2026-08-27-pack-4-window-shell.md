@@ -1,6 +1,6 @@
 # Pack 4 — Window shell: Open and Check
 
-**Status:** all 8 items done — pack gate green, awaiting review.
+**Status:** all 8 items done, reviewed, pack gate green. Merged.
 **Container:** Breadify v1 (7 packs).
 **Branch:** `pack-4-window-shell`.
 
@@ -51,4 +51,16 @@ file — not the four the design hardcodes.
   is open.
 - Icons are drawn rather than set: none of the three embedded faces carries a
   document glyph, and the design's Lucide set is a flagged substitution.
-**Pack gate:** not run.
+**Code review:** one pass at high effort. Two findings, both fixed:
+
+1. The Print tab's note paginated the whole day on every frame — 148 blocks
+   laid out sixty times a second — and `Face::parsed()` re-parsed a font file
+   on every measurement underneath it. The sheet count is now worked out once
+   when the file is read, and the eight faces are parsed once per process. A
+   full day's render went from seconds to **0.02 s**.
+2. `--screenshot` had no timeout: if the capture never arrived it spun at full
+   frame rate forever. It gives up after 240 frames now.
+
+**Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, 85
+tests across 13 files, all green. Both steps were opened and looked at:
+`--screenshot` of the empty Open step and of Check with the sample loaded.

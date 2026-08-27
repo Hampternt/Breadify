@@ -77,6 +77,9 @@ pub struct Loaded {
     pub routes: Vec<Route>,
     pub findings: Vec<Finding>,
     pub dates: Option<DeliveryDates>,
+    /// How many sheets the day comes to, worked out once when the file is
+    /// read. Paginating is far too much work to redo on every frame.
+    pub sheets: usize,
 }
 
 impl Loaded {
@@ -225,6 +228,11 @@ fn read(path: PathBuf) -> LoadResult {
     let orders = crate::order::fold(&rows);
     let routes = crate::route::group(orders.clone());
     let dates = crate::date::from_filename(&path).ok();
+    let source = path
+        .file_stem()
+        .map(|stem| stem.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let sheets = crate::layout::day(&routes, dates, &CrateRules::default(), &source).len();
 
     Ok(Box::new(Loaded {
         path,
@@ -233,6 +241,7 @@ fn read(path: PathBuf) -> LoadResult {
         routes,
         findings,
         dates,
+        sheets,
     }))
 }
 
@@ -271,6 +280,11 @@ impl Breadify {
         };
 
         self.frames += 1;
+        if self.frames > 240 {
+            eprintln!("breadify: the window never produced a screenshot");
+            context.send_viewport_cmd(egui::ViewportCommand::Close);
+            return;
+        }
         if self.frames == 3 {
             context.send_viewport_cmd(egui::ViewportCommand::Screenshot(egui::UserData::default()));
         }
