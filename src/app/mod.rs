@@ -267,6 +267,22 @@ impl Breadify {
         }
     }
 
+    /// Treats the open file as the other list — the Check step's escape hatch
+    /// for a renamed or custom-named export (decision F10). The filename's
+    /// answer stays the default; this only overrides it for the file that is
+    /// open. Validation re-runs because what counts as familiar depends on
+    /// the kind, and the sheets re-paginate.
+    pub fn set_kind(&mut self, kind: crate::date::ExportKind) {
+        if self.settings.kind == kind {
+            return;
+        }
+        self.settings.kind = kind;
+        if let Some(loaded) = &mut self.loaded {
+            loaded.findings = crate::validate::run(&loaded.rows, kind);
+        }
+        self.resettle();
+    }
+
     /// Marks what a changed setting invalidates.
     ///
     /// Paginating the day takes long enough to be felt at sixty frames a

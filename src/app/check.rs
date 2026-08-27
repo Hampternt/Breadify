@@ -4,6 +4,7 @@ use eframe::egui::{self, CornerRadius, RichText, Stroke, Vec2};
 
 use super::{Breadify, Loaded};
 use super::{mascot, theme};
+use crate::date::ExportKind;
 use crate::validate::{Finding, Severity};
 
 /// The sentence the action bar carries on this step.
@@ -34,12 +35,20 @@ pub fn show(app: &mut Breadify, ui: &mut egui::Ui) {
 
     mascot::behind(app, ui);
 
+    {
+        let Some(loaded) = &app.loaded else {
+            return;
+        };
+        stats(ui, loaded);
+    }
+
+    ui.add_space(14.0);
+    kind_bar(app, ui);
+    ui.add_space(14.0);
+
     let Some(loaded) = &app.loaded else {
         return;
     };
-
-    stats(ui, loaded);
-    ui.add_space(20.0);
 
     let counts = tally(&loaded.findings);
     ui.label(
@@ -67,6 +76,67 @@ pub fn show(app: &mut Breadify, ui: &mut egui::Ui) {
             .color(theme::FAINT),
         );
     });
+}
+
+/// Which list the file is being treated as: read from the filename, but the
+/// user's to flip right here when the name is wrong or custom (decision
+/// F10). Flipping re-runs the checks below it, since what is familiar
+/// depends on which list this is.
+fn kind_bar(app: &mut Breadify, ui: &mut egui::Ui) {
+    ui.horizontal(|ui| {
+        ui.label(
+            RichText::new("TREATED AS")
+                .family(theme::mono())
+                .size(10.5)
+                .color(theme::FAINT),
+        );
+        ui.add_space(4.0);
+
+        for (kind, label) in [(ExportKind::Bread, "BREAD"), (ExportKind::Freezer, "FREEZER")] {
+            if pill(ui, label, app.settings.kind == kind) {
+                app.set_kind(kind);
+            }
+        }
+
+        ui.add_space(8.0);
+        ui.label(
+            RichText::new("picking list or check list — read from the filename; flip it if the file was renamed")
+                .family(theme::mono())
+                .size(10.5)
+                .color(theme::FAINT),
+        );
+    });
+}
+
+/// One of the two kind buttons: solid when it is the current answer, an
+/// outline waiting to be clicked when it is not.
+fn pill(ui: &mut egui::Ui, label: &str, chosen: bool) -> bool {
+    let (rect, response) = ui.allocate_exact_size(Vec2::new(92.0, 28.0), egui::Sense::click());
+
+    let (fill, border, text) = if chosen {
+        (theme::ACCENT, theme::ACCENT, theme::VOID)
+    } else if response.hovered() {
+        (theme::CARD, theme::BORDER_STRONG, theme::STRONG)
+    } else {
+        (theme::CARD, theme::BORDER, theme::MUTED)
+    };
+
+    ui.painter().rect(
+        rect,
+        CornerRadius::same(theme::RADIUS_CONTROL),
+        fill,
+        Stroke::new(1.0, border),
+        egui::StrokeKind::Inside,
+    );
+    ui.painter().text(
+        rect.center(),
+        egui::Align2::CENTER_CENTER,
+        label,
+        egui::FontId::new(12.0, theme::heading()),
+        text,
+    );
+
+    response.clicked()
 }
 
 /// What was read, in five numbers.

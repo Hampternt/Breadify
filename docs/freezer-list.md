@@ -5,10 +5,10 @@ made about what the freezer version is and what its printed sheet must do,
 in the user's own terms. Input-side facts live in
 [`freezer-format.md`](freezer-format.md).
 
-**Status: built.** The loader work (F2, F3) and the freezer page (F6–F9)
-are in; what stays open is listed at the bottom. The sample freezer day
-prints as 15 routes over 21 sheets — the same day through the bread layout
-was 24.
+**Status: built.** The loader work (F2, F3), the freezer page (F6–F9) and
+the Check step's kind override (F10) are in; what stays open is listed at
+the bottom. The sample freezer day prints as 15 routes over 21 sheets —
+the same day through the bread layout was 24.
 
 ## Decided
 
@@ -101,6 +101,19 @@ balanced columns, read down the first then down the second. No bakery
 columns and no ten-dots (those are receiving-check machinery, D15), and no
 supplier code either — that cue lives on the stop lines, and the longest
 freezer names need the room a totals half-column has.
+
+**F10 — The kind stays automatic, with a visible override on the Check
+step.** (2026-08-27)
+The user's call: *keep it auto, but have a visible, obvious button on the
+check segment in case it's the wrong name or a custom name.* So the
+filename keeps deciding (F2), and the Check step carries a `TREATED AS`
+bar — `BREAD` / `FREEZER`, the current answer solid — that flips the open
+file to the other list. Flipping re-runs the validation on the spot, since
+what counts as familiar depends on the kind, and re-paginates the sheets.
+The override is per-file: the next file opened is read from its own name
+again. The CLI has no flag for this — a renamed file there still validates
+as bread — and gets one only if someone actually renames files at a
+terminal.
 
 ## Open
 

@@ -43,6 +43,10 @@ or two. Click it and pick a fraction. Set once — it's remembered from then on.
 **Getting back.** Click **01 Open** at the top whenever you want a different
 file.
 
+**Renamed file?** Which list a file is comes from its name. If the name is
+wrong or custom, the Check step's **TREATED AS** buttons flip it between
+bread and freezer for the file that's open.
+
 <p align="center">
   <img src="assets/nobread.jpg" alt="NO BREAD?" width="280">
   <br>
