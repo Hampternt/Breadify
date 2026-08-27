@@ -1,4 +1,8 @@
 //! Shared helpers for tests that read the real export.
+//!
+//! Every test binary compiles this module separately, and none of them uses
+//! all of it, so unused helpers are expected here rather than a smell.
+#![allow(dead_code)]
 
 use std::path::PathBuf;
 
