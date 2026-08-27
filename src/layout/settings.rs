@@ -1,10 +1,16 @@
-//! What the user gets to change about the printed page.
+//! What shapes a printed page.
 //!
 //! The printed form is fixed — six fields always print (decision D11) — so
 //! this is a short list on purpose: whether the order id shows, how a refusal
 //! to accept substitutes is marked, and the crate arithmetic.
+//!
+//! One field here is not the user's: which list the export holds. It sits with
+//! the choices rather than beside them because it decides the same things they
+//! do, and because a single channel for "what does this page show" is one that
+//! cannot disagree with itself.
 
 use crate::crates::CrateRules;
+use crate::list::Kind;
 
 /// How the no-substitutes state is drawn. The quiet state is the same in every
 /// case; these are the three treatments the design offers for the loud one.
@@ -47,13 +53,16 @@ impl MarkerTreatment {
     }
 }
 
-/// Everything the user can change about a printed sheet.
+/// Everything that shapes a printed sheet.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Settings {
     /// The one field that is the user's to show or hide.
     pub show_order_id: bool,
     pub marker: MarkerTreatment,
     pub crates: CrateRules,
+    /// Which list this is — read off the export's filename, not chosen. Only
+    /// a bread sheet counts crates; see [`Kind::has_crates`].
+    pub list: Kind,
 }
 
 impl Default for Settings {
@@ -62,7 +71,21 @@ impl Default for Settings {
             show_order_id: true,
             marker: MarkerTreatment::default(),
             crates: CrateRules::default(),
+            list: Kind::Bread,
         }
+    }
+}
+
+impl Settings {
+    /// The same settings, for a different list.
+    pub fn for_list(mut self, list: Kind) -> Self {
+        self.list = list;
+        self
+    }
+
+    /// Whether this sheet draws crates at all.
+    pub fn has_crates(&self) -> bool {
+        self.list.has_crates()
     }
 }
 

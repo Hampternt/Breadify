@@ -92,7 +92,14 @@ fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, settings: &Settin
 
     let right = cursor.right();
     let name_right = left + text::width(&stop.customer, face);
-    let count = crates::count(stop, &settings.crates);
+    // Crates are bread arithmetic — fifty units to a crate, each product a
+    // fraction of a slot. A freezer sheet goes without rather than print a
+    // confident wrong number.
+    let count = if settings.has_crates() {
+        crates::count(stop, &settings.crates)
+    } else {
+        crates::CrateCount::default()
+    };
     let crates_width = crate_run_width(count.total());
     let marks = stamp_width(stop, settings);
 

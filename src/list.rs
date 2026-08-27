@@ -55,13 +55,23 @@ impl Kind {
         matches!(self, Self::Bread)
     }
 
-    /// What the goods are, for a sentence about them.
-    pub fn goods(&self) -> &str {
+    /// The word that goes in front of a count of them — `11 bread types`,
+    /// `18 frozen types`. Empty for a kind this app has no word for, which
+    /// leaves `18 types`.
+    pub fn modifier(&self) -> &str {
         match self {
             Self::Bread => "bread",
-            Self::Freezer => "frozen goods",
-            Self::Other(_) => "goods",
+            Self::Freezer => "frozen",
+            Self::Other(_) => "",
         }
+    }
+
+    /// Whether the masthead needs to say which list this is.
+    ///
+    /// Bread is what a sheet is unless it says otherwise, and every sheet
+    /// printed before this existed said nothing.
+    pub fn names_itself(&self) -> bool {
+        !matches!(self, Self::Bread)
     }
 
     /// The word the exporter used, for a filename or a pattern.

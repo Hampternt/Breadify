@@ -44,5 +44,15 @@ fn every_kind_can_name_itself() {
     assert_eq!(Kind::Freezer.to_string(), "Freezer");
     assert_eq!(Kind::Other("DRY-GOODS".to_owned()).to_string(), "Dry-goods");
     assert_eq!(Kind::Freezer.word(), "FREEZER");
-    assert_eq!(Kind::Freezer.goods(), "frozen goods");
+    assert_eq!(Kind::Freezer.modifier(), "frozen");
+    assert_eq!(Kind::Other("DRY".to_owned()).modifier(), "");
+}
+
+/// Bread is what a sheet is unless it says otherwise — every sheet printed
+/// before the freezer list existed said nothing, and still does.
+#[test]
+fn only_a_list_that_is_not_bread_names_itself() {
+    assert!(!Kind::Bread.names_itself());
+    assert!(Kind::Freezer.names_itself());
+    assert!(Kind::Other("DRY".to_owned()).names_itself());
 }

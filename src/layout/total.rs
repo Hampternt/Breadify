@@ -1,7 +1,7 @@
 //! The route total that closes a route's last page.
 
 use super::metrics::*;
-use super::{Cursor, rule, text_from_top};
+use super::{Cursor, Settings, rule, text_from_top};
 use crate::font::Face;
 use crate::geometry::{Mm, Point, Rect};
 use crate::page::{self, Page};
@@ -12,7 +12,7 @@ use crate::total::{self, SupplierColumn};
 
 /// Lays out the whole total — title, the two meta lines, then one column per
 /// supplier — on a page of its own, the way a stop block is laid out.
-pub fn block(route: &Route, column: &Cursor) -> (Page, Mm) {
+pub fn block(route: &Route, settings: &Settings, column: &Cursor) -> (Page, Mm) {
     let total = total::of(route);
     let mut own = Page::new();
     let mut cursor = Cursor {
@@ -38,10 +38,16 @@ pub fn block(route: &Route, column: &Cursor) -> (Page, Mm) {
     cursor.advance(height + 0.6);
 
     let meta = Style::new(Face::MonoRegular, SIZE_TOTAL_META);
+    let types = match settings.list.modifier() {
+        "" => format!("{} {}", total.types(), plural(total.types() as u32, "type")),
+        word => format!(
+            "{} {word} {}",
+            total.types(),
+            plural(total.types() as u32, "type")
+        ),
+    };
     let summary = format!(
-        "{} bread {} · {} {} · most to least",
-        total.types(),
-        plural(total.types() as u32, "type"),
+        "{types} · {} {} · most to least",
         total.units(),
         plural(total.units(), "unit")
     );

@@ -5,14 +5,20 @@ use super::metrics::*;
 use super::{Cursor, micro_label, rule, text_from_right, text_from_top};
 use crate::font::Face;
 use crate::geometry::{MARGIN_SIDE, MARGIN_TOP, Mm, PAGE_WIDTH, Point, Rect};
-use crate::layout::SheetContext;
+use crate::layout::{Settings, SheetContext};
 use crate::page::{self, Page};
 use crate::route::Route;
 use crate::text::{self, Style};
 
 /// The logo panel, the route, the date and the page counter, over the brand
 /// rule.
-pub fn masthead(page: &mut Page, cursor: &mut Cursor, route: &Route, context: &SheetContext) {
+pub fn masthead(
+    page: &mut Page,
+    cursor: &mut Cursor,
+    route: &Route,
+    context: &SheetContext,
+    settings: &Settings,
+) {
     cursor.y = MARGIN_TOP;
     let top = cursor.y;
 
@@ -20,10 +26,17 @@ pub fn masthead(page: &mut Page, cursor: &mut Cursor, route: &Route, context: &S
 
     let label_left = cursor.left + LOGO_PANEL.0 + 2.0 * LOGO_PADDING.1 + HEADING_GAP;
     let label = Style::new(Face::MonoRegular, SIZE_ROUTE_LABEL).tracked(TRACK_MICRO_LABEL);
+    // A driver holding both days' sheets should not have to read the footer's
+    // filename to tell them apart. Bread says nothing, as it always has.
+    let heading = if settings.list.names_itself() {
+        format!("{} ROUTE", settings.list.word())
+    } else {
+        "ROUTE".to_owned()
+    };
     text_from_top(
         page,
         Point::new(label_left, top),
-        "ROUTE",
+        &heading,
         label,
         page::LABEL,
     );
@@ -135,7 +148,7 @@ pub fn page_note(page: &mut Page, cursor: &mut Cursor, route: &Route) {
 
 /// The tinted band that explains the boxes, the crate glyphs and the supplier
 /// codes.
-pub fn legend(page: &mut Page, cursor: &mut Cursor) {
+pub fn legend(page: &mut Page, cursor: &mut Cursor, route: &Route, settings: &Settings) {
     let text_style = Style::new(Face::MonoRegular, SIZE_LEGEND);
     let bold = Style::new(Face::MonoBold, SIZE_LEGEND).tracked(TRACK_TAG);
     let height = SWATCH + 2.0 * LEGEND_PADDING.0;
@@ -165,29 +178,76 @@ pub fn legend(page: &mut Page, cursor: &mut Cursor) {
         x += write_middle(page, x, middle, word, text_style, page::INK_QUIET) + LEGEND_ITEM_GAP;
     }
 
-    x += write_middle(page, x, middle, "CRATES", bold, page::BLACK) + LEGEND_ITEM_GAP;
-    for (full, count) in [(true, "10"), (false, "5")] {
-        super::crate_glyph(page, Point::new(x, middle - CRATE_GLYPH.1 / 2.0), full);
-        x += CRATE_GLYPH.0 + 1.0;
-        x += write_middle(page, x, middle, count, text_style, page::INK_QUIET) + LEGEND_ITEM_GAP;
+    if settings.has_crates() {
+        x += write_middle(page, x, middle, "CRATES", bold, page::BLACK) + LEGEND_ITEM_GAP;
+        for (full, count) in [(true, "10"), (false, "5")] {
+            super::crate_glyph(page, Point::new(x, middle - CRATE_GLYPH.1 / 2.0), full);
+            x += CRATE_GLYPH.0 + 1.0;
+            x +=
+                write_middle(page, x, middle, count, text_style, page::INK_QUIET) + LEGEND_ITEM_GAP;
+        }
     }
 
-    let suppliers = crate::supplier::KNOWN
+    supplier_key(page, band, middle, x, route, text_style);
+    cursor.y = band.bottom() + 2.2;
+}
+
+/// What the two-letter code on every line stands for, right-aligned in the
+/// legend band.
+///
+/// It used to name the two bakeries whatever the sheet was for. The freezer
+/// list has seven suppliers on one route and none of them a bakery, so the key
+/// comes from the route — spelled out if the room left in the band takes it,
+/// codes alone if not, and nothing at all when even those will not fit. The
+/// route total spells every supplier out regardless, so nothing is lost.
+fn supplier_key(page: &mut Page, band: Rect, middle: Mm, used: Mm, route: &Route, style: Style) {
+    let mut names: Vec<&str> = route
+        .stops
         .iter()
-        .map(|(_, code, name)| format!("{code} {name}"))
+        .flat_map(|stop| stop.lines.iter())
+        .map(|line| line.product.supplier.as_str())
+        .collect();
+    names.sort_by_key(|name| crate::supplier::column_position(name));
+    names.dedup();
+    if names.is_empty() {
+        return;
+    }
+
+    let room = band.right() - LEGEND_PADDING.1 - used;
+    let spelled = names
+        .iter()
+        .map(|name| {
+            format!(
+                "{} {}",
+                crate::supplier::code(name),
+                crate::supplier::display_name(name)
+            )
+        })
         .collect::<Vec<_>>()
         .join(" · ");
-    let width = text::width(&suppliers, text_style);
+    let codes = names
+        .iter()
+        .map(|name| crate::supplier::code(name))
+        .collect::<Vec<_>>()
+        .join(" · ");
+
+    let key = if text::width(&spelled, style) <= room {
+        spelled
+    } else if text::width(&codes, style) <= room {
+        codes
+    } else {
+        return;
+    };
+
+    let width = text::width(&key, style);
     write_middle(
         page,
         band.right() - LEGEND_PADDING.1 - width,
         middle,
-        &suppliers,
-        text_style,
+        &key,
+        style,
         page::INK_QUIET,
     );
-
-    cursor.y = band.bottom() + 2.2;
 }
 
 /// A legend swatch: the tick box with its letter, at a quarter strength so it

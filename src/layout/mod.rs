@@ -132,7 +132,7 @@ pub fn paginate(
 ) -> Vec<Sheet> {
     let column = Cursor::new(0.0);
     let pieces = pieces(route, settings, &column);
-    let breaks = share_out(&pieces, content_top(route), content_limit());
+    let breaks = share_out(&pieces, content_top(route, settings), content_limit());
 
     let count = breaks.len().max(1);
     breaks
@@ -151,7 +151,7 @@ pub fn paginate(
                 route: route.nickname.clone(),
                 number: index + 1,
                 of: count,
-                content: compose(route, &context, &pieces, &page_pieces),
+                content: compose(route, &context, settings, &pieces, &page_pieces),
             }
         })
         .collect()
@@ -181,7 +181,7 @@ fn pieces(route: &Route, settings: &Settings, column: &Cursor) -> Vec<Piece> {
         });
     }
 
-    let (content, height) = total::block(route, column);
+    let (content, height) = total::block(route, settings, column);
     pieces.push(Piece {
         content,
         height,
@@ -263,7 +263,7 @@ fn rebalance(pieces: &[Piece], pages: &mut [Vec<usize>], top: Mm, limit: Mm) {
 }
 
 /// Where a page's own content starts, below the furniture every page repeats.
-fn content_top(route: &Route) -> Mm {
+fn content_top(route: &Route, settings: &Settings) -> Mm {
     let mut scratch = Page::new();
     let mut cursor = Cursor::new(0.0);
     let context = SheetContext {
@@ -274,9 +274,9 @@ fn content_top(route: &Route) -> Mm {
         route_lines: route.line_count(),
         source: String::new(),
     };
-    furniture::masthead(&mut scratch, &mut cursor, route, &context);
+    furniture::masthead(&mut scratch, &mut cursor, route, &context, settings);
     furniture::page_note(&mut scratch, &mut cursor, route);
-    furniture::legend(&mut scratch, &mut cursor);
+    furniture::legend(&mut scratch, &mut cursor, route, settings);
     cursor.y
 }
 
@@ -287,13 +287,19 @@ fn content_limit() -> Mm {
 }
 
 /// Draws one page: the furniture it repeats, then its share of the pieces.
-fn compose(route: &Route, context: &SheetContext, pieces: &[Piece], on_page: &[usize]) -> Page {
+fn compose(
+    route: &Route,
+    context: &SheetContext,
+    settings: &Settings,
+    pieces: &[Piece],
+    on_page: &[usize],
+) -> Page {
     let mut page = Page::new();
     let mut cursor = Cursor::new(0.0);
 
-    furniture::masthead(&mut page, &mut cursor, route, context);
+    furniture::masthead(&mut page, &mut cursor, route, context, settings);
     furniture::page_note(&mut page, &mut cursor, route);
-    furniture::legend(&mut page, &mut cursor);
+    furniture::legend(&mut page, &mut cursor, route, settings);
 
     for &index in on_page {
         page.absorb(&pieces[index].content, cursor.y);

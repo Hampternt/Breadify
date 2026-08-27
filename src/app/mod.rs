@@ -18,6 +18,7 @@ use eframe::egui;
 
 use crate::date::DeliveryDates;
 use crate::layout::Settings;
+use crate::list::Kind;
 use crate::order::Order;
 use crate::route::Route;
 use crate::sheet::SheetRow;
@@ -82,6 +83,8 @@ pub struct Loaded {
     pub routes: Vec<Route>,
     pub findings: Vec<Finding>,
     pub dates: Option<DeliveryDates>,
+    /// Which list this export holds, from its filename.
+    pub list: Kind,
 }
 
 impl Loaded {
@@ -214,6 +217,9 @@ impl Breadify {
                 self.loading = None;
                 self.remember(&loaded.path);
                 self.selected = print::everything(&loaded.routes);
+                // The file decides this one, not the user — and it decides
+                // whether the sheet counts crates at all.
+                self.settings.list = loaded.list.clone();
                 self.loaded = Some(*loaded);
                 self.step = self.start_on.unwrap_or(Step::Check);
                 self.stale = true;
@@ -377,6 +383,7 @@ fn read(path: PathBuf) -> LoadResult {
     let orders = crate::order::fold(&rows);
     let routes = crate::route::group(orders.clone());
     let dates = crate::date::from_filename(&path).ok();
+    let list = Kind::of(&path);
     Ok(Box::new(Loaded {
         path,
         rows,
@@ -384,6 +391,7 @@ fn read(path: PathBuf) -> LoadResult {
         routes,
         findings,
         dates,
+        list,
     }))
 }
 

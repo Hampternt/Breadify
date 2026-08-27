@@ -5,6 +5,7 @@ mod support;
 use breadify::geometry::{CONTENT_WIDTH, MARGIN_SIDE, PAGE_HEIGHT, PAGE_WIDTH, Rect};
 use breadify::layout::metrics::{BADGE_PADDING, CRATE_GLYPH, RULE_DEPARTMENT_BOX};
 use breadify::layout::{self, Cursor, MarkerTreatment, Settings, SheetContext, stop};
+use breadify::list::Kind;
 use breadify::order::{Line, Order, Product};
 use breadify::page::{BRAND_RED, Page, Primitive};
 use breadify::route::{self, Route};
@@ -449,8 +450,8 @@ fn synthetic(customer: &str, department: Option<&str>, quantity: u32) -> Order {
 /// The total lays one column per supplier side by side. Bread has two of them
 /// and the arithmetic was written for two; the freezer list has seven on route
 /// 8, which divided the page into strips too narrow for a product name.
-fn total_holds_together(route: &Route) {
-    let (page, _) = layout::total::block(route, &Cursor::new(0.0));
+fn total_holds_together(route: &Route, settings: &Settings) {
+    let (page, _) = layout::total::block(route, settings, &Cursor::new(0.0));
     let where_ = format!("route {} total", route.nickname);
     let mut boxes: Vec<(&str, Rect)> = Vec::new();
 
@@ -513,13 +514,105 @@ fn total_holds_together(route: &Route) {
 #[test]
 fn every_bread_route_total_holds_together() {
     for route in routes() {
-        total_holds_together(&route);
+        total_holds_together(&route, &Settings::default());
     }
 }
 
 #[test]
 fn every_freezer_route_total_holds_together() {
+    let settings = Settings::default().for_list(Kind::Freezer);
     for route in freezer_routes() {
-        total_holds_together(&route);
+        total_holds_together(&route, &settings);
     }
+}
+
+/// How many crate glyphs a page draws. A half crate is drawn twice — outline
+/// and lower-half fill — so only the ones with the glyph's full height count.
+fn crate_glyphs(page: &Page) -> usize {
+    page.primitives
+        .iter()
+        .filter(|primitive| {
+            matches!(primitive, Primitive::Box { rect, .. }
+                if (rect.width - CRATE_GLYPH.0).abs() < 0.01
+                    && (rect.height - CRATE_GLYPH.1).abs() < 0.01)
+        })
+        .count()
+}
+
+/// The crate arithmetic is bread-shaped — fifty units to a crate, each product
+/// a fraction of a slot. `Lasagne 2,5 Kg` is not slot-shaped, so a freezer
+/// sheet counts no crates at all rather than counting them wrong. The legend
+/// drops its CRATES key with them.
+#[test]
+fn a_freezer_sheet_counts_no_crates() {
+    let settings = Settings::default().for_list(Kind::Freezer);
+
+    for route in freezer_routes() {
+        for sheet in layout::paginate(&route, None, &settings, "PSR-FREEZER-2026-01-23") {
+            assert_eq!(
+                crate_glyphs(&sheet.content),
+                0,
+                "route {} sheet {} drew crates",
+                route.nickname,
+                sheet.number
+            );
+            assert!(
+                !runs(&sheet.content).contains(&"CRATES"),
+                "route {} sheet {} kept the crate legend",
+                route.nickname,
+                sheet.number
+            );
+        }
+    }
+}
+
+/// The same sheets under the same settings still count crates for bread —
+/// otherwise the test above would pass with the feature simply removed.
+#[test]
+fn a_bread_sheet_still_counts_crates() {
+    let drawn: usize = sheets_of(&named(&routes(), "8"))
+        .iter()
+        .map(crate_glyphs)
+        .sum();
+
+    assert!(drawn > 0, "route 8 draws crates");
+    assert!(
+        sheets_of(&named(&routes(), "8"))
+            .iter()
+            .any(|page| runs(page).contains(&"CRATES")),
+        "and keeps the crate legend"
+    );
+}
+
+/// The legend's supplier key named the two bakeries whatever the sheet was
+/// for. It comes from the route now — spelled out where there is room, codes
+/// alone where there is not.
+#[test]
+fn the_legend_key_names_the_route_s_own_suppliers() {
+    let bread = sheets_of(&named(&routes(), "8"));
+    assert!(
+        runs(&bread[0])
+            .iter()
+            .any(|run| run.contains("SB Sandnes Bakeri")),
+        "a bread route still spells its bakeries out"
+    );
+
+    let settings = Settings::default().for_list(Kind::Freezer);
+    let route = freezer_routes()
+        .into_iter()
+        .find(|route| route.nickname == "8")
+        .expect("freezer route 8");
+    let sheets = layout::paginate(&route, None, &settings, "PSR-FREEZER-2026-01-23");
+    let key = runs(&sheets[0].content)
+        .into_iter()
+        .find(|run| run.starts_with("AS · "))
+        .expect("seven suppliers do not fit spelled out, so the codes stand alone");
+
+    for code in ["AS", "FA", "GA", "HA", "MØ", "SA", "YT"] {
+        assert!(key.contains(code), "{code} is missing from {key:?}");
+    }
+    assert!(
+        !key.contains("Sandnes"),
+        "and no bakery the freezer list never sees"
+    );
 }

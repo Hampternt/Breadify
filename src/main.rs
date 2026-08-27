@@ -8,6 +8,7 @@ use std::process::ExitCode;
 
 use breadify::layout;
 use breadify::layout::Settings;
+use breadify::list::Kind;
 use breadify::route::Route;
 use breadify::terminal;
 use breadify::{date, dump, order, pdf, route, sheet, validate};
@@ -95,12 +96,14 @@ fn window(screenshot: Option<PathBuf>, open: Option<PathBuf>, step: Option<usize
 }
 
 /// The same rules the window uses: the warehouse's crate sizes as last saved,
-/// and the printed form's defaults for everything else. A route dumped from
-/// the terminal has to come to the same crates as the same route printed from
-/// the window, or one of them is lying.
-fn settings() -> Settings {
+/// the list the file's own name says it is, and the printed form's defaults
+/// for everything else. A route dumped from the terminal has to come to the
+/// same crates as the same route printed from the window, or one of them is
+/// lying.
+fn settings(path: &Path) -> Settings {
     Settings {
         crates: breadify::store::load().unwrap_or_default(),
+        list: Kind::of(path),
         ..Settings::default()
     }
 }
@@ -135,7 +138,7 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
         .map(|stem| stem.to_string_lossy().into_owned())
         .unwrap_or_default();
 
-    let sheets = layout::day(&routes, dates, &settings(), &source);
+    let sheets = layout::day(&routes, dates, &settings(&path), &source);
     let pages: Vec<_> = sheets.iter().map(|sheet| sheet.content.clone()).collect();
 
     match pdf::write(Path::new(target), &pages, "Breadify pick lists") {
@@ -273,7 +276,7 @@ fn run(nickname: &str, path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     };
 
     let dates = date::from_filename(&path).ok();
-    let settings = settings();
+    let settings = settings(&path);
     let dumped = say(&dump::route(wanted, dates, &settings.crates));
     if dumped != ExitCode::SUCCESS {
         return dumped;
