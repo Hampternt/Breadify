@@ -1,8 +1,8 @@
 //! The total that closes each route's last page.
 //!
-//! How much of each bread the whole route needs — a cross-check for the
-//! bakery rather than picking work (decision D15). See `docs/print-spec.md`
-//! §7.
+//! How much of each bread the whole route needs — the receiving check against
+//! what the bakeries delivered, rather than picking work (decision D15). See
+//! `docs/print-spec.md` §7.
 
 use std::collections::HashMap;
 

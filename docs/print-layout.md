@@ -7,6 +7,26 @@ Output side: what gets printed for the drivers. Companion to
 terms. Nothing here is implemented yet, and the open questions at the bottom
 are still open.
 
+## Correction — where the work happens (2026-08-27)
+
+Everything below D1 was written believing the picking happened **at the
+bakery**, by a picker, and that the driver was a second person who took the
+finished crates away. That is wrong, and it was wrong from the first line of
+the first document.
+
+The bakeries — Sandnes Bakeri and Bakehuset — deliver the morning's bread to
+**the warehouse**, unsorted. Each **driver** then picks their own route out of
+that delivery, packs and labels the crates, and drives it. One person, two
+jobs, the same sheet for both.
+
+No decision changes. Several get better reasons: **D1** (one route per sheet
+set) because a driver carries their own route and nobody else's, **D2** (top to
+bottom is delivery order) because packing in that order is what makes the van
+empty in that order, and **D15** (route totals) most of all — the total is a
+receiving check against what actually arrived, which is work that only exists
+because the bread turns up in a heap. The wording throughout has been
+corrected; this note stays so the change is traceable.
+
 ## Decided
 
 **D1 — Paper is A4, one route per sheet of paper.** (2026-08-26)
@@ -33,7 +53,7 @@ Nothing is grouped, split or ordered by it. Orders that mix both bakeries
 (37 of 148 in the sample) stay one stop on one list.
 
 **D5 — What each stop must communicate.** (2026-08-26)
-The picker works off: **quantity**, **bread type**, **customer**, and
+The driver works off: **quantity**, **bread type**, **customer**, and
 **accept-alternatives as a visible true/false marker**. **Supplier** is
 helpful and should be shown too. Order ID may appear but is not important —
 keep it small and out of the way.
@@ -48,7 +68,7 @@ sequence cannot.
 (2026-08-26)
 Where `Department` is filled in, that order prints as its own block, not folded
 into a shared customer heading, and the department name is visible on the
-block. The picker labels crates by it: one customer can have several
+block. The driver labels crates by it: one customer can have several
 departments each ordering several bread types, and the crates have to be told
 apart. Customer 012 is the worst case — 9 departments, 9 orders, one
 address, all at the same delivery position.
@@ -85,19 +105,19 @@ the integer parsed out of it. (The integer is still what sorts them, D2.)
 The unlabelled `Stavanger` column carries no meaning for the printout.
 
 **D13 — Design mono, allow colour to reinforce.** (2026-08-26)
-The printer at the bakery is sometimes a colour one and sometimes not, and the
+The warehouse's printer is sometimes a colour one and sometimes not, and the
 app can't know which. So every distinction must be fully carried in black and
 white; colour may only add redundancy on top.
 
 **D14 — Product names print exactly as the file has them.** (2026-08-26)
 No stripping of the trailing bakery name, even though it repeats what the
-supplier column says. The picker knows the bread by its full name.
+supplier column says. The driver knows the bread by its full name.
 
 **D15 — Route totals stay.** (2026-08-26)
 Each route's last page closes with a per-bread, per-supplier total, ordered
 most to least, with a dot per full ten inside a single order. This reverses the
-old "no summaries" non-goal — the bakery gets a cross-check, at a cost of about
-5 of the 24 sheets in a full day.
+old "no summaries" non-goal — the warehouse gets a receiving check against
+what the bakeries delivered, for about 5 pages of ink in a 26-sheet day.
 
 **D3 reaffirmed — the unsequenced flag stays.** (2026-08-26)
 The design pass deleted it; that deletion is rejected. Without the flag a
@@ -144,7 +164,7 @@ both platforms, for about ten lines of code. A direct `lp -d … -o media=A4`
 path on Linux comes after that if it earns its place. The Windows
 `PrintDlgW` + rasterise route is explicitly **not** in v1: it is the largest
 piece of platform-specific code in the project and it trades away vector text.
-Revisit only if the bakery's own printer turns out to have no PDF handler.
+Revisit only if the warehouse's own printer turns out to have no PDF handler.
 
 The print step must tell the user to print at **actual size / 100 %, no
 scaling** — a viewer's default "fit to printable area" shrinks A4 by ~4 % and
@@ -172,13 +192,13 @@ This closes the question deferred below. The handoff argued for two
 independent channels — an inverted badge plus a heavy bar down the block — so
 a refusal survives a photocopy, and that is still one click away on the
 Configure step. It also makes one block in ten shout on a page that is read
-top to bottom, and the bakery asked for the plainer sheet. The words print in
+top to bottom, and the warehouse asked for the plainer sheet. The words print in
 Archivo ExtraBold caps under every treatment, so nothing is lost by not
 choosing.
 
 **D22 — The crate rules persist; nothing else does.** (2026-08-27)
 How many slots a crate holds and how much room each bread takes are facts
-about the bakery, worked out once at the crates — so they are written to
+about the warehouse, worked out once at the crates — so they are written to
 `$XDG_CONFIG_HOME/breadify/crates.conf` (`%APPDATA%\breadify\crates.conf` on
 Windows) whenever they change and read back at startup. The rest of the
 settings — the order-ID toggle, the marker treatment, which routes are
@@ -198,8 +218,8 @@ as written, route totals kept as **D15**, the unsequenced flag reinstated by
 Two calls are deferred to the pack that needs them rather than open:
 
 - The **actual size modifiers** per bread (D17 gives the mechanism and a
-  default of 1.0; the numbers are the bakery's to set once someone looks at
-  the crates).
+  default of 1.0; the numbers are the warehouse's to set once someone looks
+  at the crates).
 - The **unsequenced flag's rendering** and English vs Norwegian page copy.
   (The default no-substitutes treatment was the third of these; **D21**
   settles it.)

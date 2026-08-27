@@ -11,8 +11,8 @@ use crate::crates::CrateRules;
 ///
 /// The words alone are the default. The design handoff argued for two
 /// independent channels — badge and bar — so the loud state survives a
-/// photocopy; the bakery asked for the plainer page, and the words are still
-/// set in the heading either way.
+/// photocopy; the warehouse asked for the plainer page, and the words are
+/// still set in the heading either way.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum MarkerTreatment {
     /// The words alone, in the heading.

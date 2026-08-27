@@ -118,7 +118,7 @@ fn crate_glyphs(stop: &Order, rules: &CrateRules) -> String {
 }
 
 /// Quiet when substitutes are fine, loud when they are not — the state that
-/// changes what a picker does.
+/// changes what a driver does.
 fn substitute_marker(stop: &Order) -> &'static str {
     if stop.accept_alternatives {
         return "want substitute: true";

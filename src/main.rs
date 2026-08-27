@@ -93,7 +93,7 @@ fn window(screenshot: Option<PathBuf>, open: Option<PathBuf>, step: Option<usize
     }
 }
 
-/// The same rules the window uses: the bakery's crate sizes as last saved,
+/// The same rules the window uses: the warehouse's crate sizes as last saved,
 /// and the printed form's defaults for everything else. A route dumped from
 /// the terminal has to come to the same crates as the same route printed from
 /// the window, or one of them is lying.
@@ -155,7 +155,7 @@ fn print_day(path: Option<&Path>, pdf: Option<&str>) -> ExitCode {
     }
 }
 
-/// Which build this is, so a report from the bakery can be pinned to one.
+/// Which build this is, so a report from the warehouse can be pinned to one.
 fn version() -> ExitCode {
     println!("breadify {}", env!("CARGO_PKG_VERSION"));
     ExitCode::SUCCESS

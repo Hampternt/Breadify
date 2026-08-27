@@ -6,8 +6,9 @@ docs and the code; this file only says what exists and for whom.
 ## The product
 
 A Rust desktop app for Windows and Linux that reads Matvare Expressen's daily
-bread-order export and prints A4 picking lists. The picker packs bread into
-crates and labels each crate; the driver delivers them in route order.
+bread-order export and prints A4 picking lists. The bakeries deliver to the
+warehouse; each driver picks their own route out of that delivery, packs and
+labels the crates, and drives it — one person, two jobs, the same sheet.
 
 ## What exists today
 
@@ -88,7 +89,7 @@ Three things no test can settle:
   `.exe`; the window, the file dialog and handing a PDF to the system's
   handler are unexercised there.
 
-- **A day's sheets through the bakery's own printer.** The bottom margin is
+- **A day's sheets through the warehouse's own printer.** The bottom margin is
   5 mm and plenty of office printers cannot print that low; the fills on the
   no-substitutes badge and the crate glyphs need `print-color-adjust` to
   survive. Print one day and look at the paper.

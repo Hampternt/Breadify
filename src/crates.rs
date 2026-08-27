@@ -14,7 +14,7 @@ use crate::order::Order;
 /// above `100`.
 pub const STANDARD_SIZE: u32 = 100;
 
-/// The sizes worth a button, as the fraction of a slot a picker would say out
+/// The sizes worth a button, as the fraction of a slot a driver would say out
 /// loud and the percentage the arithmetic runs on.
 ///
 /// Thirds round down — three at `33` come to 99 hundredths and fill one slot,

@@ -1,8 +1,9 @@
 //! Where the crate rules live between runs.
 //!
 //! How many slots a crate holds and how much room each bread takes are facts
-//! about the bakery, not choices about today's print — somebody works them out
-//! once, standing at the crates, and they should still be there tomorrow. The
+//! about the warehouse, not choices about today's print — somebody works them
+//! out once, standing at the crates, and they should still be there tomorrow.
+//! The
 //! rest of [`Settings`](crate::layout::Settings) is per-print and is not kept.
 //!
 //! The file is a few lines of text rather than JSON so that the person who set
@@ -18,7 +19,7 @@ use crate::crates::CrateRules;
 const FILE: &str = "crates.conf";
 
 const HEADER: &str = "\
-# Breadify — how the bakery's crates work.
+# Breadify — how the warehouse's crates work.
 #
 # Written by the app when you change something on the Configure step, and safe
 # to edit by hand. Sizes are a percentage of one slot: 50 is a half, 200 takes

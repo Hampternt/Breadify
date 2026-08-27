@@ -20,12 +20,22 @@ Decision history and the reasoning behind each rule:
 ## 1. Who reads it
 
 A Rust desktop app (Windows + Linux) reads the daily bread order export and
-prints picking lists on A4. Two people read the same paper:
+prints picking lists on A4.
 
-- **The picker**, at the bakery, packing bread into crates and labelling each
-  crate for a customer or department. They work down the page with their hands
-  full, ticking boxes as they go.
-- **The driver**, delivering those crates in route order.
+The bakeries — Sandnes Bakeri and Bakehuset — deliver the morning's bread to
+**the warehouse**. It is not sorted for anybody when it arrives. Each
+**driver** then picks their own route out of that delivery, packing bread into
+crates and labelling each crate for a customer or department, and then drives
+it. One person, two jobs, the same sheet for both: they work down the page with
+their hands full, ticking boxes as they go, and then work down the same page
+again at the wheel.
+
+That is why the page is built the way it is. Top to bottom is delivery order
+(**D2**) because packing in that order is what makes the van empty in that
+order. One route per sheet set (**D1**) because a driver carries their own
+route and nobody else's. And the route total (§7) is a receiving check against
+what the two bakeries actually delivered, which is work that only exists
+because the bread arrives unsorted.
 
 It is a working document — creased, carried, read at arm's length, ticked with
 a pen. Not a screen, not an archive.
@@ -96,7 +106,8 @@ Supplier code, tick boxes and order ID are reference marks and read as such.
 
 ## 5. The substitute marker
 
-The one field that changes the picker's behaviour when a bread is sold out.
+The one field that changes what the driver does when a bread is missing from
+the morning's delivery.
 90 % of orders accept substitutes, 10 % refuse.
 
 - **Deliberately asymmetric.** `true` is quiet — a small mono line in the
@@ -109,10 +120,10 @@ The one field that changes the picker's behaviour when a bread is sold out.
   this section's principle, taken because one block in ten shouting is worse
   on a page read top to bottom than a photocopy being marginal. The badge and
   the bar are a click away on the Configure step.
-- **Mono is the baseline.** The bakery's printer is sometimes colour and
+- **Mono is the baseline.** The warehouse's printer is sometimes colour and
   sometimes not, and the app cannot know which. Colour may reinforce; it must
   never be the only thing carrying a distinction. (**D13**)
-- Both states stay readable — the picker never has to infer "yes" from an
+- Both states stay readable — the driver never has to infer "yes" from an
   absence. The legend strip states the convention regardless.
 
 ## 6. The unsequenced tail — this file overrides the handoff
@@ -150,8 +161,9 @@ re-measure that page before trusting the sheet count.
 ## 7. Route totals
 
 Each route's last page closes with a **route total**: how much of each bread
-the whole route needs. It is a cross-check for the bakery, not picking work —
-so no tick boxes. (**D15**)
+the whole route needs. It is the receiving check — hold it against what the
+bakeries delivered that morning and it says whether the route can be picked at
+all, before any of it is packed. Not picking work, so no tick boxes. (**D15**)
 
 - One column per supplier, Sandnes Bakeri first, each headed with the code,
   the full bakery name and its own `types · units` count.
@@ -163,7 +175,10 @@ so no tick boxes. (**D15**)
 - Never splits across a page break; if it does not fit, it moves and the stops
   are rebalanced so the last page is not nearly empty.
 
-Cost: about 5 of the 24 sheets across a full day. Accepted.
+Cost: measured at 1161 mm of column across the sample's 16 routes, which is
+about 5 pages of ink in a 26-sheet day — though the day still comes to 26
+either way, because that ink lands on pages the stops had already opened.
+Accepted.
 
 ## 8. What the user can change
 
@@ -319,7 +334,7 @@ default — the words alone, **D21**.
 - **Not a screen UI.** The app window is Part 2 of the design handoff and a
   separate problem.
 - **No per-product picking view.** Route totals (§7) are a cross-check, not a
-  bakery-wide pick sheet.
+  warehouse-wide pick sheet.
 - **No route optimisation.** The sequence comes from the file and is never
   second-guessed — including the `0`s, which are surfaced rather than solved.
 - **No prices, invoicing or signature lines.** None of that data exists in the

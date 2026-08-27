@@ -73,11 +73,11 @@ pub fn block(stop: &Order, settings: &Settings, column: &Cursor) -> (Page, Mm) {
 /// heading reads as one crate label in two parts rather than a row of equals.
 ///
 /// Everything else keeps to the right-hand end, because that is where the
-/// picker's eye already is for the marker — but nothing here is placed by
+/// driver's eye already is for the marker — but nothing here is placed by
 /// assuming it will fit. The name can be 127 mm of a 194 mm column, the order
 /// id ten digits, and the crate count is unbounded because the per-bread sizes
-/// are the bakery's to set. So each mark is offered the name's line, then the
-/// department's, then a line of its own, and takes the first that measures.
+/// are the warehouse's to set. So each mark is offered the name's line, then
+/// the department's, then a line of its own, and takes the first that measures.
 /// The marker and the id travel together; the crates may travel without them.
 fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, settings: &Settings, left: Mm) {
     let face = Style::new(Face::ArchivoExtraBold, SIZE_CUSTOMER).tracked(TRACK_CUSTOMER);
@@ -432,7 +432,7 @@ fn bread_line(page: &mut Page, cursor: &mut Cursor, line: &Line, left: Mm, tinte
     cursor.advance(height);
 }
 
-/// An empty box for the picker's pen, with its letter set faintly inside so it
+/// An empty box for the driver's pen, with its letter set faintly inside so it
 /// says what it is without reading as ticked.
 fn tick_box(page: &mut Page, at: Point, letter: &str) {
     let rect = Rect::new(at.x, at.y, TICK_BOX, TICK_BOX);

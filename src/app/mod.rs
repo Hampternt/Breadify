@@ -142,7 +142,7 @@ impl Breadify {
         open: Option<PathBuf>,
     ) -> Self {
         theme::install(context);
-        // The crate rules are the bakery's, not today's: they come back from
+        // The crate rules are the warehouse's, not today's: they come back from
         // the last time somebody set them (crate::store).
         let settings = Settings {
             crates: crate::store::load().unwrap_or_default(),
