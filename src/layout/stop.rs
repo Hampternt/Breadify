@@ -66,14 +66,15 @@ pub fn block(stop: &Order, settings: &Settings, column: &Cursor) -> (Page, Mm) {
     (page.clone(), cursor.y)
 }
 
-/// Customer, department box, crate glyphs, then the marker and order id on the
-/// right of the same line.
+/// The customer name and, on the right of the same line, the crate glyphs,
+/// the substitute marker and the order id.
 ///
-/// Where the customer name, its department box and its crates will not fit
-/// beside that right-hand group — one Stavanger customer has a 32-character
-/// name and a 38-character department — the box and the crates drop to a
-/// second line rather than run off the sheet. The design handoff has no case
-/// long enough to need this; the export does.
+/// A department gets a line of its own beneath the name, set smaller, so the
+/// heading reads as one crate label in two parts rather than a row of equals.
+/// The crates keep to the right-hand group because that is where the picker's
+/// eye already is for the marker; where a long customer name would run into
+/// them — one Stavanger name is 127 mm at 14 pt — they drop to the second line
+/// rather than collide.
 fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, settings: &Settings, left: Mm) {
     let name = Style::new(Face::ArchivoExtraBold, SIZE_CUSTOMER).tracked(TRACK_CUSTOMER);
     let top = cursor.y;
@@ -108,44 +109,37 @@ fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, settings: &Settin
     marker(page, marker_right, middle, stop, settings);
 
     let count = crates::count(stop, &settings.crates);
-    let crates_width = crate_run_width(count.large + count.small);
-    let department_width = stop
-        .department
-        .as_ref()
-        .map_or(0.0, |department| department_box_width(department));
+    let crates_width = crate_run_width(count.total());
+    let crates_left = marker_right - marker_width(stop, settings) - MARKER_GAP - crates_width;
+    let name_right = left + text::width(&stop.customer, name);
 
-    let after_name = left + text::width(&stop.customer, name);
-    let wanted = after_name
-        + if department_width > 0.0 {
-            HEADING_GAP + department_width
-        } else {
-            0.0
-        }
-        + if crates_width > 0.0 {
-            CRATE_GAP + crates_width
-        } else {
-            0.0
-        };
-    let available = marker_right - marker_width(stop, settings) - MARKER_GAP;
-
-    if wanted <= available {
-        let mut x = after_name;
-        if let Some(department) = &stop.department {
-            x = department_box(page, Point::new(x + HEADING_GAP, top), department, height);
-        }
-        draw_crates(page, x + CRATE_GAP, middle, count);
-        cursor.advance(height);
-        return;
+    let beside_the_marker = crates_width == 0.0 || crates_left >= name_right + CRATE_GAP;
+    if beside_the_marker && crates_width > 0.0 {
+        draw_crates(page, crates_left, middle, count);
     }
-
-    cursor.advance(height + 0.4);
-    let second = cursor.y;
-    let mut x = left;
-    if let Some(department) = &stop.department {
-        x = department_box(page, Point::new(x, second), department, height);
-    }
-    draw_crates(page, x + CRATE_GAP, second + height / 2.0, count);
     cursor.advance(height);
+
+    let second_height = match (&stop.department, beside_the_marker) {
+        (None, true) => return,
+        (None, false) => CRATE_GLYPH.1,
+        (Some(_), true) => department_box_height(),
+        (Some(_), false) => department_box_height().max(CRATE_GLYPH.1),
+    };
+
+    cursor.advance(DEPARTMENT_LINE_GAP);
+    let second = cursor.y;
+    if let Some(department) = &stop.department {
+        department_box(page, Point::new(left, second), department);
+    }
+    if !beside_the_marker {
+        draw_crates(
+            page,
+            marker_right - crates_width,
+            second + second_height / 2.0,
+            count,
+        );
+    }
+    cursor.advance(second_height);
 }
 
 /// How wide a row of crate glyphs is.
@@ -198,19 +192,22 @@ fn department_box_width(department: &str) -> Mm {
         + 2.0 * DEPARTMENT_PADDING.1
 }
 
-/// The crate label: a `DPT` tag and the department name in a hard-ruled box.
-fn department_box(page: &mut Page, at: Point, department: &str, line_height: Mm) -> Mm {
+/// How tall it will be. On a line of its own the box is sized by its own type,
+/// not by the customer name above it.
+fn department_box_height() -> Mm {
+    let name = Style::new(Face::ArchivoExtraBold, SIZE_DEPARTMENT).tracked(TRACK_DEPARTMENT);
+    text::line_height(name) + 2.0 * DEPARTMENT_PADDING.0
+}
+
+/// The crate label: a `DPT` tag and the department name in a hard-ruled box,
+/// with `at` its top-left corner.
+fn department_box(page: &mut Page, at: Point, department: &str) {
     let tag = Style::new(Face::MonoBold, SIZE_DPT_TAG).tracked(TRACK_TAG);
     let name = Style::new(Face::ArchivoExtraBold, SIZE_DEPARTMENT).tracked(TRACK_DEPARTMENT);
 
     let tag_width = text::width("DPT", tag);
-    let height = line_height + 2.0 * DEPARTMENT_PADDING.0;
-    let box_rect = Rect::new(
-        at.x,
-        at.y - DEPARTMENT_PADDING.0,
-        department_box_width(department),
-        height,
-    );
+    let height = department_box_height();
+    let box_rect = Rect::new(at.x, at.y, department_box_width(department), height);
 
     page.outline(box_rect, RULE_DEPARTMENT_BOX, page::BLACK, 0.0);
 
@@ -242,8 +239,6 @@ fn department_box(page: &mut Page, at: Point, department: &str, line_height: Mm)
         name,
         page::BLACK,
     );
-
-    box_rect.right()
 }
 
 /// Quiet when substitutes are fine, inverted and loud when they are not.

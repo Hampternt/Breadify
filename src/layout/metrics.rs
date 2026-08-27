@@ -22,7 +22,7 @@ pub const SIZE_ROUTE_NUMBER: Pt = 25.0;
 pub const SIZE_CUSTOMER: Pt = 14.0;
 pub const SIZE_QUANTITY: Pt = 13.1;
 pub const SIZE_TOTAL_TITLE: Pt = 12.5;
-pub const SIZE_DEPARTMENT: Pt = 11.9;
+pub const SIZE_DEPARTMENT: Pt = 10.4;
 pub const SIZE_PRODUCT: Pt = 11.0;
 pub const SIZE_TOTAL_QUANTITY: Pt = 11.0;
 pub const SIZE_SUPPLIER_CODE: Pt = 10.7;
@@ -34,7 +34,7 @@ pub const SIZE_ROUTE_LABEL: Pt = 9.2;
 pub const SIZE_TOTAL_NAME: Pt = 9.2;
 pub const SIZE_BOX_LETTER: Pt = 8.9;
 pub const SIZE_TOTAL_SUBTOTAL: Pt = 8.9;
-pub const SIZE_DPT_TAG: Pt = 8.6;
+pub const SIZE_DPT_TAG: Pt = 7.7;
 pub const SIZE_CONTINUED: Pt = 8.6;
 pub const SIZE_PAGE_COUNTER: Pt = 8.3;
 pub const SIZE_ORDER_ID: Pt = 8.3;
@@ -72,9 +72,11 @@ pub const MARKER_GAP: Mm = 2.3;
 pub const HEADING_TO_LINES: Mm = 0.7;
 pub const NO_SUBSTITUTES_INDENT: Mm = 2.3;
 
-/// Department box.
+/// Department box. It sits on its own line under the customer name, so the
+/// gap above it is what separates the two halves of a heading.
 pub const DEPARTMENT_PADDING: (Mm, Mm) = (0.34, 1.3);
 pub const DPT_TAG_GAP: Mm = 1.3;
+pub const DEPARTMENT_LINE_GAP: Mm = 0.8;
 
 /// Bread line.
 pub const LINE_PADDING: (Mm, Mm) = (0.36, 1.3);

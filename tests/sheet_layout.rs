@@ -200,3 +200,145 @@ fn norwegian_letters_survive_the_pdf() {
         assert!(text.contains(word), "{word} did not survive the round trip");
     }
 }
+
+/// The heading places the crate glyphs by measurement, against the marker on
+/// its right and the customer name on its left. Five of the sample's 148 stops
+/// have a name long enough to reach them; those drop their crates to the
+/// second line. Nothing may overlap either way.
+#[test]
+fn no_heading_runs_into_its_own_right_hand_group() {
+    use breadify::font::Face;
+    use breadify::layout::metrics::{
+        BADGE_PADDING, CRATE_GAP, CRATE_GLYPH, MARKER_GAP, RULE_DEPARTMENT_BOX, SIZE_CUSTOMER,
+        TRACK_CUSTOMER,
+    };
+    use breadify::layout::{Cursor, MarkerTreatment, stop};
+    use breadify::page::Stroke;
+    use breadify::text::{self, Style};
+
+    let orders = order::fold(&sample_rows());
+    let style = Style::new(Face::ArchivoExtraBold, SIZE_CUSTOMER).tracked(TRACK_CUSTOMER);
+    let mut dropped = 0;
+
+    for treatment in MarkerTreatment::ALL {
+        let settings = Settings {
+            marker: treatment,
+            ..Settings::default()
+        };
+
+        for order in &orders {
+            let (page, _) = stop::block(order, &settings, &Cursor::new(0.0));
+            let where_ = format!("{} under {:?}", order.customer, treatment);
+
+            let name = page
+                .primitives
+                .iter()
+                .find_map(|primitive| match primitive {
+                    Primitive::Text {
+                        baseline_start,
+                        text,
+                        ..
+                    } if *text == order.customer => Some(*baseline_start),
+                    _ => None,
+                })
+                .unwrap_or_else(|| panic!("{where_}: the customer name is on the block"));
+            let name_right = name.x + text::width(&order.customer, style);
+
+            let (marker_text, loud) = page
+                .primitives
+                .iter()
+                .find_map(|primitive| match primitive {
+                    Primitive::Text {
+                        baseline_start,
+                        text,
+                        ..
+                    } if text.starts_with("want substitute") => Some((*baseline_start, false)),
+                    Primitive::Text {
+                        baseline_start,
+                        text,
+                        ..
+                    } if text.starts_with("WANT SUBSTITUTE") => Some((*baseline_start, true)),
+                    _ => None,
+                })
+                .unwrap_or_else(|| panic!("{where_}: the marker is on the block"));
+            let marker_left = marker_text.x
+                - if loud && treatment.has_badge() {
+                    BADGE_PADDING.1
+                } else {
+                    0.0
+                };
+
+            assert!(
+                name_right <= marker_left + 0.01,
+                "{where_}: the name ends at {name_right:.2} and the marker starts at \
+                 {marker_left:.2}"
+            );
+
+            let department = page
+                .primitives
+                .iter()
+                .find_map(|primitive| match primitive {
+                    Primitive::Box {
+                        rect,
+                        stroke: Some(Stroke { weight, .. }),
+                        ..
+                    } if (*weight - RULE_DEPARTMENT_BOX).abs() < 0.01 => Some(*rect),
+                    _ => None,
+                });
+            assert_eq!(
+                department.is_some(),
+                order.department.is_some(),
+                "{where_}: the DPT box appears exactly when there is a department"
+            );
+            if let Some(box_rect) = department {
+                assert!(
+                    box_rect.y > name.y,
+                    "{where_}: the DPT box belongs below the name's baseline"
+                );
+            }
+
+            let glyphs: Vec<_> = page
+                .primitives
+                .iter()
+                .filter_map(|primitive| match primitive {
+                    Primitive::Box { rect, .. } if (rect.width - CRATE_GLYPH.0).abs() < 0.01 => {
+                        Some(*rect)
+                    }
+                    _ => None,
+                })
+                .collect();
+            if treatment == MarkerTreatment::default()
+                && glyphs.iter().any(|glyph| glyph.y >= name.y)
+            {
+                dropped += 1;
+            }
+
+            for glyph in glyphs {
+                if glyph.y < name.y {
+                    assert!(
+                        glyph.x >= name_right + CRATE_GAP - 0.01,
+                        "{where_}: a crate at {:.2} overlaps a name ending at {name_right:.2}",
+                        glyph.x
+                    );
+                    assert!(
+                        glyph.right() <= marker_left - MARKER_GAP + 0.01,
+                        "{where_}: a crate ends at {:.2}, past the marker at {marker_left:.2}",
+                        glyph.right()
+                    );
+                } else if let Some(box_rect) = department {
+                    assert!(
+                        glyph.x >= box_rect.right(),
+                        "{where_}: a crate at {:.2} overlaps the DPT box ending at {:.2}",
+                        glyph.x,
+                        box_rect.right()
+                    );
+                }
+            }
+        }
+    }
+
+    assert_eq!(
+        dropped, 5,
+        "five sample names are long enough to push their crates down a line"
+    );
+}

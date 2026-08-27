@@ -2,6 +2,7 @@
 
 use breadify::font::{ALL, Face};
 use breadify::geometry::{PRODUCT_COLUMN_WIDTH, mm_to_pt, pt_to_mm};
+use breadify::layout::metrics::{SIZE_DEPARTMENT, TRACK_DEPARTMENT};
 use breadify::text::{self, Style};
 
 #[test]
@@ -107,10 +108,10 @@ fn report_the_widest_measurements() {
         )
     );
     println!(
-        "department 11.9pt: {:.2} mm",
+        "department {SIZE_DEPARTMENT}pt: {:.2} mm",
         text::width(
             "Department 10",
-            Style::new(Face::ArchivoExtraBold, 11.9).tracked(-0.015)
+            Style::new(Face::ArchivoExtraBold, SIZE_DEPARTMENT).tracked(TRACK_DEPARTMENT)
         )
     );
 }
