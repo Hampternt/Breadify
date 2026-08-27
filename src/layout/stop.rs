@@ -66,80 +66,157 @@ pub fn block(stop: &Order, settings: &Settings, column: &Cursor) -> (Page, Mm) {
     (page.clone(), cursor.y)
 }
 
-/// The customer name and, on the right of the same line, the crate glyphs,
-/// the substitute marker and the order id.
+/// The customer name, its department, and the marks that go on the right of
+/// them: the crate glyphs, the substitute marker and the order id.
 ///
 /// A department gets a line of its own beneath the name, set smaller, so the
 /// heading reads as one crate label in two parts rather than a row of equals.
-/// The crates keep to the right-hand group because that is where the picker's
-/// eye already is for the marker; where a long customer name would run into
-/// them — one Stavanger name is 127 mm at 14 pt — they drop to the second line
-/// rather than collide.
+///
+/// Everything else keeps to the right-hand end, because that is where the
+/// picker's eye already is for the marker — but nothing here is placed by
+/// assuming it will fit. The name can be 127 mm of a 194 mm column, the order
+/// id ten digits, and the crate count is unbounded because the per-bread sizes
+/// are the bakery's to set. So each mark is offered the name's line, then the
+/// department's, then a line of its own, and takes the first that measures.
+/// The marker and the id travel together; the crates may travel without them.
 fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, settings: &Settings, left: Mm) {
-    let name = Style::new(Face::ArchivoExtraBold, SIZE_CUSTOMER).tracked(TRACK_CUSTOMER);
+    let face = Style::new(Face::ArchivoExtraBold, SIZE_CUSTOMER).tracked(TRACK_CUSTOMER);
     let top = cursor.y;
     let height = text_from_top(
         page,
         Point::new(left, top),
         &stop.customer,
-        name,
+        face,
         page::BLACK,
     );
-    let middle = top + height / 2.0;
 
-    let id_style = Style::new(Face::MonoRegular, SIZE_ORDER_ID);
-    let id_width = if settings.show_order_id {
-        let order_id = stop.id.to_string();
-        let width = text::width(&order_id, id_style);
-        page.text(
-            Point::new(
-                cursor.right() - width,
-                middle + text::ascent(id_style) / 2.0 - 0.4,
-            ),
-            &order_id,
-            id_style,
-            page::FAINTEST,
-        );
-        width + MARKER_GAP
-    } else {
-        0.0
-    };
-
-    let marker_right = cursor.right() - id_width;
-    marker(page, marker_right, middle, stop, settings);
-
+    let right = cursor.right();
+    let name_right = left + text::width(&stop.customer, face);
     let count = crates::count(stop, &settings.crates);
     let crates_width = crate_run_width(count.total());
-    let crates_left = marker_right - marker_width(stop, settings) - MARKER_GAP - crates_width;
-    let name_right = left + text::width(&stop.customer, name);
+    let marks = stamp_width(stop, settings);
 
-    let beside_the_marker = crates_width == 0.0 || crates_left >= name_right + CRATE_GAP;
-    if beside_the_marker && crates_width > 0.0 {
-        draw_crates(page, crates_left, middle, count);
+    let mut stamp_wanted = true;
+    let mut crates_wanted = count.total() > 0;
+
+    // The name's own line.
+    let middle = top + height / 2.0;
+    if name_right + MARKER_GAP + marks <= right {
+        stamp(page, right, middle, stop, settings);
+        stamp_wanted = false;
+
+        let edge = right - marks - MARKER_GAP;
+        if crates_wanted && name_right + CRATE_GAP + crates_width <= edge {
+            draw_crates(page, edge - crates_width, middle, count);
+            crates_wanted = false;
+        }
     }
     cursor.advance(height);
 
-    let second_height = match (&stop.department, beside_the_marker) {
-        (None, true) => return,
-        (None, false) => CRATE_GLYPH.1,
-        (Some(_), true) => department_box_height(),
-        (Some(_), false) => department_box_height().max(CRATE_GLYPH.1),
-    };
+    // The department's line, and whatever else will fit beside the box.
+    if let Some(department) = &stop.department {
+        cursor.advance(DEPARTMENT_LINE_GAP);
+        let line = cursor.y;
+        let tall = department_box_height();
+        let box_right = department_box(page, Point::new(left, line), department);
+        let middle = line + tall / 2.0;
+        let mut edge = right;
+
+        if stamp_wanted && box_right + MARKER_GAP + marks <= right {
+            stamp(page, edge, middle, stop, settings);
+            stamp_wanted = false;
+            edge = right - marks - MARKER_GAP;
+        }
+        if crates_wanted && !stamp_wanted && box_right + CRATE_GAP + crates_width <= edge {
+            draw_crates(page, edge - crates_width, middle, count);
+            crates_wanted = false;
+        }
+        cursor.advance(tall);
+    }
+
+    // A line of their own, for whatever is left over.
+    if !stamp_wanted && !crates_wanted {
+        return;
+    }
 
     cursor.advance(DEPARTMENT_LINE_GAP);
-    let second = cursor.y;
-    if let Some(department) = &stop.department {
-        department_box(page, Point::new(left, second), department);
+    let line = cursor.y;
+    let mut edge = right;
+    let mut tall: Mm = 0.0;
+
+    if stamp_wanted {
+        tall = height;
+        stamp(page, edge, line + tall / 2.0, stop, settings);
+        edge = right - marks - MARKER_GAP;
     }
-    if !beside_the_marker {
-        draw_crates(
-            page,
-            marker_right - crates_width,
-            second + second_height / 2.0,
-            count,
+    if crates_wanted {
+        let room = (edge - left).max(CRATE_GLYPH.0);
+        tall = tall.max(crate_block(page, edge, line, room, count));
+    }
+    cursor.advance(tall);
+}
+
+/// The substitute marker and the order id, which are set as one thing: the id
+/// is only ever a way of telling two otherwise identical stops apart, so it
+/// belongs with the mark it sits beside rather than adrift on its own line.
+fn stamp(page: &mut Page, right: Mm, middle: Mm, stop: &Order, settings: &Settings) {
+    let mut edge = right;
+
+    if settings.show_order_id {
+        let style = Style::new(Face::MonoRegular, SIZE_ORDER_ID);
+        let order_id = stop.id.to_string();
+        let width = text::width(&order_id, style);
+        page.text(
+            Point::new(right - width, middle + text::ascent(style) / 2.0 - 0.4),
+            &order_id,
+            style,
+            page::FAINTEST,
         );
+        edge -= width + MARKER_GAP;
     }
-    cursor.advance(second_height);
+
+    marker(page, edge, middle, stop, settings);
+}
+
+/// How wide [`stamp`] draws, so the heading's fit tests and the drawing cannot
+/// drift apart.
+fn stamp_width(stop: &Order, settings: &Settings) -> Mm {
+    let id = if settings.show_order_id {
+        text::width(
+            &stop.id.to_string(),
+            Style::new(Face::MonoRegular, SIZE_ORDER_ID),
+        ) + MARKER_GAP
+    } else {
+        0.0
+    };
+    marker_width(stop, settings) + id
+}
+
+/// Draws the crates right-aligned in a column `width` wide ending at `right`,
+/// wrapping onto further rows when one row will not hold them, and returns the
+/// height it used.
+fn crate_block(page: &mut Page, right: Mm, top: Mm, width: Mm, count: crates::CrateCount) -> Mm {
+    let total = count.total();
+    if total == 0 {
+        return 0.0;
+    }
+
+    let step = CRATE_GLYPH.0 + CRATE_GLYPH_GAP;
+    let per_row = ((width + CRATE_GLYPH_GAP) / step).floor().max(1.0) as u32;
+
+    let mut drawn = 0;
+    let mut y = top;
+    while drawn < total {
+        let in_row = per_row.min(total - drawn);
+        let mut x = right - crate_run_width(in_row);
+        for _ in 0..in_row {
+            crate_glyph(page, Point::new(x, y), drawn < count.large);
+            x += step;
+            drawn += 1;
+        }
+        y += CRATE_GLYPH.1 + CRATE_ROW_GAP;
+    }
+    y - top - CRATE_ROW_GAP
 }
 
 /// How wide a row of crate glyphs is.
@@ -200,8 +277,9 @@ fn department_box_height() -> Mm {
 }
 
 /// The crate label: a `DPT` tag and the department name in a hard-ruled box,
-/// with `at` its top-left corner.
-fn department_box(page: &mut Page, at: Point, department: &str) {
+/// with `at` its top-left corner. Hands back its right edge, which is what
+/// tells the heading whether the crates fit beside it.
+fn department_box(page: &mut Page, at: Point, department: &str) -> Mm {
     let tag = Style::new(Face::MonoBold, SIZE_DPT_TAG).tracked(TRACK_TAG);
     let name = Style::new(Face::ArchivoExtraBold, SIZE_DEPARTMENT).tracked(TRACK_DEPARTMENT);
 
@@ -239,6 +317,8 @@ fn department_box(page: &mut Page, at: Point, department: &str) {
         name,
         page::BLACK,
     );
+
+    box_rect.right()
 }
 
 /// Quiet when substitutes are fine, inverted and loud when they are not.

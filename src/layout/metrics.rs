@@ -90,6 +90,8 @@ pub const SUPPLIER_COLUMN: Mm = 8.0;
 /// Crate glyphs.
 pub const CRATE_GLYPH: (Mm, Mm) = (7.1, 4.1);
 pub const CRATE_GLYPH_GAP: Mm = 1.1;
+/// Between rows, when a stop needs more crates than a line will hold.
+pub const CRATE_ROW_GAP: Mm = 1.0;
 pub const CRATE_GLYPH_RADIUS: Mm = 0.18;
 
 /// Badge.

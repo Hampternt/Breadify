@@ -2,11 +2,13 @@
 
 mod support;
 
-use breadify::geometry::{MARGIN_SIDE, PAGE_HEIGHT, PAGE_WIDTH};
-use breadify::layout::{self, SheetContext};
-use breadify::layout::{MarkerTreatment, Settings};
+use breadify::geometry::{CONTENT_WIDTH, MARGIN_SIDE, PAGE_HEIGHT, PAGE_WIDTH, Rect};
+use breadify::layout::metrics::{BADGE_PADDING, CRATE_GLYPH, RULE_DEPARTMENT_BOX};
+use breadify::layout::{self, Cursor, MarkerTreatment, Settings, SheetContext, stop};
+use breadify::order::{Line, Order, Product};
 use breadify::page::{BRAND_RED, Page, Primitive};
 use breadify::route::{self, Route};
+use breadify::text;
 use breadify::{order, pdf};
 use support::sample_rows;
 
@@ -215,23 +217,131 @@ fn norwegian_letters_survive_the_pdf() {
     }
 }
 
+/// Everything a heading draws, as labelled rectangles.
+///
+/// Checked pairwise: no two may overlap, and none may leave the column. That
+/// is the whole invariant — it does not care which line anything landed on,
+/// which is what makes it hold for arrangements nobody thought of.
+///
+/// Returns true when the crates did not fit beside the marker and went below.
+fn heading_holds_together(order: &Order, settings: &Settings) -> bool {
+    let (page, _) = stop::block(order, settings, &Cursor::new(0.0));
+    let where_ = format!("{} under {:?}", order.customer, settings.marker);
+    let mut boxes: Vec<(&str, Rect)> = Vec::new();
+
+    for primitive in &page.primitives {
+        match primitive {
+            Primitive::Text {
+                baseline_start,
+                text,
+                style,
+                ..
+            } => {
+                let label = if *text == order.customer {
+                    "the customer name"
+                } else if text.starts_with("want substitute") || text.starts_with("WANT SUBSTITUTE")
+                {
+                    "the substitute marker"
+                } else if *text == order.id.to_string() {
+                    "the order id"
+                } else {
+                    continue;
+                };
+
+                let pad = if label == "the substitute marker" && settings.marker.has_badge() {
+                    BADGE_PADDING.1
+                } else {
+                    0.0
+                };
+                boxes.push((
+                    label,
+                    Rect::new(
+                        baseline_start.x - pad,
+                        baseline_start.y - text::ascent(*style),
+                        text::width(text, *style) + 2.0 * pad,
+                        text::line_height(*style),
+                    ),
+                ));
+            }
+            Primitive::Box { rect, stroke, .. } => {
+                // A half crate is drawn twice — the outline, and the fill in
+                // its lower half. Only the outline is the glyph.
+                if (rect.width - CRATE_GLYPH.0).abs() < 0.01
+                    && (rect.height - CRATE_GLYPH.1).abs() < 0.01
+                {
+                    boxes.push(("a crate", *rect));
+                } else if stroke
+                    .is_some_and(|stroke| (stroke.weight - RULE_DEPARTMENT_BOX).abs() < 0.01)
+                {
+                    boxes.push(("the DPT box", *rect));
+                }
+            }
+            _ => {}
+        }
+    }
+
+    assert!(
+        boxes.iter().any(|(label, _)| *label == "the customer name"),
+        "{where_}: the customer name is on the block"
+    );
+    assert!(
+        boxes
+            .iter()
+            .any(|(label, _)| *label == "the substitute marker"),
+        "{where_}: the marker is on the block"
+    );
+    assert_eq!(
+        boxes.iter().any(|(label, _)| *label == "the DPT box"),
+        order.department.is_some(),
+        "{where_}: the DPT box appears exactly when there is a department"
+    );
+
+    // The DPT box is drawn hard against the block's left edge, so its rule sits
+    // a hair outside the column; everything else keeps within it.
+    for (label, rect) in &boxes {
+        assert!(
+            rect.x >= MARGIN_SIDE - 0.01 && rect.right() <= MARGIN_SIDE + CONTENT_WIDTH + 0.01,
+            "{where_}: {label} runs {:.2}..{:.2}, outside the column",
+            rect.x,
+            rect.right()
+        );
+    }
+
+    for (index, (label, one)) in boxes.iter().enumerate() {
+        for (other_label, two) in &boxes[index + 1..] {
+            let across = one.x < two.right() - 0.01 && two.x < one.right() - 0.01;
+            let down = one.y < two.bottom() - 0.01 && two.y < one.bottom() - 0.01;
+            assert!(
+                !(across && down),
+                "{where_}: {label} ({:.2}..{:.2} x {:.2}..{:.2}) overlaps {other_label} \
+                 ({:.2}..{:.2} x {:.2}..{:.2})",
+                one.x,
+                one.right(),
+                one.y,
+                one.bottom(),
+                two.x,
+                two.right(),
+                two.y,
+                two.bottom()
+            );
+        }
+    }
+
+    let name_bottom = boxes
+        .iter()
+        .find(|(label, _)| *label == "the customer name")
+        .map_or(0.0, |(_, rect)| rect.bottom());
+    boxes
+        .iter()
+        .any(|(label, rect)| *label == "a crate" && rect.y >= name_bottom - 0.01)
+}
+
 /// The heading places the crate glyphs by measurement, against the marker on
 /// its right and the customer name on its left. Five of the sample's 148 stops
-/// have a name long enough to reach them; those drop their crates to the
-/// second line. Nothing may overlap either way.
+/// have a name long enough to reach them; those put their crates below.
 #[test]
 fn no_heading_runs_into_its_own_right_hand_group() {
-    use breadify::font::Face;
-    use breadify::layout::metrics::{
-        BADGE_PADDING, CRATE_GAP, CRATE_GLYPH, MARKER_GAP, RULE_DEPARTMENT_BOX, SIZE_CUSTOMER,
-        TRACK_CUSTOMER,
-    };
-    use breadify::layout::{Cursor, stop};
-    use breadify::page::Stroke;
-    use breadify::text::{self, Style};
-
     let orders = order::fold(&sample_rows());
-    let style = Style::new(Face::ArchivoExtraBold, SIZE_CUSTOMER).tracked(TRACK_CUSTOMER);
     let mut dropped = 0;
 
     for treatment in MarkerTreatment::ALL {
@@ -239,114 +349,9 @@ fn no_heading_runs_into_its_own_right_hand_group() {
             marker: treatment,
             ..Settings::default()
         };
-
         for order in &orders {
-            let (page, _) = stop::block(order, &settings, &Cursor::new(0.0));
-            let where_ = format!("{} under {:?}", order.customer, treatment);
-
-            let name = page
-                .primitives
-                .iter()
-                .find_map(|primitive| match primitive {
-                    Primitive::Text {
-                        baseline_start,
-                        text,
-                        ..
-                    } if *text == order.customer => Some(*baseline_start),
-                    _ => None,
-                })
-                .unwrap_or_else(|| panic!("{where_}: the customer name is on the block"));
-            let name_right = name.x + text::width(&order.customer, style);
-
-            let (marker_text, loud) = page
-                .primitives
-                .iter()
-                .find_map(|primitive| match primitive {
-                    Primitive::Text {
-                        baseline_start,
-                        text,
-                        ..
-                    } if text.starts_with("want substitute") => Some((*baseline_start, false)),
-                    Primitive::Text {
-                        baseline_start,
-                        text,
-                        ..
-                    } if text.starts_with("WANT SUBSTITUTE") => Some((*baseline_start, true)),
-                    _ => None,
-                })
-                .unwrap_or_else(|| panic!("{where_}: the marker is on the block"));
-            let marker_left = marker_text.x
-                - if loud && treatment.has_badge() {
-                    BADGE_PADDING.1
-                } else {
-                    0.0
-                };
-
-            assert!(
-                name_right <= marker_left + 0.01,
-                "{where_}: the name ends at {name_right:.2} and the marker starts at \
-                 {marker_left:.2}"
-            );
-
-            let department = page
-                .primitives
-                .iter()
-                .find_map(|primitive| match primitive {
-                    Primitive::Box {
-                        rect,
-                        stroke: Some(Stroke { weight, .. }),
-                        ..
-                    } if (*weight - RULE_DEPARTMENT_BOX).abs() < 0.01 => Some(*rect),
-                    _ => None,
-                });
-            assert_eq!(
-                department.is_some(),
-                order.department.is_some(),
-                "{where_}: the DPT box appears exactly when there is a department"
-            );
-            if let Some(box_rect) = department {
-                assert!(
-                    box_rect.y > name.y,
-                    "{where_}: the DPT box belongs below the name's baseline"
-                );
-            }
-
-            let glyphs: Vec<_> = page
-                .primitives
-                .iter()
-                .filter_map(|primitive| match primitive {
-                    Primitive::Box { rect, .. } if (rect.width - CRATE_GLYPH.0).abs() < 0.01 => {
-                        Some(*rect)
-                    }
-                    _ => None,
-                })
-                .collect();
-            if treatment == MarkerTreatment::default()
-                && glyphs.iter().any(|glyph| glyph.y >= name.y)
-            {
+            if heading_holds_together(order, &settings) && treatment == MarkerTreatment::default() {
                 dropped += 1;
-            }
-
-            for glyph in glyphs {
-                if glyph.y < name.y {
-                    assert!(
-                        glyph.x >= name_right + CRATE_GAP - 0.01,
-                        "{where_}: a crate at {:.2} overlaps a name ending at {name_right:.2}",
-                        glyph.x
-                    );
-                    assert!(
-                        glyph.right() <= marker_left - MARKER_GAP + 0.01,
-                        "{where_}: a crate ends at {:.2}, past the marker at {marker_left:.2}",
-                        glyph.right()
-                    );
-                } else if let Some(box_rect) = department {
-                    assert!(
-                        glyph.x >= box_rect.right(),
-                        "{where_}: a crate at {:.2} overlaps the DPT box ending at {:.2}",
-                        glyph.x,
-                        box_rect.right()
-                    );
-                }
             }
         }
     }
@@ -355,4 +360,81 @@ fn no_heading_runs_into_its_own_right_hand_group() {
         dropped, 5,
         "five sample names are long enough to push their crates down a line"
     );
+}
+
+/// The export cannot reach the hard cases on its own: nothing in it puts a
+/// long name, a long department and a big crate count on one stop. The
+/// bakery's own size modifiers can, and did — before this was fixed, a 14-crate
+/// stop with a 38-character department drew 27 mm of crates through its own
+/// DPT box.
+#[test]
+fn a_heading_with_nowhere_left_to_put_the_crates_still_does_not_collide() {
+    let longest_name = "Customer 001";
+    let longest_department = "Department 10";
+
+    let cases = [
+        (
+            "long name, long department, 14 crates",
+            longest_name,
+            Some(longest_department),
+            140,
+        ),
+        (
+            "long department, 40 crates — more than a row",
+            "Customer 012",
+            Some(longest_department),
+            400,
+        ),
+        (
+            "no department, more crates than the column holds",
+            longest_name,
+            None,
+            300,
+        ),
+        ("nothing unusual at all", "Customer 024", None, 3),
+        (
+            "one bread, one crate, a department",
+            "Customer 037",
+            Some("Department 31"),
+            1,
+        ),
+    ];
+
+    for (what, customer, department, quantity) in cases {
+        for treatment in MarkerTreatment::ALL {
+            for show_order_id in [true, false] {
+                let settings = Settings {
+                    marker: treatment,
+                    show_order_id,
+                    ..Settings::default()
+                };
+                let order = synthetic(customer, department, quantity);
+                println!("{what} · {treatment:?} · order id {show_order_id}");
+                heading_holds_together(&order, &settings);
+            }
+        }
+    }
+}
+
+/// A stop built by hand, for the shapes the export does not happen to contain.
+fn synthetic(customer: &str, department: Option<&str>, quantity: u32) -> Order {
+    Order {
+        id: 1_000_622_147,
+        customer: customer.to_owned(),
+        department: department.map(str::to_owned),
+        delivery_street: "Lassaveien 10".to_owned(),
+        route: "13".to_owned(),
+        sequence: 600,
+        accept_alternatives: false,
+        comment: None,
+        lines: vec![Line {
+            product: Product {
+                id: 1,
+                name: "Havrebrød Oppdelt Sandnes Bakeri".to_owned(),
+                sku: "12345".to_owned(),
+                supplier: "Sandnes Bakeri".to_owned(),
+            },
+            quantity,
+        }],
+    }
 }
