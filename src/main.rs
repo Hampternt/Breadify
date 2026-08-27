@@ -20,7 +20,10 @@ fn main() -> ExitCode {
     let mut rest = words.iter().copied();
     while let Some(word) = rest.next() {
         match word {
-            "--pdf" => pdf = rest.next(),
+            "--pdf" => match rest.next() {
+                Some(target) => pdf = Some(target),
+                None => return fail("--pdf needs a file to write to"),
+            },
             unknown if unknown.starts_with("--") => return usage(),
             value => positional.push(value),
         }

@@ -1,6 +1,6 @@
 # Pack 2 — First sheet
 
-**Status:** all 9 items done — pack gate green, awaiting review.
+**Status:** all 9 items done, reviewed, pack gate green. Merged.
 **Container:** Breadify v1 (7 packs).
 **Branch:** `pack-2-first-sheet`.
 
@@ -86,4 +86,18 @@ a matter of discipline.
   name is 112.65 mm at 11 pt, not the ~148 mm the handoff calls the binding
   constraint. `print-spec.md` §9 now records the measurement and what follows
   from it.
-**Pack gate:** not run.
+**Code review:** one pass at high effort. Three confirmed findings, all fixed:
+
+1. `--pdf` with no filename after it was silently ignored — the command wrote
+   nothing and exited 0. It now fails with a message.
+2. `department_box_width` took a line height it discarded and duplicated the
+   box's width formula; the drawing now uses the same function, so the
+   heading's fit test cannot drift from what is drawn.
+3. The PDF renderer discarded every box's corner radius, printing tick boxes
+   and crate glyphs square. Rounded boxes are drawn as bezier-cornered
+   polygons now.
+
+**Pack gate:** `./scripts/verify.sh` — fmt, clippy `-D warnings`, build, then
+69 tests across 10 files, all green. Route 8's sheet was also rendered and
+looked at: masthead, legend, five blocks, the flag, the badge and left bar,
+the total with its ten-dot, footer at the foot.

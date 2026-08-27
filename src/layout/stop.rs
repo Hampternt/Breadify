@@ -88,7 +88,7 @@ fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, rules: &CrateRule
     let department_width = stop
         .department
         .as_ref()
-        .map_or(0.0, |department| department_box_width(department, height));
+        .map_or(0.0, |department| department_box_width(department));
 
     let after_name = left + text::width(&stop.customer, name);
     let wanted = after_name
@@ -158,9 +158,9 @@ fn marker_width(stop: &Order) -> Mm {
     ) + 2.0 * BADGE_PADDING.1
 }
 
-/// How wide the department box will be, before drawing it.
-fn department_box_width(department: &str, line_height: Mm) -> Mm {
-    let _ = line_height;
+/// How wide the department box will be. [`department_box`] draws exactly this
+/// width, so the heading's fit test and the drawing cannot drift apart.
+fn department_box_width(department: &str) -> Mm {
     let tag = Style::new(Face::MonoBold, SIZE_DPT_TAG).tracked(TRACK_TAG);
     let name = Style::new(Face::ArchivoExtraBold, SIZE_DEPARTMENT).tracked(TRACK_DEPARTMENT);
     text::width("DPT", tag)
@@ -175,13 +175,11 @@ fn department_box(page: &mut Page, at: Point, department: &str, line_height: Mm)
     let name = Style::new(Face::ArchivoExtraBold, SIZE_DEPARTMENT).tracked(TRACK_DEPARTMENT);
 
     let tag_width = text::width("DPT", tag);
-    let name_width = text::width(department, name);
-    let inner = tag_width + DPT_TAG_GAP * 2.0 + name_width;
     let height = line_height + 2.0 * DEPARTMENT_PADDING.0;
     let box_rect = Rect::new(
         at.x,
         at.y - DEPARTMENT_PADDING.0,
-        inner + 2.0 * DEPARTMENT_PADDING.1,
+        department_box_width(department),
         height,
     );
 

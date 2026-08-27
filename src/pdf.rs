@@ -10,7 +10,8 @@ use std::path::Path;
 
 use printpdf::{
     Color, FontId, Line, LinePoint, Op, PaintMode, PdfDocument, PdfFontHandle, PdfPage,
-    PdfSaveOptions, Point as PdfPoint, Pt as PdfPt, Rgb, TextItem,
+    PdfSaveOptions, Point as PdfPoint, Polygon, PolygonRing, Pt as PdfPt, Rgb, TextItem,
+    WindingOrder,
 };
 
 use crate::font::{ALL, Face};
@@ -142,7 +143,7 @@ fn operations(page: &Page, fonts: &HashMap<Face, FontId>) -> Vec<Op> {
                 rect,
                 fill,
                 stroke,
-                radius: _,
+                radius,
             } => {
                 if let Some(colour) = fill {
                     ops.push(Op::SetFillColor { col: ink(*colour) });
@@ -153,13 +154,20 @@ fn operations(page: &Page, fonts: &HashMap<Face, FontId>) -> Vec<Op> {
                         pt: PdfPt(*weight as f32),
                     });
                 }
+                let mode = paint_mode(fill.is_some(), stroke.is_some());
+                if *radius > 0.0 {
+                    ops.push(Op::DrawPolygon {
+                        polygon: rounded(*rect, *radius, mode),
+                    });
+                    continue;
+                }
                 ops.push(Op::DrawRectangle {
                     rectangle: printpdf::Rect {
                         x: PdfPt(mm_to_pt(rect.x) as f32),
                         y: PdfPt(mm_to_pt(PAGE_HEIGHT - rect.bottom()) as f32),
                         width: PdfPt(mm_to_pt(rect.width) as f32),
                         height: PdfPt(mm_to_pt(rect.height) as f32),
-                        mode: Some(paint_mode(fill.is_some(), stroke.is_some())),
+                        mode: Some(mode),
                         winding_order: None,
                     },
                 });
@@ -168,6 +176,48 @@ fn operations(page: &Page, fonts: &HashMap<Face, FontId>) -> Vec<Op> {
     }
 
     ops
+}
+
+/// A box with rounded corners, as a polygon whose corner points are bezier
+/// control points — the tick boxes and crate glyphs, which the design gives a
+/// radius of a third of a millimetre.
+fn rounded(rect: crate::geometry::Rect, radius: Mm, mode: PaintMode) -> Polygon {
+    let radius = radius.min(rect.width / 2.0).min(rect.height / 2.0);
+    let (left, right) = (rect.x, rect.right());
+    let (top, bottom) = (flip(rect.y), flip(rect.bottom()));
+
+    let corners = [
+        // Along the bottom edge, up the right, back along the top, down the left.
+        ((left + radius, bottom), false),
+        ((right - radius, bottom), false),
+        ((right, bottom), true),
+        ((right, bottom + radius), false),
+        ((right, top - radius), false),
+        ((right, top), true),
+        ((right - radius, top), false),
+        ((left + radius, top), false),
+        ((left, top), true),
+        ((left, top - radius), false),
+        ((left, bottom + radius), false),
+        ((left, bottom), true),
+    ];
+
+    Polygon {
+        rings: vec![PolygonRing {
+            points: corners
+                .into_iter()
+                .map(|((x, y), bezier)| LinePoint {
+                    p: PdfPoint {
+                        x: PdfPt(mm_to_pt(x) as f32),
+                        y: PdfPt(mm_to_pt(y) as f32),
+                    },
+                    bezier,
+                })
+                .collect(),
+        }],
+        mode,
+        winding_order: WindingOrder::NonZero,
+    }
 }
 
 /// A layout point, in PDF's own space: points, from the bottom-left corner.
