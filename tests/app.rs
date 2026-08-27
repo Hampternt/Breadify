@@ -39,7 +39,11 @@ fn the_mascot_is_a_picture() {
     );
     assert_eq!(pixels.len(), width * height * 4, "four bytes to a pixel");
     assert!(
-        pixels.chunks_exact(4).all(|pixel| pixel[3] == 0xFF),
+        pixels
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .all(|pixel| pixel[3] == 0xFF),
         "a JPEG has no transparency to lose"
     );
 }

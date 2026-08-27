@@ -107,11 +107,15 @@ fn the_window_icon_is_the_symbol_on_a_transparent_tile() {
 
     let brand = breadify::page::BRAND_RED;
     let red = rgba
-        .chunks_exact(4)
+        .as_chunks::<4>()
+        .0
+        .iter()
         .filter(|p| p[3] == 0xFF && (p[0], p[1], p[2]) == (brand.red, brand.green, brand.blue))
         .count();
     let white = rgba
-        .chunks_exact(4)
+        .as_chunks::<4>()
+        .0
+        .iter()
         .filter(|p| p[3] == 0xFF && (p[0], p[1], p[2]) == (0xFF, 0xFF, 0xFF))
         .count();
 
