@@ -29,8 +29,7 @@ fn a_route_dumps_in_the_shape_of_the_worked_example() {
         "the flag comes before the stops it covers"
     );
     assert!(
-        text.find("Customer 005")
-            .is_some_and(|stop| stop < flag),
+        text.find("Customer 005").is_some_and(|stop| stop < flag),
         "sequenced stops come before the flag"
     );
 

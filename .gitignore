@@ -19,3 +19,7 @@ breadify-v1.0.0
 
 # Python bytecode from tools/
 __pycache__/
+
+# The real -> placeholder mapping, written by tools/anonymise_xlsx.py.
+# It holds every real name and must never be committed.
+anonymise-mapping.tsv

@@ -82,6 +82,10 @@ labels the crates, and drives it — one person, two jobs, the same sheet.
 
 - [`../tools/inspect_xlsx.py`](../tools/inspect_xlsx.py) — stdlib-only dumper
   that re-derives the format doc from any export.
+- [`../tools/anonymise_xlsx.py`](../tools/anonymise_xlsx.py) — replaces the
+  people in an export with placeholders, keeping every structural property the
+  tests rest on. The samples committed here have been through it; the repo is
+  public and those columns described real customers.
 
 ## In flight
 

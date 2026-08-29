@@ -6,6 +6,16 @@ about the app's own behaviour beyond what the data forces. The freezer
 export shares this file's every structural fact; where its data differs is
 in [`freezer-format.md`](freezer-format.md).
 
+> **The samples are anonymised.** Every customer, department, delivery street
+> and comment in the exports committed here has been replaced with a
+> placeholder — `Customer 042`, `Street 17`, `Note 3` — by
+> [`tools/anonymise_xlsx.py`](../tools/anonymise_xlsx.py), because this repo is
+> public and those columns described real people, in one case down to a work
+> email address. Everything else is the real file: order ids, quantities,
+> products, suppliers, positions, routes, sequence numbers and the region
+> column, so every count, mapping and sort in this document still holds. The
+> worked examples below use the placeholders, and so match the files.
+
 - **Sample:** `PSR-BREAD-2026-03-04-to-2026-03-04 (1).xlsx` (27 994 bytes)
 - **Derived:** 2026-08-26, by reading `xl/worksheets/sheet1.xml` directly
   (`tools/inspect_xlsx.py` re-derives everything here)

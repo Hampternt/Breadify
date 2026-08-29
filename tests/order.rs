@@ -73,11 +73,14 @@ fn a_comment_is_carried_once_not_once_per_line() {
         .find(|order| order.id == 1_000_622_329)
         .expect("ACSENTERET's order carries a comment");
     assert_eq!(acsenteret.lines.len(), 4);
+    // The comments are placeholders since the samples were anonymised, so
+    // what is worth asserting is that one reached the order once — not what
+    // it says.
     assert!(
         acsenteret
             .comment
             .as_deref()
-            .is_some_and(|comment| comment.starts_with("Hei :)"))
+            .is_some_and(|comment| comment.starts_with("Note "))
     );
 }
 

@@ -298,7 +298,7 @@ Route 8 total
 Route 8 — end of route          PSR-BREAD-2026-03-04 · Matvare Expressen
 ```
 
-Things to read off it: Customer 024's 14 units become one crate of ten plus one of
+Things to read off it: Customer 024 14 units become one crate of ten plus one of
 five; the two unsequenced stops sit under the flag rather than looking like
 final deliveries; A3 refuses substitutes and says so in caps — the badge and
 the left rule the prototype draws are now the non-default treatment (**D21**); the only ten-dot on the route is Trollhaugen's single line of 10.

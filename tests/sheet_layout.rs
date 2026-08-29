@@ -3,7 +3,9 @@
 mod support;
 
 use breadify::geometry::{CONTENT_WIDTH, MARGIN_SIDE, PAGE_HEIGHT, PAGE_WIDTH, Rect};
-use breadify::layout::metrics::{BADGE_PADDING, CRATE_GLYPH, RULE_DEPARTMENT_BOX};
+use breadify::layout::metrics::{
+    BADGE_PADDING, CRATE_GLYPH, RULE_DEPARTMENT_BOX, SIZE_CUSTOMER, SIZE_DEPARTMENT, TRACK_CUSTOMER,
+};
 use breadify::layout::{self, Cursor, MarkerTreatment, Settings, SheetContext, stop};
 use breadify::order::{Line, Order, Product};
 use breadify::page::{BRAND_RED, Page, Primitive};
@@ -212,7 +214,9 @@ fn norwegian_letters_survive_the_pdf() {
     };
 
     let text = String::from_utf8_lossy(&output.stdout);
-    for word in ["KJØKKEN", "Rugbrød", "Sekskornsbrød", "RAVNÅS"] {
+    // Product names, not customers: the samples are anonymised and only the
+    // product catalogue still carries æ, ø and å.
+    for word in ["Rugbrød", "Sekskornsbrød", "Oppskåret", "Ryfylkebrød"] {
         assert!(text.contains(word), "{word} did not survive the round trip");
     }
 }
@@ -337,8 +341,13 @@ fn heading_holds_together(order: &Order, settings: &Settings) -> bool {
 }
 
 /// The heading places the crate glyphs by measurement, against the marker on
-/// its right and the customer name on its left. Five of the sample's 148 stops
-/// have a name long enough to reach them; those put their crates below.
+/// its right and the customer name on its left.
+///
+/// No stop in the samples reaches them any more: five did when the customers
+/// were real, and the placeholders that replaced them are all short. The
+/// invariant is still walked over every stop under every treatment — it is
+/// the hard case that has moved, to the synthetic test below, which is where
+/// it has to live now that no real name is long.
 #[test]
 fn no_heading_runs_into_its_own_right_hand_group() {
     let orders = order::fold(&sample_rows());
@@ -357,8 +366,8 @@ fn no_heading_runs_into_its_own_right_hand_group() {
     }
 
     assert_eq!(
-        dropped, 5,
-        "five sample names are long enough to push their crates down a line"
+        dropped, 0,
+        "no anonymised name is long enough to push its crates down a line"
     );
 }
 
@@ -369,8 +378,13 @@ fn no_heading_runs_into_its_own_right_hand_group() {
 /// DPT box.
 #[test]
 fn a_heading_with_nowhere_left_to_put_the_crates_still_does_not_collide() {
-    let longest_name = "Customer 001";
-    let longest_department = "Department 10";
+    // Built to the widths the real data used to reach, because the anonymised
+    // samples no longer reach them: the longest real customer name measured
+    // 127.13 mm at 14 pt and the longest department 79.57 mm. These measure at
+    // least as much, asserted below, so a later edit cannot quietly shorten
+    // them and leave every case here passing on an easy heading.
+    let longest_name = "CUSTOMER 001 AVDELING STORKJØKKEN NORD AS";
+    let longest_department = "Department 10 — storkjøkken avdeling nord";
 
     let cases = [
         (
@@ -399,6 +413,19 @@ fn a_heading_with_nowhere_left_to_put_the_crates_still_does_not_collide() {
             1,
         ),
     ];
+
+    let name_style = text::Style::new(breadify::font::Face::ArchivoExtraBold, SIZE_CUSTOMER)
+        .tracked(TRACK_CUSTOMER);
+    let department_style =
+        text::Style::new(breadify::font::Face::ArchivoExtraBold, SIZE_DEPARTMENT);
+    assert!(
+        text::width(longest_name, name_style) >= 127.13,
+        "the synthetic name must be at least as wide as the longest real one was"
+    );
+    assert!(
+        text::width(longest_department, department_style) >= 79.57,
+        "the synthetic department must be at least as wide as the longest real one was"
+    );
 
     for (what, customer, department, quantity) in cases {
         for treatment in MarkerTreatment::ALL {

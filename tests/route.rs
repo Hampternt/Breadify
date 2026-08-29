@@ -111,13 +111,7 @@ fn stops_sharing_a_sequence_break_the_tie_by_address_then_department() {
         .filter(|stop| stop.sequence == 1400)
         .map(|stop| stop.delivery_street.as_str())
         .collect();
-    assert_eq!(
-        tied,
-        [
-            "Street 64",
-            "Street 65"
-        ]
-    );
+    assert_eq!(tied, ["Street 64", "Street 65"]);
 
     let route_eleven = routes.iter().find(|r| r.nickname == "11").unwrap();
     let tied: Vec<(&str, Option<&str>)> = route_eleven
@@ -126,20 +120,20 @@ fn stops_sharing_a_sequence_break_the_tie_by_address_then_department() {
         .filter(|stop| stop.sequence == 1400)
         .map(|stop| (stop.delivery_street.as_str(), stop.department.as_deref()))
         .collect();
+    // Re-derived after the samples were anonymised: the placeholders sort
+    // differently from the names they replaced, and this list is the sort
+    // itself — address first, then department, with no department first.
     assert_eq!(
         tied,
         [
+            ("Street 112", Some("Department 32")),
             ("Street 17", None),
             ("Street 17", None),
             ("Street 17", None),
             ("Street 17", Some("Department 09")),
-            ("Street 62", Some("Department 22")),
-            ("Street 62", Some("Department 22")),
             ("Street 62", Some("Department 16")),
-            (
-                "Street 112",
-                Some("Department 32")
-            ),
+            ("Street 62", Some("Department 22")),
+            ("Street 62", Some("Department 22")),
         ]
     );
 }
