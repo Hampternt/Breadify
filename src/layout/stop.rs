@@ -100,12 +100,15 @@ fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, settings: &Settin
         crates::CrateCount::default()
     };
     let crates_width = crate_run_width(count.total());
+    let compact_width = compact_crates_width(count);
     let marks = stamp_width(stop, settings);
 
     let mut stamp_wanted = true;
     let mut crates_wanted = count.total() > 0;
 
-    // The name's own line.
+    // The name's own line. When the name leaves no room for the glyph run,
+    // the compact `×N` form keeps the crates on this line rather than
+    // spilling them downward (decision D24).
     let middle = top + height / 2.0;
     if name_right + MARKER_GAP + marks <= right {
         stamp(page, right, middle, stop, settings);
@@ -114,6 +117,9 @@ fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, settings: &Settin
         let edge = right - marks - MARKER_GAP;
         if crates_wanted && name_right + CRATE_GAP + crates_width <= edge {
             draw_crates(page, edge - crates_width, middle, count);
+            crates_wanted = false;
+        } else if crates_wanted && name_right + CRATE_GAP + compact_width <= edge {
+            compact_crates(page, edge, middle, count);
             crates_wanted = false;
         }
     }
@@ -135,6 +141,9 @@ fn heading(page: &mut Page, cursor: &mut Cursor, stop: &Order, settings: &Settin
         }
         if crates_wanted && !stamp_wanted && box_right + CRATE_GAP + crates_width <= edge {
             draw_crates(page, edge - crates_width, middle, count);
+            crates_wanted = false;
+        } else if crates_wanted && !stamp_wanted && box_right + CRATE_GAP + compact_width <= edge {
+            compact_crates(page, edge, middle, count);
             crates_wanted = false;
         }
         cursor.advance(tall);
@@ -199,30 +208,69 @@ fn stamp_width(stop: &Order, settings: &Settings) -> Mm {
 }
 
 /// Draws the crates right-aligned in a column `width` wide ending at `right`,
-/// wrapping onto further rows when one row will not hold them, and returns the
-/// height it used.
+/// and returns the height it used. One row of glyphs when the row holds them
+/// all; the compact `×N` form when it will not — never a second row of
+/// squares (decision D24).
 fn crate_block(page: &mut Page, right: Mm, top: Mm, width: Mm, count: crates::CrateCount) -> Mm {
     let total = count.total();
     if total == 0 {
         return 0.0;
     }
 
-    let step = CRATE_GLYPH.0 + CRATE_GLYPH_GAP;
-    let per_row = ((width + CRATE_GLYPH_GAP) / step).floor().max(1.0) as u32;
-
-    let mut drawn = 0;
-    let mut y = top;
-    while drawn < total {
-        let in_row = per_row.min(total - drawn);
-        let mut x = right - crate_run_width(in_row);
-        for _ in 0..in_row {
-            crate_glyph(page, Point::new(x, y), drawn < count.large);
-            x += step;
-            drawn += 1;
-        }
-        y += CRATE_GLYPH.1 + CRATE_ROW_GAP;
+    if crate_run_width(total) <= width {
+        draw_crates(
+            page,
+            right - crate_run_width(total),
+            top + CRATE_GLYPH.1 / 2.0,
+            count,
+        );
+    } else {
+        compact_crates(page, right, top + CRATE_GLYPH.1 / 2.0, count);
     }
-    y - top - CRATE_ROW_GAP
+    CRATE_GLYPH.1
+}
+
+/// How wide [`compact_crates`] draws, so the heading's fit tests and the
+/// drawing cannot drift apart.
+fn compact_crates_width(count: crates::CrateCount) -> Mm {
+    let style = Style::new(Face::MonoSemiBold, SIZE_DOT_NOTE);
+    let mut width: Mm = 0.0;
+    let mut groups = 0;
+    for part in [count.large, count.small] {
+        if part == 0 {
+            continue;
+        }
+        width += text::width(&format!("×{part}"), style) + CRATE_GLYPH_GAP + CRATE_GLYPH.0;
+        groups += 1;
+    }
+    if groups == 2 {
+        width += CRATE_GAP;
+    }
+    width
+}
+
+/// The compact form of a crate count too wide to draw glyph by glyph: `×24`
+/// beside one full crate, then `×1` beside one half crate — the notation the
+/// route total already uses when its tray dots outgrow their column. Drawn
+/// right-aligned against `right`, centred on `middle`.
+fn compact_crates(page: &mut Page, right: Mm, middle: Mm, count: crates::CrateCount) {
+    let style = Style::new(Face::MonoSemiBold, SIZE_DOT_NOTE);
+    let mut x = right - compact_crates_width(count);
+    for (part, full) in [(count.large, true), (count.small, false)] {
+        if part == 0 {
+            continue;
+        }
+        let label = format!("×{part}");
+        page.text(
+            Point::new(x, middle + text::ascent(style) / 2.0 - 0.35),
+            &label,
+            style,
+            page::BLACK,
+        );
+        x += text::width(&label, style) + CRATE_GLYPH_GAP;
+        crate_glyph(page, Point::new(x, middle - CRATE_GLYPH.1 / 2.0), full);
+        x += CRATE_GLYPH.0 + CRATE_GAP;
+    }
 }
 
 /// How wide a row of crate glyphs is.

@@ -225,6 +225,23 @@ block's* full 194 mm column and holds there. It never applied to the total,
 whose columns are half that. The freezer list's flat total is untouched — F9
 already proved by measurement that its longest name fits its half-column.
 
+**D24 — A crate run that will not fit compresses to `×N`, never a second
+row.** (2026-08-31)
+D20 let the crates drop a line when a long customer name reached them, and the
+overflow line wrapped the glyphs onto further rows when one row would not hold
+them — a big stop could put three rows of squares between two headings. Now
+the glyph run is drawn only where it fits whole on one line: first beside the
+name, then beside the department, then on a line of its own. Wherever it does
+not fit, the count is set in the compact form the route total already uses for
+its tray dots — `×24` beside one full-crate glyph, `×1` beside one half —
+so the heading never grows extra rows of squares, and a long name costs the
+stop the glyph run, not the page its rhythm.
+
+The trade D17 warned about is accepted knowingly: the compact form makes the
+driver read a number where the run let them count squares. It only appears
+when the alternative was a block of wrapped rows, which was no easier to take
+in at a glance.
+
 ## Open
 
 Nothing blocking. The design handoff's eight overrides are settled (six adopted
