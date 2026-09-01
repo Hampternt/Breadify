@@ -51,9 +51,11 @@ fn routes(app: &mut Breadify, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             if ui.button(RichText::new("All").size(12.0)).clicked() {
                 app.selected = rows.iter().map(|(name, ..)| name.clone()).collect();
+                app.resettle();
             }
             if ui.button(RichText::new("None").size(12.0)).clicked() {
                 app.selected.clear();
+                app.resettle();
             }
             ui.label(
                 RichText::new(format!(
@@ -81,6 +83,10 @@ fn routes(app: &mut Breadify, ui: &mut egui::Ui) {
                             } else {
                                 app.selected.remove(&nickname);
                             }
+                            // The day is cached (see `Breadify::day`) and print
+                            // reads that cache; without this a changed tick
+                            // still printed every route.
+                            app.resettle();
                         }
                         ui.label(
                             RichText::new(format!("Route {nickname}"))
@@ -200,16 +206,15 @@ fn write_and(
     target: &PathBuf,
     then: impl FnOnce(&PathBuf) -> Result<(), String>,
 ) {
-    if app.day().is_empty() {
+    // Laid out fresh from the live selection: the cached day settles a frame
+    // behind the checkboxes, and what goes to paper must never trail a tick.
+    let sheets = selected_day(app);
+    if sheets.is_empty() {
         app.error = Some("nothing selected to print".to_owned());
         return;
     }
 
-    let pages: Vec<_> = app
-        .day()
-        .iter()
-        .map(|sheet| sheet.content.clone())
-        .collect();
+    let pages: Vec<_> = sheets.iter().map(|sheet| sheet.content.clone()).collect();
     let outcome = crate::pdf::write(target, &pages, "Breadify pick lists")
         .map_err(|error| error.to_string())
         .and_then(|()| then(target));

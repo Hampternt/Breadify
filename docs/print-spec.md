@@ -83,6 +83,7 @@ and the bread they get. It is also one crate label.
 | Customer | `Customer` | **Loud** — block heading | Verbatim; up to 46 chars, ALL-CAPS and mixed case both occur |
 | Department | `Department` | **Loud** — outlined `DPT` box, on its own line under the customer name (**D19**) | The crate label. An order without one shows no box; its order ID tells it apart |
 | Crate count | derived | Loud — glyphs immediately left of the substitute marker (**D20**); a run too wide for its line is set as `×N` beside one glyph instead (**D24**) | How many crates that block's bread needs, at 10 and 5 per crate, adjusted by the per-bread size |
+| Pallet call | derived | Quiet — appended to the page note on every sheet of the route (**D25**) | `NN crates — take a pallet.` when the route's stops sum to more than 16 crates; bread list only |
 | Accept alternatives | `Accept alternatives` | Asymmetric — see §5 | Quiet when true, loud when false |
 | Quantity | `Quantity` | **Loud** — the number counted to | 1–48 |
 | Supplier | `Supplier` | Code on each line | `SB` / `BH`, spelled out in the legend and the totals. The code, not the name — that is what paid for 11 pt body text |

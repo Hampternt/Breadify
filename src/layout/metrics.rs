@@ -63,6 +63,9 @@ pub const TRACK_SUPPLIER_CODE: f64 = 0.02;
 pub const LOGO_PANEL: (Mm, Mm) = (26.3, 6.3);
 pub const LOGO_PADDING: (Mm, Mm) = (1.5, 2.1);
 pub const MASTHEAD_RULE_GAP: Mm = 5.9;
+/// Least clear paper between the page note's sentence and the substitute
+/// convention on its right, which the pallet call (D25) must not eat into.
+pub const PAGE_NOTE_GAP: Mm = 4.0;
 
 /// Legend strip.
 pub const LEGEND_PADDING: (Mm, Mm) = (0.9, 1.3);
