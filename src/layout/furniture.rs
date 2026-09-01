@@ -110,7 +110,7 @@ pub fn page_note(page: &mut Page, cursor: &mut Cursor, route: &Route, settings: 
     } else {
         "check list"
     };
-    let left = match unsequenced {
+    let mut left = match unsequenced {
         0 => format!(
             "Route {} {what} — {} stops.",
             route.nickname,
@@ -122,6 +122,29 @@ pub fn page_note(page: &mut Page, cursor: &mut Cursor, route: &Route, settings: 
             route.stops.len()
         ),
     };
+    // The pallet call is made once for the whole route, so it lives here on
+    // every sheet rather than in the total at the end (decision D25). The
+    // freezer list has no crate arithmetic to sum (decision F4). The line is
+    // shared with the substitute convention, so the sentence is measured
+    // before it grows: the crate count goes first, and a line already crowded
+    // by the unsequenced note gets the short form.
+    let convention = "want substitute: true unless marked FALSE";
+    if settings.is_bread() {
+        let crates = crate::crates::route_total(route, &settings.crates);
+        if crates > crate::crates::PALLET_THRESHOLD {
+            let room = cursor.width - text::width(convention, style) - PAGE_NOTE_GAP;
+            for suffix in [
+                format!("{crates} crates — take a pallet."),
+                "Take a pallet.".to_owned(),
+            ] {
+                let candidate = format!("{left} {suffix}");
+                if text::width(&candidate, style) <= room {
+                    left = candidate;
+                    break;
+                }
+            }
+        }
+    }
     let height = text_from_top(
         page,
         Point::new(cursor.left, cursor.y),
@@ -133,7 +156,7 @@ pub fn page_note(page: &mut Page, cursor: &mut Cursor, route: &Route, settings: 
         page,
         cursor.right(),
         cursor.y,
-        "want substitute: true unless marked FALSE",
+        convention,
         style,
         page::NOTE,
     );

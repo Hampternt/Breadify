@@ -242,6 +242,21 @@ driver read a number where the run let them count squares. It only appears
 when the alternative was a block of wrapped rows, which was no easier to take
 in at a glance.
 
+**D25 — A route of more than 16 crates asks for a pallet.** (2026-08-31)
+Whether to take a pallet is decided once for the whole route, before the
+first crate is packed — so the call sits in the page note beside the stop
+count, on **every sheet** of the route, not in the total that closes it:
+`Route 6 in full — 16 stops. 29 crates — take a pallet.` The threshold is
+"more than 16" — seventeen crates is a pallet, sixteen is not — and the count
+is the sum of each stop's own crate count (the same arithmetic as the glyphs,
+D17), not a re-count of pooled units. The freezer list has no crate
+arithmetic (F4) and so never asks.
+
+The page note shares its line with the substitute convention, so the sentence
+is measured before it grows (the lesson of D23): a line already crowded by a
+long nickname and the unsequenced note gets the short form `Take a pallet.`
+instead of losing the call or colliding.
+
 ## Open
 
 Nothing blocking. The design handoff's eight overrides are settled (six adopted

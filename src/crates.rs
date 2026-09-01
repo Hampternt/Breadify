@@ -123,6 +123,20 @@ pub fn slots(order: &Order, rules: &CrateRules) -> u32 {
     u32::try_from(slots).unwrap_or(u32::MAX)
 }
 
+/// Crates on one route above this, and the sheet recommends a pallet
+/// (decision D25). "More than 16" — 17 crates is a pallet, 16 is not.
+pub const PALLET_THRESHOLD: u32 = 16;
+
+/// Every crate a route needs, all stops summed — what decides whether the
+/// driver should take a pallet.
+pub fn route_total(route: &crate::route::Route, rules: &CrateRules) -> u32 {
+    route
+        .stops
+        .iter()
+        .map(|stop| count(stop, rules).total())
+        .sum()
+}
+
 /// How many crates of each size an order needs, in the fewest containers.
 ///
 /// A remainder that fits a small crate takes one; a remainder too big for one

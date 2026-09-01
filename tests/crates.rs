@@ -207,3 +207,122 @@ fn saying_a_bread_is_standard_forgets_it() {
     assert_eq!(rules.size_of(7), STANDARD_SIZE);
     assert_eq!(rules, CrateRules::default(), "and nothing is left behind");
 }
+
+/// One stop per quantity, each a single line of a standard bread, so a
+/// route's crate total is easy to state in the test.
+fn synthetic_route(nickname: &str, quantities: &[u32]) -> breadify::route::Route {
+    use breadify::order::{Line, Product};
+
+    breadify::route::Route {
+        nickname: nickname.to_owned(),
+        stops: quantities
+            .iter()
+            .enumerate()
+            .map(|(index, &quantity)| Order {
+                id: 1_000_700_000 + index as i64,
+                customer: format!("Customer {index:03}"),
+                department: None,
+                delivery_street: format!("Gate {index}"),
+                route: nickname.to_owned(),
+                sequence: 100 * (index as u32 + 1),
+                accept_alternatives: true,
+                comment: None,
+                lines: vec![Line {
+                    product: Product {
+                        id: 1,
+                        name: "Havrebrød Oppdelt Sandnes Bakeri".to_owned(),
+                        sku: "101".to_owned(),
+                        supplier: "sandnes bakeri".to_owned(),
+                    },
+                    quantity,
+                }],
+            })
+            .collect(),
+    }
+}
+
+/// Everything every sheet of a route writes, one string per text run.
+fn sheet_text(
+    route: &breadify::route::Route,
+    settings: &breadify::layout::Settings,
+) -> Vec<String> {
+    breadify::layout::day(std::slice::from_ref(route), None, settings, "PSR-BREAD")
+        .iter()
+        .flat_map(|sheet| &sheet.content.primitives)
+        .filter_map(|primitive| match primitive {
+            breadify::page::Primitive::Text { text, .. } => Some(text.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+/// A route's crates are summed across its stops, each stop's count first —
+/// two stops of 14 units are four crates (1 large + 1 small each), not the
+/// three that 28 pooled units would make.
+#[test]
+fn a_route_total_sums_stops_not_units() {
+    let rules = CrateRules::default();
+    assert_eq!(
+        crates::route_total(&synthetic_route("6", &[14, 14]), &rules),
+        4
+    );
+    assert_eq!(
+        crates::route_total(&synthetic_route("6", &[90, 90]), &rules),
+        18
+    );
+}
+
+/// More than sixteen crates on one route and every sheet of it says to take
+/// a pallet (decision D25); exactly sixteen does not.
+#[test]
+fn a_heavy_route_recommends_a_pallet_on_every_sheet() {
+    let settings = breadify::layout::Settings::default();
+
+    let heavy = synthetic_route("6", &[90, 90]);
+    let sheets = breadify::layout::day(std::slice::from_ref(&heavy), None, &settings, "PSR-BREAD");
+    for sheet in &sheets {
+        let texts: Vec<String> = sheet
+            .content
+            .primitives
+            .iter()
+            .filter_map(|primitive| match primitive {
+                breadify::page::Primitive::Text { text, .. } => Some(text.clone()),
+                _ => None,
+            })
+            .collect();
+        assert!(
+            texts
+                .iter()
+                .any(|text| text.contains("18 crates — take a pallet.")),
+            "sheet {} of route 6 carries the pallet call",
+            sheet.number
+        );
+    }
+
+    let at_threshold = synthetic_route("6", &[80, 80]);
+    assert_eq!(
+        crates::route_total(&at_threshold, &CrateRules::default()),
+        crates::PALLET_THRESHOLD
+    );
+    assert!(
+        !sheet_text(&at_threshold, &settings)
+            .iter()
+            .any(|text| text.contains("pallet")),
+        "sixteen crates is not more than sixteen"
+    );
+}
+
+/// The freezer list has no crate arithmetic (decision F4), so it never asks
+/// for a pallet, however big the route.
+#[test]
+fn the_freezer_list_never_recommends_a_pallet() {
+    let settings = breadify::layout::Settings {
+        kind: breadify::date::ExportKind::Freezer,
+        ..breadify::layout::Settings::default()
+    };
+    assert!(
+        !sheet_text(&synthetic_route("6", &[90, 90]), &settings)
+            .iter()
+            .any(|text| text.contains("pallet"))
+    );
+}
